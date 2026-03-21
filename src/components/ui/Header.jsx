@@ -12,7 +12,7 @@ export default function Header() {
   const { data: unreadCount = 0 } = useUnreadCount();
 
   return (
-    <header className="h-16 bg-white border-b border-border flex items-center px-4 lg:px-6 gap-3 flex-shrink-0 no-print">
+    <header className="h-16 bg-white border-b border-border flex items-center px-4 lg:px-6 gap-3 shrink-0 no-print">
       {/* Mobile hamburger — toggles sidebar overlay */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -44,7 +44,7 @@ export default function Header() {
           {activeSchool?.name && (
             <>
               <span className="text-brand-300">·</span>
-              <span className="text-xs text-brand-500 max-w-[120px] truncate">{activeSchool.name}</span>
+              <span className="text-xs text-brand-500 max-w-30 truncate">{activeSchool.name}</span>
             </>
           )}
         </div>
@@ -58,7 +58,7 @@ export default function Header() {
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-status-danger text-white text-[10px] font-bold flex items-center justify-center">
+          <span className="absolute top-1 right-1 min-w-4 h-4 px-0.5 rounded-full bg-status-danger text-white text-[10px] font-bold flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -66,7 +66,7 @@ export default function Header() {
 
       {/* Avatar / name */}
       <div className="flex items-center gap-2.5 pl-3 border-l border-border">
-        <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center ring-2 ring-brand-200 flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center ring-2 ring-brand-200 shrink-0">
           {profile?.avatar_url
             ? <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
             : <span className="text-xs font-bold text-brand-700">{profile?.first_name?.[0]}{profile?.last_name?.[0]}</span>
