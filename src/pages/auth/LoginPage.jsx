@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -10,54 +10,56 @@ import { authApi } from '../../services/api/auth.js';
 import { cn } from '../../utils/cn.js';
 
 const schema = yup.object({
-  email: yup.string().email('Enter a valid email').required('Email is required'),
+  email:    yup.string().email('Enter a valid email').required('Email is required'),
   password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
 });
 
+const ROLE_DASHBOARDS = {
+  admin:       '/admin/dashboard',
+  super_admin: '/admin/dashboard',
+  teacher:     '/teacher/dashboard',
+  student:     '/student/dashboard',
+  parent:      '/parent/dashboard',
+};
+
 export default function LoginPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn, role } = useAuthContext();
-  const [showPassword, setShowPassword] = useState(false);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const { signIn, isAuthenticated, role } = useAuthContext();
+
+  const [showPassword,    setShowPassword]    = useState(false);
+  const [magicLinkSent,   setMagicLinkSent]   = useState(false);
+  const [magicLinkEmail,  setMagicLinkEmail]  = useState('');
+  const [signingIn,       setSigningIn]       = useState(false);
 
   const from = location.state?.from?.pathname ?? null;
 
-  const roleDashboards = {
-    admin: '/admin/dashboard',
-    super_admin: '/admin/dashboard',
-    teacher: '/teacher/dashboard',
-    student: '/student/dashboard',
-    parent: '/parent/dashboard',
-  };
+  // ── Navigate once auth state is settled after sign-in ──────────────────────
+  useEffect(() => {
+    if (isAuthenticated && role && signingIn) {
+      const dest = from ?? ROLE_DASHBOARDS[role] ?? '/admin/dashboard';
+      navigate(dest, { replace: true });
+    }
+  }, [isAuthenticated, role, signingIn, from, navigate]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    getValues,
-  } = useForm({ resolver: yupResolver(schema) });
+  const { register, handleSubmit, formState: { errors, isSubmitting }, getValues } = useForm({
+    resolver: yupResolver(schema),
+  });
 
   const onSubmit = async ({ email, password }) => {
     try {
+      setSigningIn(true);
       await signIn(email, password);
-      // AuthContext will update role; navigate after a tick
-      setTimeout(() => {
-        const dest = from ?? roleDashboards[role] ?? '/admin/dashboard';
-        navigate(dest, { replace: true });
-      }, 100);
+      // Navigation happens in the useEffect above once role is populated
     } catch (err) {
+      setSigningIn(false);
       toast.error(err.message ?? 'Invalid email or password');
     }
   };
 
   const handleMagicLink = async () => {
     const email = getValues('email');
-    if (!email) {
-      toast.error('Enter your email address first');
-      return;
-    }
+    if (!email) { toast.error('Enter your email address first'); return; }
     try {
       await authApi.signInWithMagicLink(email);
       setMagicLinkEmail(email);
@@ -78,10 +80,7 @@ export default function LoginPage() {
         <p className="text-text-secondary text-sm mb-6">
           We sent a magic sign-in link to <strong>{magicLinkEmail}</strong>
         </p>
-        <button
-          onClick={() => setMagicLinkSent(false)}
-          className="text-sm text-brand-600 hover:underline"
-        >
+        <button onClick={() => setMagicLinkSent(false)} className="text-sm text-brand-600 hover:underline">
           ← Back to sign in
         </button>
       </div>
@@ -94,9 +93,7 @@ export default function LoginPage() {
         <h2 className="text-2xl font-bold text-text-primary">Sign in to your school</h2>
         <p className="text-text-secondary text-sm mt-1">
           Don't have an account?{' '}
-          <Link to="/register" className="text-brand-600 font-semibold hover:underline">
-            Create one free
-          </Link>
+          <Link to="/register" className="text-brand-600 font-semibold hover:underline">Create one free</Link>
         </p>
       </div>
 
@@ -117,23 +114,14 @@ export default function LoginPage() {
               {...register('email')}
             />
           </div>
-          {errors.email && (
-            <p className="mt-1 text-xs text-status-danger">{errors.email.message}</p>
-          )}
+          {errors.email && <p className="mt-1 text-xs text-status-danger">{errors.email.message}</p>}
         </div>
 
         {/* Password */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-medium text-text-primary" htmlFor="password">
-              Password
-            </label>
-            <Link
-              to="/forgot-password"
-              className="text-xs text-brand-600 hover:underline"
-            >
-              Forgot password?
-            </Link>
+            <label className="text-sm font-medium text-text-primary" htmlFor="password">Password</label>
+            <Link to="/forgot-password" className="text-xs text-brand-600 hover:underline">Forgot password?</Link>
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -154,46 +142,28 @@ export default function LoginPage() {
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          {errors.password && (
-            <p className="mt-1 text-xs text-status-danger">{errors.password.message}</p>
-          )}
+          {errors.password && <p className="mt-1 text-xs text-status-danger">{errors.password.message}</p>}
         </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="btn-primary w-full"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Signing in...
-            </>
-          ) : (
-            'Sign in'
-          )}
+        <button type="submit" disabled={isSubmitting || signingIn} className="btn-primary w-full">
+          {(isSubmitting || signingIn)
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
+            : 'Sign in'
+          }
         </button>
 
-        {/* Divider */}
         <div className="relative flex items-center gap-3">
           <div className="flex-1 h-px bg-border" />
           <span className="text-xs text-text-muted">or</span>
           <div className="flex-1 h-px bg-border" />
         </div>
 
-        {/* Magic link */}
-        <button
-          type="button"
-          onClick={handleMagicLink}
-          className="btn-secondary w-full"
-        >
+        <button type="button" onClick={handleMagicLink} className="btn-secondary w-full">
           <Mail className="w-4 h-4" />
           Sign in with magic link
         </button>
       </form>
 
-      {/* Demo credentials hint */}
       <div className="mt-6 p-3 bg-surface-muted rounded-lg border border-border">
         <p className="text-xs text-text-muted text-center">
           <span className="font-medium text-text-secondary">Demo: </span>

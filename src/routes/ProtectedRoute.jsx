@@ -9,24 +9,11 @@ import { useAuthContext } from '../contexts/AuthContext.jsx';
  *   <ProtectedRoute allowedRoles={['admin']}> // auth + role
  */
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, role, loading, initialized, profile, user } = useAuthContext();
+  const { isAuthenticated, role, loading, initialized } = useAuthContext();
   const location = useLocation();
 
-  // DEBUG: Log everything
-  console.log('🔐 [ProtectedRoute] Current state:', {
-    isAuthenticated,
-    role,
-    loading,
-    initialized,
-    profileSchoolId: profile?.school_id,
-    userId: user?.id,
-    allowedRoles,
-    currentPath: location.pathname,
-  });
-
-  // Still initialising auth state — show nothing (avoids flash)
+  // Still initialising — show branded splash to avoid flash
   if (!initialized || loading) {
-    console.log('⏳ [ProtectedRoute] Still loading...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-muted">
         <div className="flex flex-col items-center gap-4">
@@ -42,35 +29,32 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     );
   }
 
-  // Not authenticated → redirect to login, preserving intended destination
+  // Not logged in → send to login, saving intended path
   if (!isAuthenticated) {
-    console.log('❌ [ProtectedRoute] Not authenticated, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  console.log('✅ [ProtectedRoute] User is authenticated');
-
-  // Authenticated but role not allowed
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    console.warn('⚠️ [ProtectedRoute] Role mismatch!', {
-      userRole: role,
-      allowedRoles,
-    });
-
-    // Redirect to the appropriate dashboard for their role
+  // Logged in but wrong role → redirect to their own dashboard
+  if (allowedRoles && role && !allowedRoles.includes(role)) {
     const roleDashboards = {
-      admin: '/admin/dashboard',
+      admin:       '/admin/dashboard',
       super_admin: '/admin/dashboard',
-      teacher: '/teacher/dashboard',
-      student: '/student/dashboard',
-      parent: '/parent/dashboard',
+      teacher:     '/teacher/dashboard',
+      student:     '/student/dashboard',
+      parent:      '/parent/dashboard',
     };
-    const destination = roleDashboards[role] ?? '/login';
-    console.log(`🔀 [ProtectedRoute] Redirecting to: ${destination}`);
-    return <Navigate to={destination} replace />;
+    return <Navigate to={roleDashboards[role] ?? '/login'} replace />;
   }
 
-  console.log('✅ [ProtectedRoute] Access granted, rendering children');
+  // Logged in but profile not loaded yet (role is null) — wait
+  if (allowedRoles && !role) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-muted">
+        <div className="w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return children;
 };
 

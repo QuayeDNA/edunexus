@@ -3,10 +3,26 @@ import { useAuthContext } from '../../contexts/AuthContext.jsx';
 import { APP_NAME, APP_TAGLINE } from '../../utils/constants.js';
 
 export default function AuthLayout() {
-  const { isAuthenticated, role, initialized } = useAuthContext();
+  const { isAuthenticated, role, initialized, loading } = useAuthContext();
+
+  // If we are still resolving auth state, keep the loader until it's settled.
+  if (!initialized || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-muted">
+        <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  // Authenticated but role not set yet: go to onboarding
+  if (isAuthenticated && !role) {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   // Redirect already-authenticated users to their dashboard
-  if (initialized && isAuthenticated && role) {
+  if (isAuthenticated && role) {
     const dashboards = {
       admin: '/admin/dashboard',
       super_admin: '/admin/dashboard',
