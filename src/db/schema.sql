@@ -1,6 +1,13 @@
 -- ============================================================
 -- EduNexus Complete Database Schema
--- Run this in Supabase SQL Editor: https://supabase.com/dashboard
+--
+-- How to run:
+--   1. Go to https://supabase.com/dashboard
+--   2. Open your project → SQL Editor (left sidebar)
+--   3. Paste the contents of this file and click "Run"
+--
+-- API credentials:
+--   Project Settings → Data API → Project URL & API Keys
 -- ============================================================
 
 -- ─── SCHOOL CONFIGURATION ────────────────────────────────────────────────────
@@ -599,14 +606,103 @@ alter table lesson_plans enable row level security;
 
 -- ─── RLS POLICIES (base — restrict to own school) ─────────────────────────────
 
--- Helper function: get the school_id for the logged-in user
+-- Helper function: get the school_id for the logged-in user.
+-- Uses SECURITY DEFINER so it can read profiles without triggering RLS recursion,
+-- and SET search_path = '' prevents search-path injection attacks.
 create or replace function get_my_school_id()
 returns uuid
 language sql
 stable
+security definer
+set search_path = ''
 as $$
-  select school_id from profiles where id = auth.uid()
+  select school_id from public.profiles where id = auth.uid()
 $$;
+
+-- ─── AUTO-CREATE PROFILE ON SIGN-UP ──────────────────────────────────────────
+-- When a new row is inserted in auth.users (i.e. user signs up), automatically
+-- create a minimal profile row so the rest of the app can reference it.
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, role, is_active)
+  values (new.id, 'admin', true)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+-- Drop and recreate trigger to make the script idempotent
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- ─── RPC: CREATE SCHOOL FOR AUTHENTICATED USER ───────────────────────────────
+-- Called from the onboarding wizard when a user's profile has no school yet.
+-- Runs as SECURITY DEFINER so it can bypass the school RLS policy and update
+-- the profile table atomically.
+
+create or replace function public.create_school_for_user(school_data jsonb)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  new_school_id uuid;
+  current_user_id uuid;
+begin
+  current_user_id := auth.uid();
+
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  -- Prevent creating a second school if one already exists
+  if exists (
+    select 1 from public.profiles
+    where id = current_user_id and school_id is not null
+  ) then
+    raise exception 'User already belongs to a school';
+  end if;
+
+  insert into public.schools (
+    name, address, phone, email, website, motto,
+    curriculum_mode, calendar_mode, grading_system,
+    currency_code, timezone, country
+  ) values (
+    school_data->>'name',
+    school_data->>'address',
+    school_data->>'phone',
+    school_data->>'email',
+    school_data->>'website',
+    school_data->>'motto',
+    coalesce(nullif(school_data->>'curriculum_mode', ''), 'ghana_basic'),
+    coalesce(nullif(school_data->>'calendar_mode',   ''), 'trimester'),
+    coalesce(nullif(school_data->>'grading_system',  ''), 'ghana_basic'),
+    coalesce(nullif(school_data->>'currency_code',   ''), 'GHS'),
+    coalesce(nullif(school_data->>'timezone',        ''), 'Africa/Accra'),
+    coalesce(nullif(school_data->>'country',         ''), 'GH')
+  )
+  returning id into new_school_id;
+
+  -- Link the new school to the user's profile
+  update public.profiles
+  set school_id = new_school_id
+  where id = current_user_id;
+
+  return new_school_id;
+end;
+$$;
+
+-- Grant execution to authenticated users only
+grant execute on function public.create_school_for_user(jsonb) to authenticated;
 
 -- Generic policy: users can only see data from their own school
 -- Apply this pattern to each table:
@@ -615,20 +711,125 @@ create policy "School isolation: schools"
   on schools for all
   using (id = get_my_school_id());
 
-create policy "School isolation: students"
-  on students for all
+create policy "School isolation: academic_years"
+  on academic_years for all
   using (school_id = get_my_school_id());
 
-create policy "School isolation: staff"
-  on staff for all
+create policy "School isolation: terms"
+  on terms for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: grade_levels"
+  on grade_levels for all
   using (school_id = get_my_school_id());
 
 create policy "School isolation: classes"
   on classes for all
   using (school_id = get_my_school_id());
 
+create policy "School isolation: students"
+  on students for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: guardians"
+  on guardians for all
+  using (
+    id in (
+      select guardian_id from student_guardians
+      join students on students.id = student_guardians.student_id
+      where students.school_id = get_my_school_id()
+    )
+  );
+
+create policy "School isolation: student_guardians"
+  on student_guardians for all
+  using (
+    student_id in (select id from students where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: staff"
+  on staff for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: subjects"
+  on subjects for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: class_subjects"
+  on class_subjects for all
+  using (
+    class_id in (select id from classes where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: timetable_slots"
+  on timetable_slots for all
+  using (
+    class_id in (select id from classes where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: assessments"
+  on assessments for all
+  using (
+    class_subject_id in (
+      select cs.id from class_subjects cs
+      join classes c on c.id = cs.class_id
+      where c.school_id = get_my_school_id()
+    )
+  );
+
+create policy "School isolation: assessment_scores"
+  on assessment_scores for all
+  using (
+    assessment_id in (
+      select a.id from assessments a
+      join class_subjects cs on cs.id = a.class_subject_id
+      join classes c on c.id = cs.class_id
+      where c.school_id = get_my_school_id()
+    )
+  );
+
+create policy "School isolation: report_cards"
+  on report_cards for all
+  using (
+    student_id in (select id from students where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: attendance"
+  on attendance for all
+  using (
+    student_id in (select id from students where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: staff_attendance"
+  on staff_attendance for all
+  using (
+    staff_id in (select id from staff where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: fee_categories"
+  on fee_categories for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: fee_schedules"
+  on fee_schedules for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: student_fees"
+  on student_fees for all
+  using (
+    student_id in (select id from students where school_id = get_my_school_id())
+  );
+
 create policy "School isolation: payments"
   on payments for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: expenses"
+  on expenses for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: payroll_runs"
+  on payroll_runs for all
   using (school_id = get_my_school_id());
 
 create policy "School isolation: payslips"
@@ -636,6 +837,76 @@ create policy "School isolation: payslips"
   using (
     payroll_run_id in (
       select id from payroll_runs where school_id = get_my_school_id()
+    )
+  );
+
+create policy "School isolation: books"
+  on books for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: book_loans"
+  on book_loans for all
+  using (
+    book_id in (select id from books where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: announcements"
+  on announcements for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: messages"
+  on messages for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: vehicles"
+  on vehicles for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: routes"
+  on routes for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: student_transport"
+  on student_transport for all
+  using (
+    student_id in (select id from students where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: inventory_items"
+  on inventory_items for all
+  using (school_id = get_my_school_id());
+
+create policy "School isolation: inventory_transactions"
+  on inventory_transactions for all
+  using (
+    item_id in (select id from inventory_items where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: behavior_records"
+  on behavior_records for all
+  using (
+    student_id in (select id from students where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: wellness_checkins"
+  on wellness_checkins for all
+  using (
+    student_id in (select id from students where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: parent_engagements"
+  on parent_engagements for all
+  using (
+    student_id in (select id from students where school_id = get_my_school_id())
+  );
+
+create policy "School isolation: lesson_plans"
+  on lesson_plans for all
+  using (
+    class_subject_id in (
+      select cs.id from class_subjects cs
+      join classes c on c.id = cs.class_id
+      where c.school_id = get_my_school_id()
     )
   );
 

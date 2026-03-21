@@ -52,8 +52,15 @@ export const AuthProvider = ({ children }) => {
           setProfile(null);
           setLoading(false);
         } else if (event === 'TOKEN_REFRESHED' && currentUser) {
-          // Silently refresh profile
+          // Silently refresh profile in the background
           loadProfile(currentUser.id);
+        } else if (event === 'USER_UPDATED' && currentUser) {
+          // User details changed (e.g. email, password) — reload profile
+          await loadProfile(currentUser.id);
+        } else if (event === 'PASSWORD_RECOVERY') {
+          // User clicked the password-reset link in their email.
+          // The session is now set; the ResetPasswordPage will handle the rest.
+          setLoading(false);
         }
       }
     );
@@ -101,6 +108,8 @@ export const AuthProvider = ({ children }) => {
     isTeacher: profile?.role === 'teacher',
     isStudent: profile?.role === 'student',
     isParent: profile?.role === 'parent',
+    // True when the user is logged in but has not yet completed school setup
+    needsOnboarding: !!user && initialized && !loading && !profile?.school_id,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

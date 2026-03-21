@@ -5,6 +5,7 @@ import { Check, ChevronRight, ChevronLeft, Loader2, Building2, BookOpen, Graduat
 import toast from 'react-hot-toast';
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
 import { useSchoolStore } from '../../store/schoolStore.js';
+import { supabase } from '../../services/supabaseClient.js';
 import { schoolsApi } from '../../services/api/schools.js';
 import { gradeLevelsApi } from '../../services/api/gradeLevels.js';
 import { academicYearsApi } from '../../services/api/academicYears.js';
@@ -271,8 +272,7 @@ export default function OnboardingPage() {
     // Step 4 → save everything
     setSaving(true);
     try {
-      // 1. Update school record
-      const school = await schoolsApi.update(schoolId, {
+      const schoolConfig = {
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
@@ -285,7 +285,24 @@ export default function OnboardingPage() {
           : formData.curriculum_mode === 'american' ? 'american_gpa'
           : 'ghana_basic',
         calendar_mode: formData.curriculum_mode === 'american' ? 'semester' : 'trimester',
-      });
+      };
+
+      let school;
+      let resolvedSchoolId = schoolId;
+
+      if (!schoolId) {
+        // New user (confirmed via email) — create the school via RPC which also
+        // links it to the user's profile (bypasses RLS using security definer).
+        const { data: newSchoolId, error: rpcError } = await supabase
+          .rpc('create_school_for_user', { school_data: schoolConfig });
+        if (rpcError) throw new Error(`Failed to create school: ${rpcError.message}`);
+        resolvedSchoolId = newSchoolId;
+        // Re-fetch the school record so we can pass it to setSchoolData
+        school = await schoolsApi.getById(resolvedSchoolId);
+      } else {
+        // Existing school — update it
+        school = await schoolsApi.update(schoolId, schoolConfig);
+      }
 
       setSchoolData(school);
 
@@ -294,19 +311,19 @@ export default function OnboardingPage() {
       const selected = formData.selectedGrades ?? allLevels.map(l => l.name);
       const levelRows = allLevels
         .filter(l => selected.includes(l.name))
-        .map(l => ({ school_id: schoolId, name: l.name, level_group: l.group, order_index: l.order }));
+        .map(l => ({ school_id: resolvedSchoolId, name: l.name, level_group: l.group, order_index: l.order }));
       await gradeLevelsApi.bulkCreate(levelRows);
 
       // 3. Create default academic year + terms
       const currentYear = new Date().getFullYear();
       const { data: ay } = await academicYearsApi.create({
-        school_id: schoolId,
+        school_id: resolvedSchoolId,
         label: `${currentYear}/${currentYear + 1}`,
         start_date: `${currentYear}-09-01`,
         end_date: `${currentYear + 1}-08-31`,
         is_current: true,
       });
-      const terms = generateGhanaTerms(ay.id, schoolId, `${currentYear}-09-01`);
+      const terms = generateGhanaTerms(ay.id, resolvedSchoolId, `${currentYear}-09-01`);
       await academicYearsApi.createTerms(terms);
 
       await refreshProfile();

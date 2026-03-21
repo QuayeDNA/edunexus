@@ -22,15 +22,19 @@ Open `.env.local` and fill in:
 
 | Variable | Where to find it |
 |---|---|
-| `VITE_SUPABASE_URL` | Supabase dashboard → Settings → API |
-| `VITE_SUPABASE_ANON_KEY` | Supabase dashboard → Settings → API |
+| `VITE_SUPABASE_URL` | [Supabase Dashboard](https://supabase.com/dashboard) → your project → **Project Settings → Data API → Project URL** |
+| `VITE_SUPABASE_ANON_KEY` | [Supabase Dashboard](https://supabase.com/dashboard) → your project → **Project Settings → Data API → Project API Keys → anon public** |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same page → **service_role** (secret) — only needed for `npm run seed` |
 | `VITE_PAYSTACK_PUBLIC_KEY` | Paystack dashboard → Settings → API Keys |
+
+> **Security note:** `SUPABASE_SERVICE_ROLE_KEY` bypasses Row Level Security.
+> Keep it out of client-side code and never commit it to version control.
 
 ### 3. Set up the database
 
 1. Create a new project at [supabase.com](https://supabase.com)
-2. Open the **SQL Editor** in your Supabase dashboard
-3. Run the complete schema from `src/db/schema.sql` (see below)
+2. In the left sidebar of your project, click **SQL Editor**
+3. Click **New query**, paste the entire contents of `src/db/schema.sql`, and click **Run**
 
 ### 4. Seed development data (optional)
 
