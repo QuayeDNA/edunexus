@@ -80,8 +80,8 @@ The project is structured into 11 phases. Complete each before starting the next
 | Phase | Status | Description |
 |---|---|---|
 | **1 — Foundation** | ✅ **Complete** | Project scaffold, auth, routing, onboarding wizard |
-| 2 — Admin Shell | 🔨 Next | Sidebar, header, dashboard with real data |
-| 3 — Students & Staff | ⬜ Pending | Full CRUD with tabbed profiles |
+| **2 — Admin Shell** | ✅ **Complete** | DataTable, StatCard, Avatar, ConfirmDialog, live dashboard, Students, Staff, Classes |
+| 3 — Academics | 🔨 Next | Subjects, timetable, assessments, report cards |
 | 4 — Academics | ⬜ Pending | Classes, timetable, assessments, report cards |
 | 5 — Attendance | ⬜ Pending | Mark attendance, reports, heatmap |
 | 6 — Finance | ⬜ Pending | Fees, payments, MoMo, receipts |

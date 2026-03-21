@@ -3,14 +3,21 @@ import { useEffect } from 'react';
 import Sidebar from '../ui/Sidebar.jsx';
 import Header from '../ui/Header.jsx';
 import WelcomeModal from '../ui/WelcomeModal.jsx';
+import NotificationsPanel from '../ui/NotificationsPanel.jsx';
 import { useUiStore } from '../../store/uiStore.js';
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
+import { useSchoolStore } from '../../store/schoolStore.js';
+import { useSchoolData, useCurrentTerm } from '../../hooks/useSchool.js';
 import { cn } from '../../utils/cn.js';
 
 export default function AdminLayout() {
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
-  const { profile } = useAuthContext();
+  const { profile, schoolId } = useAuthContext();
   const { showWelcomeModal, setShowWelcomeModal } = useUiStore();
+
+  // Bootstrap school data and current term into global store
+  useSchoolData(schoolId);
+  useCurrentTerm(schoolId);
 
   // Show welcome modal on first login
   useEffect(() => {
@@ -40,6 +47,9 @@ export default function AdminLayout() {
           </div>
         </main>
       </div>
+
+      {/* Notifications slide-out panel */}
+      <NotificationsPanel />
 
       {/* Welcome modal */}
       {showWelcomeModal && (
