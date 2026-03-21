@@ -3,7 +3,12 @@
  * Run with: npm run seed
  *
  * This seeds your Supabase database with realistic Ghanaian school data.
- * Requires VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in environment.
+ * Requires the following in .env.local:
+ *   VITE_SUPABASE_URL          — your project URL
+ *   SUPABASE_SERVICE_ROLE_KEY  — service role key (Project Settings → Data API)
+ *
+ * ⚠️  NEVER expose the service role key on the client side.
+ *     It is only safe to use in server-side/Node scripts like this one.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -11,10 +16,25 @@ import { config } from 'dotenv';
 
 config({ path: '.env.local' });
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
-);
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error(
+    '❌ Missing environment variables.\n' +
+    '   Ensure .env.local contains:\n' +
+    '     VITE_SUPABASE_URL\n' +
+    '     SUPABASE_SERVICE_ROLE_KEY\n' +
+    '   Find SUPABASE_SERVICE_ROLE_KEY in:\n' +
+    '   Supabase Dashboard → Project Settings → Data API → Service Role (secret)'
+  );
+  process.exit(1);
+}
+
+// Use the service role client so we can call auth.admin.* and bypass RLS
+const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { persistSession: false },
+});
 
 const SEED_EMAIL = 'admin@edunexus.demo';
 const SEED_PASSWORD = 'Demo1234!';

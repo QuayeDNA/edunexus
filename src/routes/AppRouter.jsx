@@ -13,6 +13,8 @@ import LoginPage from '../pages/auth/LoginPage.jsx';
 import RegisterPage from '../pages/auth/RegisterPage.jsx';
 import OnboardingPage from '../pages/auth/OnboardingPage.jsx';
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage.jsx';
+import AuthCallbackPage from '../pages/auth/AuthCallbackPage.jsx';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage.jsx';
 
 // ─── Admin Pages (lazy-loaded) ────────────────────────────────────────────────
 const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard.jsx'));
@@ -73,6 +75,10 @@ export default function AppRouter() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        {/* Handles magic-link, email-confirmation, and OAuth PKCE callbacks */}
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        {/* Handles password-reset links — user lands here after clicking email link */}
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Onboarding (auth required, no layout chrome) */}

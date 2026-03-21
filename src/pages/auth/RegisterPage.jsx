@@ -3,10 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Eye, EyeOff, Mail, Lock, User, Phone, Building2, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, Building2, Loader2, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../services/supabaseClient.js';
-import { schoolsApi } from '../../services/api/schools.js';
 import { cn } from '../../utils/cn.js';
 
 const schema = yup.object({
@@ -44,6 +43,8 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const {
     register,
@@ -57,37 +58,41 @@ export default function RegisterPage() {
 
   const onSubmit = async ({ schoolName, firstName, lastName, email, phone, password }) => {
     try {
-      // 1. Create school record first
-      const school = await schoolsApi.create({
-        name: schoolName,
-        email,
-        phone,
-        curriculum_mode: 'ghana_basic',
-        calendar_mode: 'trimester',
-        grading_system: 'ghana_basic',
-        currency_code: 'GHS',
-        timezone: 'Africa/Accra',
-        country: 'GH',
-      });
-
-      // 2. Sign up the user
+      // 1. Sign up the user first.
+      //    Supabase may require email confirmation depending on project settings.
+      //    A database trigger (handle_new_user) will auto-create a minimal profile row.
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: { data: { first_name: firstName, last_name: lastName } },
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            school_name: schoolName,
+            phone,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (authError) throw authError;
 
-      // 3. Create profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: authData.user.id,
-        school_id: school.id,
-        role: 'admin',
-        first_name: firstName,
-        last_name: lastName,
-        phone,
-        is_active: true,
-      });
+      // 2a. Email confirmation required — the session is null.
+      //     Show a "check your inbox" screen; school setup will happen after confirmation.
+      if (!authData.session) {
+        setRegisteredEmail(email.trim().toLowerCase());
+        setEmailSent(true);
+        return;
+      }
+
+      // 2b. Email confirmation disabled — session is available immediately.
+      //     Proceed to update the profile with name/phone details.
+      //     School creation will happen in the onboarding wizard via the
+      //     create_school_for_user RPC function.
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ first_name: firstName, last_name: lastName, phone })
+        .eq('id', authData.user.id);
+
       if (profileError) throw profileError;
 
       toast.success('Account created! Let\'s set up your school.');
@@ -96,6 +101,32 @@ export default function RegisterPage() {
       toast.error(err.message ?? 'Registration failed. Please try again.');
     }
   };
+
+  // ─── Email confirmation pending screen ──────────────────────────────────────
+  if (emailSent) {
+    return (
+      <div className="text-center animate-fade-in">
+        <div className="w-16 h-16 rounded-2xl bg-status-successBg flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-8 h-8 text-status-success" />
+        </div>
+        <h2 className="text-2xl font-bold text-text-primary mb-2">Check your inbox</h2>
+        <p className="text-text-secondary text-sm mb-2">
+          We sent a confirmation link to:
+        </p>
+        <p className="text-text-primary font-semibold text-sm mb-4">{registeredEmail}</p>
+        <p className="text-text-muted text-xs mb-6">
+          Click the link in that email to activate your account and continue school setup.
+          Didn't receive it? Check your spam folder.
+        </p>
+        <button
+          onClick={() => setEmailSent(false)}
+          className="text-sm text-brand-600 hover:underline"
+        >
+          ← Use a different email
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">

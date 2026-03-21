@@ -9,7 +9,7 @@ import { useAuthContext } from '../contexts/AuthContext.jsx';
  *   <ProtectedRoute allowedRoles={['admin']}> // auth + role
  */
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, role, loading, initialized } = useAuthContext();
+  const { isAuthenticated, role, loading, initialized, needsOnboarding } = useAuthContext();
   const location = useLocation();
 
   // Still initialising auth state — show nothing (avoids flash)
@@ -32,6 +32,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   // Not authenticated → redirect to login, preserving intended destination
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Authenticated but school setup not complete → redirect to onboarding
+  // (unless we're already on the onboarding page)
+  if (needsOnboarding && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Authenticated but role not allowed
