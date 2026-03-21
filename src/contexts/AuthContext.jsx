@@ -21,7 +21,13 @@ export const AuthProvider = ({ children }) => {
 
     const promise = (async () => {
       try {
-        const profileData = await authApi.getProfile(userId);
+        // ✅ ADDED: 10 second timeout to prevent indefinite hanging
+        const profilePromise = authApi.getProfile(userId);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Profile fetch timeout after 10s')), 10000)
+        );
+        
+        const profileData = await Promise.race([profilePromise, timeoutPromise]);
         setProfile(profileData);
         return profileData;
       } catch (err) {
@@ -52,23 +58,37 @@ export const AuthProvider = ({ children }) => {
 
         if (event === 'INITIAL_SESSION') {
           // Restore persisted session on page load / hard refresh
-          if (currentUser) {
-            setUser(currentUser);
-            await loadProfile(currentUser.id);
-          } else {
+          try {
+            if (currentUser) {
+              setUser(currentUser);
+              await loadProfile(currentUser.id);
+            } else {
+              setUser(null);
+              setProfile(null);
+            }
+          } catch (err) {
+            console.error('❌ [Auth] Failed to restore session on page load:', err);
             setUser(null);
             setProfile(null);
+          } finally {
+            // ✅ CRITICAL: Always mark auth as ready, even if profile load fails.
+            // This prevents the app from being stuck in loading state.
+            setLoading(false);
+            setInitialized(true);
           }
-          // Mark auth as ready regardless of whether a session exists
-          setLoading(false);
-          setInitialized(true);
 
         } else if (event === 'SIGNED_IN') {
           setUser(currentUser);
           if (currentUser) {
             setLoading(true);
-            await loadProfile(currentUser.id);
-            setLoading(false);
+            try {
+              await loadProfile(currentUser.id);
+            } catch (err) {
+              console.error('❌ [Auth] Failed to load profile after sign-in:', err);
+              setProfile(null);
+            } finally {
+              setLoading(false);
+            }
           }
 
         } else if (event === 'SIGNED_OUT') {
@@ -83,7 +103,12 @@ export const AuthProvider = ({ children }) => {
         } else if (event === 'USER_UPDATED') {
           if (currentUser) {
             setUser(currentUser);
-            await loadProfile(currentUser.id);
+            try {
+              await loadProfile(currentUser.id);
+            } catch (err) {
+              console.error('❌ [Auth] Failed to update profile:', err);
+              setProfile(null);
+            }
           }
         }
       }

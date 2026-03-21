@@ -639,10 +639,19 @@ create policy "School isolation: payslips"
     )
   );
 
--- Profiles: users can see their own profile + profiles in their school
-create policy "Profiles: own or same school"
-  on profiles for all
-  using (id = auth.uid() or school_id = get_my_school_id());
+-- Profiles: users can see their own profile ONLY
+-- ✅ FIXED: Removed all circular logic - no subqueries that touch profiles table
+create policy "Profiles: read own"
+  on profiles for select
+  using (id = auth.uid());
+
+create policy "Profiles: update own"
+  on profiles for update
+  using (id = auth.uid());
+
+create policy "Profiles: insert own"
+  on profiles for insert
+  with check (id = auth.uid());
 
 -- Notifications: users see only their own
 create policy "Notifications: own only"
