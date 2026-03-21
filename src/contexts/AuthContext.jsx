@@ -45,30 +45,46 @@ export const AuthProvider = ({ children }) => {
      * persisted session (or null). This replaces any need for a separate
      * getSession() bootstrap call and avoids the React Strict Mode double-
      * effect race condition entirely.
+     *
+     * IMPORTANT: Do NOT use async/await or call any Supabase API methods
+     * (database queries, auth calls, etc.) directly inside this callback.
+     * Supabase holds an internal auth lock while dispatching events; awaiting
+     * any call that needs the session from within the callback creates a
+     * deadlock — the query waits for the lock, the lock waits for the
+     * callback to return, and the app is stuck on the loading screen forever.
+     * Defer async work with setTimeout(0) to release the lock first.
      */
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         const currentUser = session?.user ?? null;
 
         if (event === 'INITIAL_SESSION') {
-          // Restore persisted session on page load / hard refresh
+          // Restore persisted session on page load / hard refresh.
           if (currentUser) {
             setUser(currentUser);
-            await loadProfile(currentUser.id);
+            // Defer the profile fetch so it runs outside the auth lock.
+            setTimeout(() => {
+              loadProfile(currentUser.id).finally(() => {
+                setLoading(false);
+                setInitialized(true);
+              });
+            }, 0);
           } else {
             setUser(null);
             setProfile(null);
+            // Mark auth as ready — no session to restore.
+            setLoading(false);
+            setInitialized(true);
           }
-          // Mark auth as ready regardless of whether a session exists
-          setLoading(false);
-          setInitialized(true);
 
         } else if (event === 'SIGNED_IN') {
           setUser(currentUser);
           if (currentUser) {
             setLoading(true);
-            await loadProfile(currentUser.id);
-            setLoading(false);
+            // Defer the profile fetch so it runs outside the auth lock.
+            setTimeout(() => {
+              loadProfile(currentUser.id).finally(() => setLoading(false));
+            }, 0);
           }
 
         } else if (event === 'SIGNED_OUT') {
@@ -77,13 +93,13 @@ export const AuthProvider = ({ children }) => {
           setLoading(false);
 
         } else if (event === 'TOKEN_REFRESHED') {
-          // Token silently refreshed — update user object, no loading flicker
+          // Token silently refreshed — update user object, no loading flicker.
           if (currentUser) setUser(currentUser);
 
         } else if (event === 'USER_UPDATED') {
           if (currentUser) {
             setUser(currentUser);
-            await loadProfile(currentUser.id);
+            setTimeout(() => loadProfile(currentUser.id), 0);
           }
         }
       }
