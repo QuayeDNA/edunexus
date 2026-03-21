@@ -84,14 +84,20 @@ export const authApi = {
    * Get profile for the currently logged-in user
    */
   getProfile: async (userId) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*, schools(*)')
-      .eq('id', userId)
-      .single();
-    if (error) throw error;
-    return data;
-  },
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')  // Remove the schools(*) join for now
+    .eq('id', userId)
+    .single();
+  
+  console.log('🔍 [API] getProfile result:', { data, error });
+  
+  if (error) {
+    console.error('❌ [API] getProfile error:', error);
+    throw error;
+  }
+  return data;
+},
 
   /**
    * Create initial admin profile after registration

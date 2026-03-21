@@ -54,12 +54,11 @@ export const AuthProvider = ({ children }) => {
         setUser(currentUser);
 
         if (event === 'SIGNED_IN' && currentUser) {
-          console.log('✅ [Auth] User signed in, loading profile...');
-          // DON'T set loading=true here - it causes the hang!
-          // Just load the profile silently
-          await loadProfile(currentUser.id);
-          console.log('✅ [Auth] Sign-in complete');
-        } else if (event === 'SIGNED_OUT') {
+  console.log('✅ [Auth] User signed in, loading profile...');
+  await loadProfile(currentUser.id);
+  setLoading(false);  // ← ADD THIS LINE!
+  console.log('✅ [Auth] Sign-in complete');
+} else if (event === 'SIGNED_OUT') {
           console.log('👋 [Auth] User signed out');
           setProfile(null);
           setLoading(false);
