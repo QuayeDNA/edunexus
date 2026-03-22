@@ -24,6 +24,8 @@ const StaffPage           = lazy(() => import('../pages/admin/staff/StaffPage.js
 const StaffNewPage        = lazy(() => import('../pages/admin/staff/StaffNewPage.jsx'));
 const StaffDetailPage     = lazy(() => import('../pages/admin/staff/StaffDetailPage.jsx'));
 const ClassesPage         = lazy(() => import('../pages/admin/academics/ClassesPage.jsx'));
+const ClassNewPage        = lazy(() => import('../pages/admin/academics/ClassNewPage.jsx'));
+const ClassDetailPage     = lazy(() => import('../pages/admin/academics/ClassDetailPage.jsx'));
 const SubjectsPage        = lazy(() => import('../pages/admin/academics/SubjectsPage.jsx'));
 const TimetablePage       = lazy(() => import('../pages/admin/academics/TimetablePage.jsx'));
 const AssessmentsPage     = lazy(() => import('../pages/admin/academics/AssessmentsPage.jsx'));
@@ -116,6 +118,8 @@ export default function AppRouter() {
 
         {/* Academics */}
         <Route path="classes"                element={S(ClassesPage)} />
+        <Route path="classes/new"            element={S(ClassNewPage)} />
+        <Route path="classes/:id"            element={S(ClassDetailPage)} />
         <Route path="academics/subjects"     element={S(SubjectsPage)} />
         <Route path="academics/timetable"    element={S(TimetablePage)} />
         <Route path="academics/assessments"  element={S(AssessmentsPage)} />

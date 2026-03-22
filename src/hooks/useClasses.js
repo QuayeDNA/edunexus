@@ -5,6 +5,7 @@ import db from '../db/schema.js';
 
 export const CLASSES_KEY = (filters) => ['classes', filters];
 export const CLASS_KEY = (id) => ['class', id];
+export const CLASS_ROSTER_KEY = (id) => ['class-roster', id];
 
 export const useClasses = (schoolId, academicYearId) =>
   useQuery({
@@ -37,7 +38,11 @@ export const useClass = (id) =>
 export const useCreateClass = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: classesApi.create,
+    mutationFn: async (data) => {
+      const { data: created, error } = await classesApi.create(data);
+      if (error) throw error;
+      return created;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['classes'] });
       toast.success('Class created successfully');
@@ -49,7 +54,11 @@ export const useCreateClass = () => {
 export const useUpdateClass = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }) => classesApi.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      const { data: updated, error } = await classesApi.update(id, data);
+      if (error) throw error;
+      return updated;
+    },
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['classes'] });
       qc.invalidateQueries({ queryKey: CLASS_KEY(id) });
@@ -62,7 +71,11 @@ export const useUpdateClass = () => {
 export const useDeleteClass = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: classesApi.delete,
+    mutationFn: async (id) => {
+      const { error } = await classesApi.delete(id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['classes'] });
       toast.success('Class deleted');
@@ -70,3 +83,15 @@ export const useDeleteClass = () => {
     onError: (err) => toast.error(err.message ?? 'Failed to delete class'),
   });
 };
+
+export const useClassRoster = (classId) =>
+  useQuery({
+    queryKey: CLASS_ROSTER_KEY(classId),
+    queryFn: async () => {
+      const { data, error } = await classesApi.getRoster(classId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!classId,
+    staleTime: 60_000,
+  });

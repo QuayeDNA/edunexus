@@ -80,6 +80,16 @@ export default function StudentsPage() {
     setSearchQuery('');
   };
 
+  const getCellValue = (column, row) => {
+    if (typeof column.accessorFn === 'function') {
+      return column.accessorFn(row, 0);
+    }
+    if (column.accessorKey) {
+      return row[column.accessorKey];
+    }
+    return row[column.id];
+  };
+
   const columns = useMemo(() => [
     col.display({
       id: 'student',
@@ -251,7 +261,7 @@ export default function StudentsPage() {
         {/* Toolbar */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border flex-wrap">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <div className="relative flex-1 min-w-50 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
             <input
               type="search"
@@ -392,7 +402,12 @@ export default function StudentsPage() {
                   <tr key={student.id} className="hover:bg-surface-muted/40 transition-colors group/row">
                     {columns.map(c => (
                       <td key={c.id} className="px-4 py-3 text-text-primary">
-                        {c.cell ? c.cell({ row: { original: student }, getValue: () => student[c.accessorKey || c.id] }) : null}
+                        {c.cell
+                          ? c.cell({
+                              row: { original: student },
+                              getValue: () => getCellValue(c, student),
+                            })
+                          : null}
                       </td>
                     ))}
                   </tr>

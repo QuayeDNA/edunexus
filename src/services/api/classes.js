@@ -4,7 +4,7 @@ export const classesApi = {
   list: (schoolId, academicYearId) => {
     let q = supabase
       .from('classes')
-      .select('*, grade_levels(name, level_group, order_index), profiles!class_teacher_id(first_name, last_name)', { count: 'exact' })
+      .select('*, grade_levels(name, level_group, order_index), profiles!class_teacher_id(first_name, last_name), academic_years(label)', { count: 'exact' })
       .eq('school_id', schoolId)
       .order('grade_levels(order_index)', { ascending: true });
     if (academicYearId) q = q.eq('academic_year_id', academicYearId);
@@ -14,7 +14,7 @@ export const classesApi = {
   getById: (id) =>
     supabase
       .from('classes')
-      .select('*, grade_levels(*), profiles!class_teacher_id(first_name, last_name, avatar_url)')
+      .select('*, grade_levels(*), profiles!class_teacher_id(first_name, last_name, avatar_url), academic_years(*)')
       .eq('id', id)
       .single(),
 
