@@ -37,12 +37,16 @@ export const useStudent = (id) =>
 export const useCreateStudent = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: studentsApi.create,
+    mutationFn: async (data) => {
+      const { data: created, error } = await studentsApi.create(data);
+      if (error) throw error;
+      return created;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['students'] });
-      toast.success('Student added successfully');
+      toast.success('Student enrolled successfully');
     },
-    onError: (err) => toast.error(err.message ?? 'Failed to add student'),
+    onError: (err) => toast.error(err.message ?? 'Failed to enroll student'),
   });
 };
 
@@ -65,7 +69,7 @@ export const useDeleteStudent = () => {
     mutationFn: studentsApi.delete,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['students'] });
-      toast.success('Student removed');
+      toast.success('Student record removed');
     },
     onError: (err) => toast.error(err.message ?? 'Failed to remove student'),
   });

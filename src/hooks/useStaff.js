@@ -37,8 +37,15 @@ export const useStaffMember = (id) =>
 export const useCreateStaff = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: staffApi.create,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['staff'] }); toast.success('Staff member added'); },
+    mutationFn: async (data) => {
+      const { data: created, error } = await staffApi.create(data);
+      if (error) throw error;
+      return created;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['staff'] });
+      toast.success('Staff member added successfully');
+    },
     onError: (err) => toast.error(err.message ?? 'Failed to add staff member'),
   });
 };
@@ -60,7 +67,10 @@ export const useDeleteStaff = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: staffApi.delete,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['staff'] }); toast.success('Staff member removed'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['staff'] });
+      toast.success('Staff member removed');
+    },
     onError: (err) => toast.error(err.message ?? 'Failed to remove staff member'),
   });
 };

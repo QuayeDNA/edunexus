@@ -4,6 +4,54 @@ import { authApi } from '../services/api/auth';
 
 const AuthContext = createContext(null);
 
+const PROFILE_CACHE_KEY = 'edunexus:auth:profile-cache';
+const PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
+const PROFILE_FETCH_TIMEOUT_MS = 15 * 1000;
+
+const safeReadProfileCache = () => {
+  try {
+    const raw = localStorage.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeProfileCache = (userId, profile) => {
+  try {
+    const payload = {
+      userId,
+      profile,
+      cachedAt: Date.now(),
+    };
+    localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore storage failures (private mode/quota)
+  }
+};
+
+const clearProfileCache = () => {
+  try {
+    localStorage.removeItem(PROFILE_CACHE_KEY);
+  } catch {
+    // Ignore storage failures
+  }
+};
+
+const withTimeout = (promise, timeoutMs, message) => {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timeoutId);
+  });
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser]               = useState(null);
   const [profile, setProfile]         = useState(null);
@@ -13,7 +61,9 @@ export const AuthProvider = ({ children }) => {
   // Prevent duplicate profile fetches for the same userId
   const profileFetchRef = useRef(null);
 
-  const loadProfile = useCallback(async (userId) => {
+  const loadProfile = useCallback(async (userId, options = {}) => {
+    const { useTimeout = true } = options;
+
     // Already fetching for this user — return the in-flight promise
     if (profileFetchRef.current?.userId === userId) {
       return profileFetchRef.current.promise;
@@ -21,14 +71,13 @@ export const AuthProvider = ({ children }) => {
 
     const promise = (async () => {
       try {
-        // ✅ ADDED: 10 second timeout to prevent indefinite hanging
         const profilePromise = authApi.getProfile(userId);
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Profile fetch timeout after 10s')), 10000)
-        );
-        
-        const profileData = await Promise.race([profilePromise, timeoutPromise]);
+        const profileData = useTimeout
+          ? await withTimeout(profilePromise, PROFILE_FETCH_TIMEOUT_MS, `Profile fetch timeout after ${PROFILE_FETCH_TIMEOUT_MS / 1000}s`)
+          : await profilePromise;
+
         setProfile(profileData);
+        if (profileData) writeProfileCache(userId, profileData);
         return profileData;
       } catch (err) {
         console.error('❌ [Auth] Could not load profile:', err.message);
@@ -61,15 +110,35 @@ export const AuthProvider = ({ children }) => {
           try {
             if (currentUser) {
               setUser(currentUser);
-              await loadProfile(currentUser.id);
+
+              // Hydrate immediately from cache to avoid blocking UI on every refresh.
+              const cached = safeReadProfileCache();
+              const isSameUser = cached?.userId === currentUser.id;
+              const isFresh = isSameUser && Date.now() - (cached.cachedAt ?? 0) < PROFILE_CACHE_TTL_MS;
+
+              if (isSameUser && cached.profile) {
+                setProfile(cached.profile);
+              }
+
+              // Mark app ready immediately after session is restored.
+              setLoading(false);
+              setInitialized(true);
+
+              // Revalidate profile only when cache is stale or missing.
+              if (!isFresh) {
+                void loadProfile(currentUser.id, { useTimeout: false });
+              }
+              return;
             } else {
               setUser(null);
               setProfile(null);
+              clearProfileCache();
             }
           } catch (err) {
             console.error('❌ [Auth] Failed to restore session on page load:', err);
             setUser(null);
             setProfile(null);
+            clearProfileCache();
           } finally {
             // ✅ CRITICAL: Always mark auth as ready, even if profile load fails.
             // This prevents the app from being stuck in loading state.
@@ -95,6 +164,7 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
           setProfile(null);
           setLoading(false);
+          clearProfileCache();
 
         } else if (event === 'TOKEN_REFRESHED') {
           // Token silently refreshed — update user object, no loading flicker
@@ -139,6 +209,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setProfile(null);
       setLoading(false);
+      clearProfileCache();
     }
   };
 
