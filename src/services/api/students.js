@@ -49,12 +49,12 @@ export const studentsApi = {
     return data.publicUrl;
   },
 
-  getAttendanceSummary: (studentId, termId) =>
+  getAttendanceSummary: (studentId) =>
     supabase
       .from('attendance')
-      .select('status')
+      .select('status, date')
       .eq('student_id', studentId)
-      .eq('term_id', termId),
+      .order('date', { ascending: false }),
 
   getReportCards: (studentId) =>
     supabase

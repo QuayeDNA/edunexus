@@ -158,6 +158,7 @@ export default function AppRouter() {
       >
         <Route index element={<Navigate to="/teacher/dashboard" replace />} />
         <Route path="dashboard"                element={S(TeacherDashboard)} />
+        <Route path="attendance"               element={S(TeacherAttendancePage)} />
         <Route path="attendance/:classId"      element={S(TeacherAttendancePage)} />
         <Route path="grades/:classId"          element={S(TeacherGradesPage)} />
       </Route>
