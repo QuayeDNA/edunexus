@@ -39,7 +39,7 @@ After completing each phase, output a summary of what was built and what comes n
 Framework:        React 19 (with React Compiler enabled)
 Build Tool:       Vite 6
 Language:         JavaScript (JSX) — no TypeScript for speed of development
-Styling:          Tailwind CSS v4 (CSS-first config)
+Styling:          Tailwind CSS v4 (No tailwind.config use v4.X type design definition in the index.css)
 Component Base:   shadcn/ui (copy components into src/components/ui/)
 Icons:            lucide-react
 Routing:          React Router v7
