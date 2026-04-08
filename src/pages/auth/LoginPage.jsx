@@ -25,22 +25,28 @@ const ROLE_DASHBOARDS = {
 export default function LoginPage() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { signIn, isAuthenticated, role } = useAuthContext();
+  const { signIn, isAuthenticated, role, initialized, profileStatus } = useAuthContext();
 
   const [showPassword,    setShowPassword]    = useState(false);
   const [magicLinkSent,   setMagicLinkSent]   = useState(false);
   const [magicLinkEmail,  setMagicLinkEmail]  = useState('');
-  const [signingIn,       setSigningIn]       = useState(false);
 
   const from = location.state?.from?.pathname ?? null;
 
-  // ── Navigate once auth state is settled after sign-in ──────────────────────
+  // Navigate once auth/profile state settles.
   useEffect(() => {
-    if (isAuthenticated && role && signingIn) {
+    if (!initialized || !isAuthenticated) return;
+
+    if (role) {
       const dest = from ?? ROLE_DASHBOARDS[role] ?? '/admin/dashboard';
       navigate(dest, { replace: true });
+      return;
     }
-  }, [isAuthenticated, role, signingIn, from, navigate]);
+
+    if (profileStatus === 'ready' || profileStatus === 'missing') {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [initialized, isAuthenticated, role, profileStatus, from, navigate]);
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, getValues } = useForm({
     resolver: yupResolver(schema),
@@ -48,11 +54,8 @@ export default function LoginPage() {
 
   const onSubmit = async ({ email, password }) => {
     try {
-      setSigningIn(true);
       await signIn(email, password);
-      // Navigation happens in the useEffect above once role is populated
     } catch (err) {
-      setSigningIn(false);
       toast.error(err.message ?? 'Invalid email or password');
     }
   };
@@ -145,8 +148,8 @@ export default function LoginPage() {
           {errors.password && <p className="mt-1 text-xs text-status-danger">{errors.password.message}</p>}
         </div>
 
-        <button type="submit" disabled={isSubmitting || signingIn} className="btn-primary w-full">
-          {(isSubmitting || signingIn)
+        <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
+          {isSubmitting
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
             : 'Sign in'
           }

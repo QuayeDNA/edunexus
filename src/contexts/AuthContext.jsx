@@ -4,9 +4,11 @@ import { authApi } from '../services/api/auth';
 
 const AuthContext = createContext(null);
 
-const PROFILE_CACHE_KEY = 'edunexus:auth:profile-cache';
-const PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
-const PROFILE_FETCH_TIMEOUT_MS = 15 * 1000;
+const PROFILE_CACHE_KEY = 'edunexus:auth:profile-cache:v2';
+const PROFILE_CACHE_TTL_MS = 30 * 60 * 1000;
+const PROFILE_FETCH_TIMEOUT_MS = 8 * 1000;
+const PROFILE_FETCH_RETRIES = 2;
+const PROFILE_RETRY_DELAY_MS = 1200;
 
 const safeReadProfileCache = () => {
   try {
@@ -23,6 +25,7 @@ const safeReadProfileCache = () => {
 const writeProfileCache = (userId, profile) => {
   try {
     const payload = {
+      version: 2,
       userId,
       profile,
       cachedAt: Date.now(),
@@ -52,187 +55,276 @@ const withTimeout = (promise, timeoutMs, message) => {
   });
 };
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const readCachedProfileForUser = (userId) => {
+  const cached = safeReadProfileCache();
+  if (!cached || cached.userId !== userId || !cached.profile) {
+    return { profile: null, isFresh: false };
+  }
+
+  const age = Date.now() - (cached.cachedAt ?? 0);
+  return {
+    profile: cached.profile,
+    isFresh: age < PROFILE_CACHE_TTL_MS,
+  };
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]               = useState(null);
-  const [profile, setProfile]         = useState(null);
-  const [loading, setLoading]         = useState(true);
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [profileStatus, setProfileStatus] = useState('idle');
+  const [profileError, setProfileError] = useState(null);
   const [initialized, setInitialized] = useState(false);
 
   // Prevent duplicate profile fetches for the same userId
   const profileFetchRef = useRef(null);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    setProfile(null);
+    setProfileStatus('idle');
+    setProfileError(null);
+    profileFetchRef.current = null;
+    clearProfileCache();
+  }, []);
 
   const loadProfile = useCallback(async (userId, options = {}) => {
-    const { useTimeout = true } = options;
+    const {
+      useTimeout = true,
+      retries = PROFILE_FETCH_RETRIES,
+      background = false,
+      force = false,
+    } = options;
+
+    if (!userId) return null;
 
     // Already fetching for this user — return the in-flight promise
-    if (profileFetchRef.current?.userId === userId) {
+    if (!force && profileFetchRef.current?.userId === userId) {
       return profileFetchRef.current.promise;
     }
 
-    const promise = (async () => {
-      try {
-        const profilePromise = authApi.getProfile(userId);
-        const profileData = useTimeout
-          ? await withTimeout(profilePromise, PROFILE_FETCH_TIMEOUT_MS, `Profile fetch timeout after ${PROFILE_FETCH_TIMEOUT_MS / 1000}s`)
-          : await profilePromise;
+    if (!background) {
+      setProfileStatus('loading');
+    }
+    setProfileError(null);
 
-        setProfile(profileData);
-        if (profileData) writeProfileCache(userId, profileData);
-        return profileData;
-      } catch (err) {
-        console.error('❌ [Auth] Could not load profile:', err.message);
-        setProfile(null);
-        return null;
-      } finally {
-        profileFetchRef.current = null;
-      }
-    })();
+    const request = (async () => {
+      let attempt = 0;
+      let lastError = null;
 
-    profileFetchRef.current = { userId, promise };
-    return promise;
-  }, []);
+      while (attempt <= retries) {
+        try {
+          const profilePromise = authApi.getProfile(userId);
+          const profileData = useTimeout
+            ? await withTimeout(
+                profilePromise,
+                PROFILE_FETCH_TIMEOUT_MS,
+                `Profile fetch timeout after ${PROFILE_FETCH_TIMEOUT_MS / 1000}s`
+              )
+            : await profilePromise;
 
-  useEffect(() => {
-    /**
-     * Use onAuthStateChange as the SINGLE source of truth.
-     *
-     * Supabase fires INITIAL_SESSION immediately on subscribe with the
-     * persisted session (or null). This replaces any need for a separate
-     * getSession() bootstrap call and avoids the React Strict Mode double-
-     * effect race condition entirely.
-     */
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        const currentUser = session?.user ?? null;
-
-        if (event === 'INITIAL_SESSION') {
-          // Restore persisted session on page load / hard refresh
-          try {
-            if (currentUser) {
-              setUser(currentUser);
-
-              // Hydrate immediately from cache to avoid blocking UI on every refresh.
-              const cached = safeReadProfileCache();
-              const isSameUser = cached?.userId === currentUser.id;
-              const isFresh = isSameUser && Date.now() - (cached.cachedAt ?? 0) < PROFILE_CACHE_TTL_MS;
-
-              if (isSameUser && cached.profile) {
-                setProfile(cached.profile);
-              }
-
-              // Mark app ready immediately after session is restored.
-              setLoading(false);
-              setInitialized(true);
-
-              // Revalidate profile only when cache is stale or missing.
-              if (!isFresh) {
-                void loadProfile(currentUser.id, { useTimeout: false });
-              }
-              return;
-            } else {
-              setUser(null);
-              setProfile(null);
-              clearProfileCache();
-            }
-          } catch (err) {
-            console.error('❌ [Auth] Failed to restore session on page load:', err);
-            setUser(null);
+          if (!profileData) {
             setProfile(null);
             clearProfileCache();
-          } finally {
-            // ✅ CRITICAL: Always mark auth as ready, even if profile load fails.
-            // This prevents the app from being stuck in loading state.
-            setLoading(false);
-            setInitialized(true);
+            setProfileStatus('missing');
+            return null;
           }
 
-        } else if (event === 'SIGNED_IN') {
-          setUser(currentUser);
-          if (currentUser) {
-            setLoading(true);
-            try {
-              await loadProfile(currentUser.id);
-            } catch (err) {
-              console.error('❌ [Auth] Failed to load profile after sign-in:', err);
-              setProfile(null);
-            } finally {
-              setLoading(false);
-            }
-          }
+          setProfile(profileData);
+          writeProfileCache(userId, profileData);
+          setProfileStatus('ready');
+          setProfileError(null);
+          return profileData;
+        } catch (err) {
+          lastError = err;
+          attempt += 1;
 
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setProfile(null);
-          setLoading(false);
-          clearProfileCache();
-
-        } else if (event === 'TOKEN_REFRESHED') {
-          // Token silently refreshed — update user object, no loading flicker
-          if (currentUser) setUser(currentUser);
-
-        } else if (event === 'USER_UPDATED') {
-          if (currentUser) {
-            setUser(currentUser);
-            try {
-              await loadProfile(currentUser.id);
-            } catch (err) {
-              console.error('❌ [Auth] Failed to update profile:', err);
-              setProfile(null);
-            }
+          if (attempt <= retries) {
+            await sleep(PROFILE_RETRY_DELAY_MS * attempt);
           }
         }
+      }
+
+      console.error('❌ [Auth] Could not load profile:', lastError?.message ?? lastError);
+      setProfileError(lastError);
+
+      // Keep the last known good profile to avoid route deadlocks.
+      setProfileStatus(profileRef.current ? 'ready' : 'error');
+      return null;
+    })();
+
+    profileFetchRef.current = { userId, promise: request };
+
+    request.finally(() => {
+      if (profileFetchRef.current?.promise === request) {
+        profileFetchRef.current = null;
+      }
+    });
+
+    return request;
+  }, []);
+
+  const handleAuthEvent = useCallback(
+    async (event, session) => {
+      const currentUser = session?.user ?? null;
+
+      if (event === 'INITIAL_SESSION') {
+        if (!currentUser) {
+          clearAuthState();
+          setInitialized(true);
+          return;
+        }
+
+        setUser(currentUser);
+
+        const cached = readCachedProfileForUser(currentUser.id);
+        if (cached.profile) {
+          setProfile(cached.profile);
+          setProfileStatus('ready');
+        } else {
+          setProfile(null);
+          setProfileStatus('loading');
+        }
+
+        setProfileError(null);
+        setInitialized(true);
+
+        if (!cached.isFresh) {
+          void loadProfile(currentUser.id, {
+            useTimeout: true,
+            retries: PROFILE_FETCH_RETRIES,
+            background: !!cached.profile,
+            force: true,
+          });
+        }
+        return;
+      }
+
+      if (event === 'SIGNED_IN') {
+        if (!currentUser) {
+          clearAuthState();
+          setInitialized(true);
+          return;
+        }
+
+        setUser(currentUser);
+        setInitialized(true);
+        setProfileError(null);
+
+        const cached = readCachedProfileForUser(currentUser.id);
+        if (cached.profile) {
+          setProfile(cached.profile);
+          setProfileStatus('ready');
+        } else {
+          setProfile(null);
+          setProfileStatus('loading');
+        }
+
+        void loadProfile(currentUser.id, {
+          useTimeout: true,
+          retries: PROFILE_FETCH_RETRIES,
+          background: false,
+          force: true,
+        });
+        return;
+      }
+
+      if (event === 'TOKEN_REFRESHED') {
+        if (currentUser) {
+          setUser(currentUser);
+        }
+        return;
+      }
+
+      if (event === 'USER_UPDATED') {
+        if (currentUser) {
+          setUser(currentUser);
+          void loadProfile(currentUser.id, {
+            useTimeout: true,
+            retries: 1,
+            background: true,
+            force: true,
+          });
+        }
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
+        clearAuthState();
+        setInitialized(true);
+      }
+    },
+    [clearAuthState, loadProfile]
+  );
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        void handleAuthEvent(event, session);
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [loadProfile]);
+  }, [handleAuthEvent]);
 
-  // ── signIn ──────────────────────────────────────────────────────────────────
-  // We set loading=true here; the SIGNED_IN event will load profile + clear it.
   const signIn = async (email, password) => {
-    setLoading(true);
-    try {
-      return await authApi.signIn(email, password);
-    } catch (err) {
-      setLoading(false);
-      throw err;
-    }
+    return authApi.signIn(email, password);
   };
 
-  // ── signOut ─────────────────────────────────────────────────────────────────
   const signOut = async () => {
-    setLoading(true);
     try {
       await authApi.signOut();
     } finally {
-      // SIGNED_OUT event will also clear state, but be defensive here too
-      setUser(null);
-      setProfile(null);
-      setLoading(false);
-      clearProfileCache();
+      clearAuthState();
+      setInitialized(true);
     }
   };
 
-  // ── refreshProfile ──────────────────────────────────────────────────────────
   const refreshProfile = () => {
-    if (user) return loadProfile(user.id);
+    if (!user?.id) return null;
+    return loadProfile(user.id, {
+      useTimeout: true,
+      retries: 1,
+      background: false,
+      force: true,
+    });
   };
+
+  const loading = !initialized;
+  const role = profile?.role ?? null;
+  const schoolId = profile?.school_id ?? null;
+  const profileLoading = profileStatus === 'loading';
+  const profileReady = profileStatus === 'ready';
+  const profileMissing = profileStatus === 'missing';
+  const hasProfileIssue = profileStatus === 'error' || profileStatus === 'missing';
 
   const value = {
     user,
     profile,
     loading,
     initialized,
+    profileStatus,
+    profileError,
+    profileLoading,
+    profileReady,
+    profileMissing,
+    hasProfileIssue,
     signIn,
     signOut,
     refreshProfile,
     isAuthenticated: !!user,
-    role:      profile?.role ?? null,
-    schoolId:  profile?.school_id ?? null,
-    isAdmin:   profile?.role === 'admin' || profile?.role === 'super_admin',
-    isTeacher: profile?.role === 'teacher',
-    isStudent: profile?.role === 'student',
-    isParent:  profile?.role === 'parent',
+    role,
+    schoolId,
+    isAdmin: role === 'admin' || role === 'super_admin',
+    isTeacher: role === 'teacher',
+    isStudent: role === 'student',
+    isParent: role === 'parent',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

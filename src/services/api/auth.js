@@ -84,31 +84,15 @@ export const authApi = {
    * Get profile for the currently logged-in user
    */
   getProfile: async (userId) => {
-  try {
-    // ✅ IMPROVED: Better error handling and logging
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
-    
-    if (error) {
-      // PGRST116 = no rows found, which is OK for new users
-      if (error.code === 'PGRST116') {
-        console.warn('⚠️ [API] No profile found for user, returning null:', userId);
-        return null;
-      }
-      console.error('❌ [API] getProfile error:', error);
-      throw error;
-    }
-    
-    console.log('✅ [API] Profile loaded successfully:', data?.id);
-    return data;
-  } catch (err) {
-    console.error('❌ [API] getProfile exception:', err.message);
-    throw err;
-  }
-},
+      .maybeSingle();
+
+    if (error) throw error;
+    return data ?? null;
+  },
 
   /**
    * Create initial admin profile after registration

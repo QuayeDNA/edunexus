@@ -39,7 +39,9 @@ export const useNotifications = () => {
       })
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      channel.unsubscribe();
+    };
   }, [user?.id, qc]);
 
   return query;

@@ -3,9 +3,18 @@ import { useAuthContext } from '../../contexts/AuthContext.jsx';
 import { APP_NAME, APP_TAGLINE } from '../../utils/constants.js';
 
 export default function AuthLayout() {
-  const { isAuthenticated, role, initialized, loading } = useAuthContext();
+  const {
+    isAuthenticated,
+    role,
+    initialized,
+    loading,
+    profileStatus,
+    profileError,
+    refreshProfile,
+    signOut,
+  } = useAuthContext();
 
-  // If we are still resolving auth state, keep the loader until it's settled.
+  // Session bootstrap loader
   if (!initialized || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-muted">
@@ -16,12 +25,6 @@ export default function AuthLayout() {
     );
   }
 
-  // Authenticated but role not set yet: go to onboarding
-  if (isAuthenticated && !role) {
-    return <Navigate to="/onboarding" replace />;
-  }
-
-  // Redirect already-authenticated users to their dashboard
   if (isAuthenticated && role) {
     const dashboards = {
       admin: '/admin/dashboard',
@@ -33,6 +36,43 @@ export default function AuthLayout() {
     return <Navigate to={dashboards[role] ?? '/admin/dashboard'} replace />;
   }
 
+  if (isAuthenticated && profileStatus === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-muted px-4">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-sm text-text-muted">Loading your account profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated && (profileStatus === 'error' || profileStatus === 'missing')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-muted px-4">
+        <div className="w-full max-w-md bg-white rounded-xl border border-border shadow-card p-6 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-text-primary">Could not restore account profile</h2>
+            <p className="text-sm text-text-secondary mt-1">
+              {profileError?.message ?? 'Please retry profile sync or sign out and sign in again.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={refreshProfile} className="btn-primary text-sm">Retry</button>
+            <button onClick={signOut} className="btn-secondary text-sm">Sign out</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Authenticated, profile loaded, no role/school assignment yet.
+  if (isAuthenticated) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   return (
     <div className="min-h-screen flex">
       {/* Left panel — branding */}
@@ -40,7 +80,7 @@ export default function AuthLayout() {
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-20 -right-20 w-96 h-96 rounded-full bg-brand-500 opacity-40" />
-          <div className="absolute -bottom-32 -left-16 w-[480px] h-[480px] rounded-full bg-brand-700 opacity-50" />
+          <div className="absolute -bottom-32 -left-16 w-120 h-120 rounded-full bg-brand-700 opacity-50" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-brand-400 opacity-20" />
         </div>
 
