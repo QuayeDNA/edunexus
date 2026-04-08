@@ -653,6 +653,14 @@ create policy "School isolation: class_subjects"
     )
   );
 
+create policy "School isolation: timetable_slots"
+  on timetable_slots for all
+  using (
+    class_id in (
+      select id from classes where school_id = get_my_school_id()
+    )
+  );
+
 create policy "School isolation: payments"
   on payments for all
   using (school_id = get_my_school_id());
