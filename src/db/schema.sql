@@ -689,6 +689,14 @@ create policy "School isolation: assessment_scores"
     )
   );
 
+create policy "School isolation: report_cards"
+  on report_cards for all
+  using (
+    class_id in (
+      select id from classes where school_id = get_my_school_id()
+    )
+  );
+
 create policy "School isolation: payments"
   on payments for all
   using (school_id = get_my_school_id());

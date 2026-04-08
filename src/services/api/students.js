@@ -59,7 +59,7 @@ export const studentsApi = {
   getReportCards: (studentId) =>
     supabase
       .from('report_cards')
-      .select('*, terms(label), academic_years(label), classes(name)')
+      .select('*, terms(label), academic_years(label), classes:classes!report_cards_class_id_fkey(name), next_class:classes!report_cards_next_class_id_fkey(name)')
       .eq('student_id', studentId)
       .order('generated_at', { ascending: false }),
 };
