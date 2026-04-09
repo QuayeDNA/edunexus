@@ -20,6 +20,7 @@ create table if not exists schools (
   currency_code text default 'GHS',
   timezone text default 'Africa/Accra',
   country text default 'GH',
+  lifecycle_status text not null default 'active' check (lifecycle_status in ('active','suspended')),
   created_at timestamptz default now()
 );
 
@@ -444,6 +445,18 @@ create table if not exists notifications (
   type text,
   is_read boolean default false,
   action_url text,
+  created_at timestamptz default now()
+);
+
+create table if not exists platform_audit_events (
+  id uuid primary key default gen_random_uuid(),
+  actor_user_id uuid references profiles(id) on delete set null,
+  actor_name text,
+  action text not null,
+  target_type text,
+  target_id uuid,
+  target_name text,
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz default now()
 );
 
