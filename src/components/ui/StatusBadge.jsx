@@ -22,6 +22,16 @@ const STYLES = {
   Approved:     'bg-status-successBg text-status-success',
   Processed:    'bg-brand-50 text-brand-600',
   Cancelled:    'bg-status-dangerBg text-status-danger',
+  Sent:         'bg-status-successBg text-status-success',
+  Delivered:    'bg-status-successBg text-status-success',
+  Queued:       'bg-status-warningBg text-status-warning',
+  Scheduled:    'bg-status-infoBg text-status-info',
+  Failed:       'bg-status-dangerBg text-status-danger',
+  Expired:      'bg-surface-hover text-text-muted',
+  Low:          'bg-surface-hover text-text-muted',
+  Normal:       'bg-brand-50 text-brand-600',
+  High:         'bg-status-warningBg text-status-warning',
+  Urgent:       'bg-status-dangerBg text-status-danger',
   Borrowed:     'bg-status-infoBg text-status-info',
   Returned:     'bg-status-successBg text-status-success',
   Lost:         'bg-status-dangerBg text-status-danger',
@@ -52,7 +62,7 @@ export default function StatusBadge({ status, size = 'md', dot = false, classNam
       )}
     >
       {dot && (
-        <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0" />
+        <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
       )}
       {status}
     </span>

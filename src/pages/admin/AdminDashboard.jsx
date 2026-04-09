@@ -20,6 +20,8 @@ import {
   useMonthlyFeeAnalytics,
   useRecentPayments,
 } from '../../hooks/useFinance.js';
+import { useAnnouncements } from '../../hooks/useMessaging.js';
+import { useUnreadCount } from '../../hooks/useNotifications.js';
 import StatCard from '../../components/ui/StatCard.jsx';
 import Avatar from '../../components/ui/Avatar.jsx';
 import { formatGHS, formatRelativeTime } from '../../utils/formatters.js';
@@ -32,6 +34,13 @@ const ENROLLMENT_DATA = [
   { term: 'T1 \'24', count: 824 },
   { term: 'T2 \'24', count: 847 },
 ];
+
+const ANNOUNCEMENT_PRIORITY_STYLES = {
+  Low: 'bg-surface-hover text-text-muted',
+  Normal: 'bg-brand-50 text-brand-700',
+  High: 'bg-status-warningBg text-status-warning',
+  Urgent: 'bg-status-dangerBg text-status-danger',
+};
 
 // ─── Custom Tooltip ────────────────────────────────────────────────────────────
 function ChartTooltip({ active, payload, label }) {
@@ -110,10 +119,17 @@ export default function AdminDashboard() {
     schoolId,
     5
   );
+  const { data: unreadCount = 0 } = useUnreadCount();
+  const { data: announcementsData, isLoading: announcementsLoading } = useAnnouncements({
+    schoolId,
+    activeOnly: true,
+    limit: 3,
+  });
 
   const totalStudents = studentsData?.count ?? studentsData?.data?.length ?? 0;
   const totalStaff = staffData?.count ?? staffData?.data?.length ?? 0;
   const totalClasses = classesData?.data?.length ?? 0;
+  const pinnedAnnouncements = announcementsData?.data ?? [];
   const feeCollectionRate = Number(financeSummary?.collectionRate ?? 0);
   const totalCollected = Number(financeSummary?.totalPaid ?? 0);
   const outstandingAmount = Number(financeSummary?.outstanding ?? 0);
@@ -186,6 +202,40 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* ── Pinned Announcements ───────────────────────────────────────────── */}
+      {!announcementsLoading && pinnedAnnouncements.length > 0 && (
+        <div className="bg-white rounded-xl border border-border shadow-card">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <div>
+              <h3 className="text-sm font-semibold text-text-primary">Announcement Board</h3>
+              <p className="text-xs text-text-muted mt-0.5">Pinned communication updates</p>
+            </div>
+            <Link to="/admin/messaging" className="text-xs text-brand-600 hover:underline font-medium">
+              Manage announcements →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4">
+            {pinnedAnnouncements.map((row) => (
+              <div key={row.id} className="border border-border rounded-xl p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span
+                    className={cn(
+                      'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold',
+                      ANNOUNCEMENT_PRIORITY_STYLES[row.priority] ?? 'bg-surface-hover text-text-muted'
+                    )}
+                  >
+                    {row.priority ?? 'Normal'}
+                  </span>
+                  <span className="text-[11px] text-text-muted">{formatRelativeTime(row.publish_at)}</span>
+                </div>
+                <p className="text-sm font-semibold text-text-primary line-clamp-1">{row.title}</p>
+                <p className="text-xs text-text-secondary mt-1 line-clamp-2">{row.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Stat Cards ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -235,7 +285,13 @@ export default function AdminDashboard() {
             to: '/admin/finance/fees',
             color: 'text-status-warning',
           },
-          { label: 'Unread Notifications', value: '12', icon: Bell, to: '/admin/messaging', color: 'text-status-info' },
+          {
+            label: 'Unread Notifications',
+            value: unreadCount,
+            icon: Bell,
+            to: '/admin/messaging',
+            color: 'text-status-info',
+          },
         ].map(({ label, value, icon: Icon, to, color }) => (
           <Link
             key={to}

@@ -90,6 +90,11 @@ The project is structured into 11 phases. Complete each before starting the next
 | 9 — Innovative Features | ⬜ Pending | Behavior gamification, wellness, AI insights |
 | 10 — Production | ⬜ Pending | Offline sync, SMS, Paystack, PWA, RLS |
 
+### Future Feature Roadmaps
+
+- Attendance roadmap: `docs/ATTENDANCE_TODO.md`
+- Messaging roadmap: `docs/MESSAGING_TODO.md`
+
 ---
 
 ## Project Structure

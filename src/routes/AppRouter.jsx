@@ -48,6 +48,7 @@ const SettingsPage        = lazy(() => import('../pages/admin/settings/SettingsP
 const TeacherDashboard      = lazy(() => import('../pages/teacher/TeacherDashboard.jsx'));
 const TeacherAttendancePage = lazy(() => import('../pages/teacher/TeacherAttendancePage.jsx'));
 const TeacherGradesPage     = lazy(() => import('../pages/teacher/TeacherGradesPage.jsx'));
+const TeacherMessagingPage  = lazy(() => import('../pages/teacher/TeacherMessagingPage.jsx'));
 
 // ─── Student / Parent Pages ───────────────────────────────────────────────────
 const StudentDashboard = lazy(() => import('../pages/student/StudentDashboard.jsx'));
@@ -161,6 +162,7 @@ export default function AppRouter() {
         <Route path="attendance"               element={S(TeacherAttendancePage)} />
         <Route path="attendance/:classId"      element={S(TeacherAttendancePage)} />
         <Route path="grades/:classId"          element={S(TeacherGradesPage)} />
+        <Route path="messaging"                element={S(TeacherMessagingPage)} />
       </Route>
 
       {/* ── Student ────────────────────────────────────────────────────────── */}
