@@ -1,6 +1,11 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
-import { APP_NAME, APP_TAGLINE } from '../../utils/constants.js';
+import {
+  APP_NAME,
+  APP_ROUTES,
+  APP_TAGLINE,
+  getRoleDashboardRoute,
+} from '../../utils/constants.js';
 
 export default function AuthLayout() {
   const {
@@ -26,14 +31,7 @@ export default function AuthLayout() {
   }
 
   if (isAuthenticated && role) {
-    const dashboards = {
-      admin: '/admin/dashboard',
-      super_admin: '/admin/dashboard',
-      teacher: '/teacher/dashboard',
-      student: '/student/dashboard',
-      parent: '/parent/dashboard',
-    };
-    return <Navigate to={dashboards[role] ?? '/admin/dashboard'} replace />;
+    return <Navigate to={getRoleDashboardRoute(role)} replace />;
   }
 
   if (isAuthenticated && profileStatus === 'loading') {
@@ -70,7 +68,7 @@ export default function AuthLayout() {
 
   // Authenticated, profile loaded, no role/school assignment yet.
   if (isAuthenticated) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to={APP_ROUTES.ONBOARDING} replace />;
   }
 
   return (

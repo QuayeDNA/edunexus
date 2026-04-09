@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuthContext } from '../contexts/AuthContext.jsx';
+import { APP_ROUTES, getRoleDashboardRoute, ROLES } from '../utils/constants.js';
 
 /**
  * OnboardingGuard
@@ -49,16 +50,14 @@ const OnboardingGuard = ({ children }) => {
     );
   }
 
+  // Platform super admin accounts are cross-school and do not use onboarding.
+  if (role === ROLES.SUPER_ADMIN) {
+    return <Navigate to={APP_ROUTES.SUPER_ADMIN_DASHBOARD} replace />;
+  }
+
   // Profile has a school_id → onboarding is complete, go to dashboard
   if (profile?.school_id) {
-    const roleDashboards = {
-      admin:       '/admin/dashboard',
-      super_admin: '/admin/dashboard',
-      teacher:     '/teacher/dashboard',
-      student:     '/student/dashboard',
-      parent:      '/parent/dashboard',
-    };
-    return <Navigate to={roleDashboards[role] ?? '/admin/dashboard'} replace />;
+    return <Navigate to={getRoleDashboardRoute(role)} replace />;
   }
 
   // No school_id yet → show onboarding

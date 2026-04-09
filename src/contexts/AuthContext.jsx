@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { authApi } from '../services/api/auth';
+import { ROLES } from '../utils/constants.js';
 
 const AuthContext = createContext(null);
 
@@ -321,10 +322,10 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     role,
     schoolId,
-    isAdmin: role === 'admin' || role === 'super_admin',
-    isTeacher: role === 'teacher',
-    isStudent: role === 'student',
-    isParent: role === 'parent',
+    isAdmin: role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN,
+    isTeacher: role === ROLES.TEACHER,
+    isStudent: role === ROLES.STUDENT,
+    isParent: role === ROLES.PARENT,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

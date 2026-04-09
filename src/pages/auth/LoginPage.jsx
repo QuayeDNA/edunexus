@@ -7,20 +7,13 @@ import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
 import { authApi } from '../../services/api/auth.js';
+import { APP_ROUTES, getRoleDashboardRoute } from '../../utils/constants.js';
 import { cn } from '../../utils/cn.js';
 
 const schema = yup.object({
   email:    yup.string().email('Enter a valid email').required('Email is required'),
   password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
 });
-
-const ROLE_DASHBOARDS = {
-  admin:       '/admin/dashboard',
-  super_admin: '/admin/dashboard',
-  teacher:     '/teacher/dashboard',
-  student:     '/student/dashboard',
-  parent:      '/parent/dashboard',
-};
 
 export default function LoginPage() {
   const navigate  = useNavigate();
@@ -38,13 +31,13 @@ export default function LoginPage() {
     if (!initialized || !isAuthenticated) return;
 
     if (role) {
-      const dest = from ?? ROLE_DASHBOARDS[role] ?? '/admin/dashboard';
+      const dest = from ?? getRoleDashboardRoute(role);
       navigate(dest, { replace: true });
       return;
     }
 
     if (profileStatus === 'ready' || profileStatus === 'missing') {
-      navigate('/onboarding', { replace: true });
+      navigate(APP_ROUTES.ONBOARDING, { replace: true });
     }
   }, [initialized, isAuthenticated, role, profileStatus, from, navigate]);
 

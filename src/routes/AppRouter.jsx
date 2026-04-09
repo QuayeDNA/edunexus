@@ -2,11 +2,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import ProtectedRoute from './ProtectedRoute.jsx';
 import OnboardingGuard from './OnboardingGuard.jsx';
-import { ROLES } from '../utils/constants.js';
+import { APP_ROUTES, ROLES } from '../utils/constants.js';
 
 // ─── Layouts ──────────────────────────────────────────────────────────────────
 import AdminLayout from '../components/layouts/AdminLayout.jsx';
 import AuthLayout from '../components/layouts/AuthLayout.jsx';
+import SuperAdminLayout from '../components/layouts/SuperAdminLayout.jsx';
 import TeacherLayout from '../components/layouts/TeacherLayout.jsx';
 
 // ─── Auth Pages (eager-loaded) ────────────────────────────────────────────────
@@ -44,6 +45,12 @@ const InventoryPage       = lazy(() => import('../pages/admin/inventory/Inventor
 const ReportsPage         = lazy(() => import('../pages/admin/reports/ReportsPage.jsx'));
 const SettingsPage        = lazy(() => import('../pages/admin/settings/SettingsPage.jsx'));
 
+// ─── Super Admin Pages ───────────────────────────────────────────────────────
+const SuperAdminDashboardPage = lazy(() => import('../pages/superAdmin/SuperAdminDashboardPage.jsx'));
+const SuperAdminSchoolsPage   = lazy(() => import('../pages/superAdmin/SuperAdminSchoolsPage.jsx'));
+const SuperAdminUsersPage     = lazy(() => import('../pages/superAdmin/SuperAdminUsersPage.jsx'));
+const SuperAdminAuditLogPage  = lazy(() => import('../pages/superAdmin/SuperAdminAuditLogPage.jsx'));
+
 // ─── Teacher Pages ────────────────────────────────────────────────────────────
 const TeacherDashboard      = lazy(() => import('../pages/teacher/TeacherDashboard.jsx'));
 const TeacherAttendancePage = lazy(() => import('../pages/teacher/TeacherAttendancePage.jsx'));
@@ -74,18 +81,18 @@ export default function AppRouter() {
   return (
     <Routes>
       {/* Root */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path={APP_ROUTES.ROOT} element={<Navigate to={APP_ROUTES.LOGIN} replace />} />
 
       {/* Public auth routes */}
       <Route element={<AuthLayout />}>
-        <Route path="/login"           element={<LoginPage />} />
-        <Route path="/register"        element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path={APP_ROUTES.LOGIN}           element={<LoginPage />} />
+        <Route path={APP_ROUTES.REGISTER}        element={<RegisterPage />} />
+        <Route path={APP_ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
       </Route>
 
       {/* Onboarding — only accessible when authenticated AND school not configured yet */}
       <Route
-        path="/onboarding"
+        path={APP_ROUTES.ONBOARDING}
         element={
           <ProtectedRoute>
             <OnboardingGuard>
@@ -95,16 +102,32 @@ export default function AppRouter() {
         }
       />
 
+      {/* ── Super Admin ───────────────────────────────────────────────────── */}
+      <Route
+        path={APP_ROUTES.SUPER_ADMIN_ROOT}
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+            <SuperAdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to={APP_ROUTES.SUPER_ADMIN_DASHBOARD} replace />} />
+        <Route path="dashboard" element={S(SuperAdminDashboardPage)} />
+        <Route path="schools" element={S(SuperAdminSchoolsPage)} />
+        <Route path="users" element={S(SuperAdminUsersPage)} />
+        <Route path="audit-log" element={S(SuperAdminAuditLogPage)} />
+      </Route>
+
       {/* ── Admin ──────────────────────────────────────────────────────────── */}
       <Route
-        path="/admin"
+        path={APP_ROUTES.ADMIN_ROOT}
         element={
-          <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
             <AdminLayout />
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        <Route index element={<Navigate to={APP_ROUTES.ADMIN_DASHBOARD} replace />} />
         <Route path="dashboard"              element={S(AdminDashboard)} />
 
         {/* Students */}
@@ -150,14 +173,14 @@ export default function AppRouter() {
 
       {/* ── Teacher ────────────────────────────────────────────────────────── */}
       <Route
-        path="/teacher"
+        path={APP_ROUTES.TEACHER_ROOT}
         element={
           <ProtectedRoute allowedRoles={[ROLES.TEACHER]}>
             <TeacherLayout />
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/teacher/dashboard" replace />} />
+        <Route index element={<Navigate to={APP_ROUTES.TEACHER_DASHBOARD} replace />} />
         <Route path="dashboard"                element={S(TeacherDashboard)} />
         <Route path="attendance"               element={S(TeacherAttendancePage)} />
         <Route path="attendance/:classId"      element={S(TeacherAttendancePage)} />
@@ -167,26 +190,34 @@ export default function AppRouter() {
 
       {/* ── Student ────────────────────────────────────────────────────────── */}
       <Route
-        path="/student"
+        path={APP_ROUTES.STUDENT_ROOT}
+        element={<Navigate to={APP_ROUTES.STUDENT_DASHBOARD} replace />}
+      />
+      <Route
+        path={APP_ROUTES.STUDENT_DASHBOARD}
         element={
           <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-            <StudentDashboard />
+            {S(StudentDashboard)}
           </ProtectedRoute>
         }
       />
 
       {/* ── Parent ─────────────────────────────────────────────────────────── */}
       <Route
-        path="/parent"
+        path={APP_ROUTES.PARENT_ROOT}
+        element={<Navigate to={APP_ROUTES.PARENT_DASHBOARD} replace />}
+      />
+      <Route
+        path={APP_ROUTES.PARENT_DASHBOARD}
         element={
           <ProtectedRoute allowedRoles={[ROLES.PARENT]}>
-            <ParentDashboard />
+            {S(ParentDashboard)}
           </ProtectedRoute>
         }
       />
 
       {/* 404 catch-all */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to={APP_ROUTES.LOGIN} replace />} />
     </Routes>
   );
 }

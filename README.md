@@ -73,6 +73,27 @@ Open [http://localhost:5173](http://localhost:5173)
 
 ---
 
+## Access Model (Option A)
+
+The codebase follows a platform-level access model:
+
+- `super_admin` is a cross-school platform role.
+- `admin`, `teacher`, `student`, and `parent` are school-scoped roles tied to `profiles.school_id`.
+- Super admin write operations must execute through Supabase Edge Functions using service role credentials.
+- Client-side code must never perform service-role operations directly.
+
+### User Hierarchy
+
+| Role | Scope | Primary Responsibility |
+|---|---|---|
+| `super_admin` | Platform-wide (all schools) | School provisioning, cross-school user lifecycle, platform governance |
+| `admin` | Single school | School operations, user administration, settings, reporting |
+| `teacher` | Assigned classes/subjects | Attendance, grading, class-level communication |
+| `student` | Self | Personal academics, attendance, fees, wellness |
+| `parent` | Linked children | Child progress, communication, fee visibility/payments |
+
+---
+
 ## Build Phases
 
 The project is structured into 11 phases. Complete each before starting the next.
@@ -86,9 +107,9 @@ The project is structured into 11 phases. Complete each before starting the next
 | 5 — Finance | ⬜ Pending | Fees, payments, MoMo, receipts |
 | 6 — Payroll | ⬜ Pending | SSNIT + PAYE auto-calculation, payslips |
 | 7 — Supporting Modules | ⬜ Pending | Library, messaging, transport, inventory |
-| 8 — Role Portals | ⬜ Pending | Teacher, Student, Parent dashboards |
+| 8 — Role Portals | ⬜ Pending | Teacher, Student, Parent dashboards + super-admin console |
 | 9 — Innovative Features | ⬜ Pending | Behavior gamification, wellness, AI insights |
-| 10 — Production | ⬜ Pending | Offline sync, SMS, Paystack, PWA, RLS |
+| 10 — Production | ⬜ Pending | Offline sync, SMS, Paystack, PWA, RLS, service-role super-admin workflows |
 
 ### Future Feature Roadmaps
 
@@ -147,6 +168,8 @@ src/
 - All dates stored as ISO 8601 UTC, displayed in `en-GH` locale
 - Use `cn()` from `utils/cn.js` for all conditional class names
 - Delete actions must always show a confirmation dialog first
+- Super admin cross-school actions must run through backend Edge Functions with service-role credentials
+- School settings user management must handle only school roles (`admin`, `teacher`, `student`, `parent`), never `super_admin`
 
 ---
 

@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../contexts/AuthContext.jsx';
+import { APP_ROUTES, getRoleDashboardRoute } from '../utils/constants.js';
 
 const AuthLoadingScreen = ({ label }) => (
   <div className="min-h-screen flex items-center justify-center bg-surface-muted px-4">
@@ -58,7 +59,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Not logged in -> send to login, saving intended path
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to={APP_ROUTES.LOGIN} state={{ from: location }} replace />;
   }
 
   if (!allowedRoles) {
@@ -67,14 +68,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Logged in but wrong role -> redirect to their own dashboard
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    const roleDashboards = {
-      admin:       '/admin/dashboard',
-      super_admin: '/admin/dashboard',
-      teacher:     '/teacher/dashboard',
-      student:     '/student/dashboard',
-      parent:      '/parent/dashboard',
-    };
-    return <Navigate to={roleDashboards[role] ?? '/login'} replace />;
+    return <Navigate to={getRoleDashboardRoute(role, APP_ROUTES.LOGIN)} replace />;
   }
 
   // Role-dependent route but role is unavailable.

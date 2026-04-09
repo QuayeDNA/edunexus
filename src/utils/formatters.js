@@ -172,3 +172,10 @@ export const generateStudentId = (schoolPrefix = 'EDN', year = new Date().getFul
   const seq = String(sequence ?? Math.floor(Math.random() * 9000) + 1000).padStart(4, '0');
   return `${schoolPrefix}-${year}-${seq}`;
 };
+
+// ─── Staff ID ────────────────────────────────────────────────────────────────────
+export const generateStaffId = (schoolPrefix = 'EDN', year = new Date().getFullYear(), sequence) => {
+  const seq = String(sequence ?? Math.floor(Math.random() * 9000) + 1000).padStart(4, '0');
+  return `${schoolPrefix}-STF-${year}-${seq}`;
+}
+

@@ -1,8 +1,11 @@
 import { supabase } from '../supabaseClient.js';
+import {
+  SCHOOL_STAFF_PROFILE_ROLES,
+  getRolePrimaryActionRoute,
+  isSchoolRecipientRole,
+} from '../../utils/constants.js';
 
 const EMPTY_LIST = { data: [], error: null, count: 0 };
-const STAFF_ROLES = ['teacher', 'admin', 'super_admin'];
-const SCHOOL_RECIPIENT_ROLES = new Set(['student', 'parent', 'teacher', 'admin', 'super_admin']);
 const SUPPORTED_CHANNELS = ['in_app', 'email', 'sms'];
 
 const toIsoString = (value = new Date()) => {
@@ -35,14 +38,6 @@ const uniqueById = (rows = []) => {
 const fullName = (row) => {
   const name = `${row?.first_name ?? ''} ${row?.last_name ?? ''}`.trim();
   return name || row?.role || 'Recipient';
-};
-
-const getRoleActionUrl = (role) => {
-  if (role === 'teacher') return '/teacher/messaging';
-  if (role === 'admin' || role === 'super_admin') return '/admin/messaging';
-  if (role === 'student') return '/student/dashboard';
-  if (role === 'parent') return '/parent';
-  return '/';
 };
 
 const isFutureTimestamp = (value) => {
@@ -212,7 +207,7 @@ const listSchoolProfiles = async ({ schoolId, role = 'All', limit } = {}) => {
   } else if (normalizedRole === 'Parents') {
     query = query.eq('role', 'parent');
   } else if (normalizedRole === 'Staff') {
-    query = query.in('role', STAFF_ROLES);
+    query = query.in('role', SCHOOL_STAFF_PROFILE_ROLES);
   }
 
   if (limit) {
@@ -223,7 +218,7 @@ const listSchoolProfiles = async ({ schoolId, role = 'All', limit } = {}) => {
   if (error) return { data: [], error, count: 0 };
 
   return {
-    data: (data ?? []).filter((row) => SCHOOL_RECIPIENT_ROLES.has(row.role)),
+    data: (data ?? []).filter((row) => isSchoolRecipientRole(row.role)),
     error: null,
     count: count ?? (data ?? []).length,
   };
@@ -333,7 +328,7 @@ const resolveAudienceRecipients = async ({
 
   const recipients = uniqueById(rows)
     .filter((row) => row.id !== senderId)
-    .filter((row) => SCHOOL_RECIPIENT_ROLES.has(row.role));
+    .filter((row) => isSchoolRecipientRole(row.role));
 
   return { data: recipients, error: null };
 };
@@ -348,7 +343,7 @@ const sendInAppNotifications = async ({ recipients = [], subject, body } = {}) =
     title: subject?.trim() || 'New message',
     body: body?.trim() || null,
     type: 'message',
-    action_url: getRoleActionUrl(recipient.role),
+    action_url: getRolePrimaryActionRoute(recipient.role),
     is_read: false,
   }));
 

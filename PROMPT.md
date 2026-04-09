@@ -126,8 +126,12 @@ src/
 ### 3.3 Auth Rules
 - Use Supabase Auth exclusively — no custom JWT
 - Store user role in Supabase `profiles` table, not in JWT claims
-- Protect routes by role: `admin`, `teacher`, `student`, `parent`
+- Adopt Option A access model: `super_admin` is a platform-wide cross-school role
+- School-scoped roles are `admin`, `teacher`, `student`, `parent` and must be constrained by `profiles.school_id`
+- Protect routes by role: `super_admin`, `admin`, `teacher`, `student`, `parent`
 - `ProtectedRoute` must check both auth AND role before rendering
+- Super admin write operations (school provisioning, cross-school user lifecycle, role elevation, deactivation/reactivation, tenant suspension) MUST run through Supabase Edge Functions using service role credentials
+- Never execute service role operations from client-side components, hooks, or API wrappers
 
 ### 3.4 UI Rules
 - Desktop-first layout (sidebar + content). Min sidebar width: 240px
@@ -144,6 +148,13 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 export const cn = (...args) => twMerge(clsx(args));
 ```
+
+### 3.6 DRY & Single Source of Truth Rules
+- Apply DRY strictly: if logic is repeated in 2+ places, extract and reuse it
+- Centralize role-route mappings, role redirect targets, and route path constants in `src/utils/constants.js`
+- Do not duplicate role dashboard maps inside pages, layouts, guards, or service files
+- Use shared helper functions for role-aware redirects and role-based action URLs
+- When adding a new role or route, update the constants source first, then reference it everywhere else
 
 ---
 
@@ -1078,7 +1089,7 @@ The Ghanaian end-of-term report card must include:
 **Features:**
 - School registration with setup wizard (5 steps: School Info → Curriculum Mode → Grade Levels → Admin Account → Done)
 - Login with email/password + magic link option
-- Role-based redirects: admin → `/admin/dashboard`, teacher → `/teacher/dashboard`, student → `/student/dashboard`, parent → `/parent/dashboard`
+- Role-based redirects: super_admin → `/super-admin/dashboard`, admin → `/admin/dashboard`, teacher → `/teacher/dashboard`, student → `/student/dashboard`, parent → `/parent/dashboard`
 - "Remember me" on devices
 - Password strength indicator on signup
 - Offline login using cached credentials in Dexie
@@ -1089,6 +1100,9 @@ The Ghanaian end-of-term report card must include:
 3. Auto-generate grade levels based on selected curriculum
 4. Create first admin account
 5. Invite staff via email or shareable link
+
+**Super Admin Provisioning Note:**
+- Super admin accounts are platform-level and are provisioned outside school onboarding flow via secure backend service-role operations.
 
 ---
 
@@ -1383,10 +1397,13 @@ Widgets:
 - **Academic Calendar:** manage academic years and terms
 - **Fee Configuration:** categories, payment methods, MoMo accounts
 - **Notification Settings:** which events trigger SMS/email, templates
-- **User Management:** invite/create accounts, assign roles, deactivate users
+- **User Management:** invite/create accounts, assign school roles (`admin`, `teacher`, `student`, `parent`), deactivate/reactivate users
 - **Integrations:** Paystack keys, Africa's Talking credentials, Resend API key
 - **Data & Privacy:** export all school data, GDPR data deletion
 - **Appearance:** school brand color (accent), dark mode toggle
+
+**Platform Rule:**
+- School-level settings must never create or promote `super_admin`; platform role management is restricted to super-admin backend workflows.
 
 ---
 
@@ -1485,6 +1502,11 @@ Feature: Exam preparation dashboard for JHS 3 / SHS 3 students
 /login                         → Login page
 /register                      → School registration
 /onboarding                    → Setup wizard (post-registration)
+
+/super-admin/dashboard         → Platform dashboard (cross-school KPIs)
+/super-admin/schools           → School provisioning, suspension, reactivation
+/super-admin/users             → Cross-school user administration
+/super-admin/audit-log         → Platform audit events and security trail
 
 /admin/dashboard               → Admin home
 /admin/students                → Student list
@@ -1626,8 +1648,8 @@ The agent must build in this exact sequence. Complete each phase fully before st
 - [ ] Create Supabase project, run SQL schema from Section 5.1
 - [ ] Create `src/services/supabaseClient.js`
 - [ ] Create `src/db/schema.js` (Dexie)
-- [ ] Create `AppRouter.jsx` with all routes from Section 9
-- [ ] Create `ProtectedRoute.jsx` with role-based access
+- [ ] Create `AppRouter.jsx` with all routes from Section 9 (including super-admin routes)
+- [ ] Create `ProtectedRoute.jsx` with role-based access for `super_admin`, `admin`, `teacher`, `student`, `parent`
 - [ ] Build `AuthContext` with Supabase Auth
 - [ ] Build Login page + School Registration + Onboarding Wizard
 
@@ -1697,6 +1719,7 @@ The agent must build in this exact sequence. Complete each phase fully before st
 ### Phase 11 — Polish & Production
 - [ ] Offline sync service (Dexie ↔ Supabase)
 - [ ] Supabase Edge Functions for email/SMS triggers
+- [ ] Supabase Edge Functions (service role) for super-admin cross-school operations and user lifecycle administration
 - [ ] Africa's Talking SMS integration
 - [ ] Paystack payment gateway integration
 - [ ] PWA manifest + service worker (installable on mobile)

@@ -10,6 +10,67 @@ export const ROLES = {
   PARENT: 'parent',
 };
 
+export const APP_ROUTES = Object.freeze({
+  ROOT: '/',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
+  ONBOARDING: '/onboarding',
+  SUPER_ADMIN_ROOT: '/super-admin',
+  SUPER_ADMIN_DASHBOARD: '/super-admin/dashboard',
+  SUPER_ADMIN_SCHOOLS: '/super-admin/schools',
+  SUPER_ADMIN_USERS: '/super-admin/users',
+  SUPER_ADMIN_AUDIT_LOG: '/super-admin/audit-log',
+  ADMIN_ROOT: '/admin',
+  ADMIN_DASHBOARD: '/admin/dashboard',
+  ADMIN_MESSAGING: '/admin/messaging',
+  TEACHER_ROOT: '/teacher',
+  TEACHER_DASHBOARD: '/teacher/dashboard',
+  TEACHER_MESSAGING: '/teacher/messaging',
+  STUDENT_ROOT: '/student',
+  STUDENT_DASHBOARD: '/student/dashboard',
+  PARENT_ROOT: '/parent',
+  PARENT_DASHBOARD: '/parent/dashboard',
+});
+
+export const ROLE_DASHBOARD_ROUTES = Object.freeze({
+  [ROLES.SUPER_ADMIN]: APP_ROUTES.SUPER_ADMIN_DASHBOARD,
+  [ROLES.ADMIN]: APP_ROUTES.ADMIN_DASHBOARD,
+  [ROLES.TEACHER]: APP_ROUTES.TEACHER_DASHBOARD,
+  [ROLES.STUDENT]: APP_ROUTES.STUDENT_DASHBOARD,
+  [ROLES.PARENT]: APP_ROUTES.PARENT_DASHBOARD,
+});
+
+export const ROLE_PRIMARY_ACTION_ROUTES = Object.freeze({
+  [ROLES.SUPER_ADMIN]: APP_ROUTES.SUPER_ADMIN_DASHBOARD,
+  [ROLES.ADMIN]: APP_ROUTES.ADMIN_MESSAGING,
+  [ROLES.TEACHER]: APP_ROUTES.TEACHER_MESSAGING,
+  [ROLES.STUDENT]: APP_ROUTES.STUDENT_DASHBOARD,
+  [ROLES.PARENT]: APP_ROUTES.PARENT_DASHBOARD,
+});
+
+export const SCHOOL_STAFF_PROFILE_ROLES = Object.freeze([
+  ROLES.TEACHER,
+  ROLES.ADMIN,
+]);
+
+export const SCHOOL_RECIPIENT_PROFILE_ROLES = Object.freeze([
+  ROLES.STUDENT,
+  ROLES.PARENT,
+  ROLES.TEACHER,
+  ROLES.ADMIN,
+]);
+
+export const getRoleDashboardRoute = (role, fallback = APP_ROUTES.ADMIN_DASHBOARD) => (
+  ROLE_DASHBOARD_ROUTES[role] ?? fallback
+);
+
+export const getRolePrimaryActionRoute = (role, fallback = APP_ROUTES.ROOT) => (
+  ROLE_PRIMARY_ACTION_ROUTES[role] ?? fallback
+);
+
+export const isSchoolRecipientRole = (role) => SCHOOL_RECIPIENT_PROFILE_ROLES.includes(role);
+
 export const CURRICULUM_MODES = {
   GHANA_BASIC: 'ghana_basic',
   GHANA_SHS: 'ghana_shs',

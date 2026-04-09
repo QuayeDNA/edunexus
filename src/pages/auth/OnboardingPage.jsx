@@ -8,10 +8,14 @@ import { useSchoolStore } from '../../store/schoolStore.js';
 import { schoolsApi } from '../../services/api/schools.js';
 import { gradeLevelsApi } from '../../services/api/gradeLevels.js';
 import { academicYearsApi } from '../../services/api/academicYears.js';
-import { CURRICULUM_DESCRIPTIONS, CURRICULUM_MODES } from '../../utils/constants.js';
+import {
+  APP_NAME,
+  APP_ROUTES,
+  CURRICULUM_DESCRIPTIONS,
+  CURRICULUM_MODES,
+} from '../../utils/constants.js';
 import { GRADE_LEVELS_BY_CURRICULUM, generateGhanaTerms } from '../../utils/ghanaCalendar.js';
 import { cn } from '../../utils/cn.js';
-import { APP_NAME } from '../../utils/constants.js';
 
 const STEPS = [
   { id: 1, label: 'School Info',  icon: Building2 },
@@ -429,7 +433,7 @@ export default function OnboardingPage() {
             ) : (
               <button
                 type="button"
-                onClick={() => navigate('/admin/dashboard')}
+                onClick={() => navigate(APP_ROUTES.ADMIN_DASHBOARD)}
                 className="btn-primary"
               >
                 Go to Dashboard <ChevronRight className="w-4 h-4" />
