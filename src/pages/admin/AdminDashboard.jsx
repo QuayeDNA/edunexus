@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   GraduationCap, Users, CreditCard, CalendarCheck,
-  TrendingUp, TrendingDown, AlertTriangle, ArrowRight,
+  TrendingUp, AlertTriangle, ArrowRight,
   BookOpen, BarChart3, Banknote, Bell,
 } from 'lucide-react';
 import {
@@ -15,21 +15,15 @@ import { useAuthContext } from '../../contexts/AuthContext.jsx';
 import { useStudents } from '../../hooks/useStudents.js';
 import { useStaff } from '../../hooks/useStaff.js';
 import { useClasses } from '../../hooks/useClasses.js';
+import {
+  useFinanceSummary,
+  useMonthlyFeeAnalytics,
+  useRecentPayments,
+} from '../../hooks/useFinance.js';
 import StatCard from '../../components/ui/StatCard.jsx';
-import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import Avatar from '../../components/ui/Avatar.jsx';
-import { formatGHS, formatDate, formatRelativeTime } from '../../utils/formatters.js';
+import { formatGHS, formatRelativeTime } from '../../utils/formatters.js';
 import { cn } from '../../utils/cn.js';
-
-// ─── Mock charts data (replace with real queries in Phase 6+) ─────────────────
-const FEE_CHART_DATA = [
-  { month: 'Sep', expected: 52000, collected: 44200 },
-  { month: 'Oct', expected: 52000, collected: 48800 },
-  { month: 'Nov', expected: 52000, collected: 51200 },
-  { month: 'Dec', expected: 52000, collected: 49600 },
-  { month: 'Jan', expected: 55000, collected: 42000 },
-  { month: 'Feb', expected: 55000, collected: 38500 },
-];
 
 const ENROLLMENT_DATA = [
   { term: 'T1 \'23', count: 780 },
@@ -37,20 +31,6 @@ const ENROLLMENT_DATA = [
   { term: 'T3 \'23', count: 801 },
   { term: 'T1 \'24', count: 824 },
   { term: 'T2 \'24', count: 847 },
-];
-
-const MOCK_PAYMENTS = [
-  { id: 1, student: 'Kofi Mensah', class: 'JHS 3A', amount: 850, method: 'MTN MoMo', time: '10 min ago' },
-  { id: 2, student: 'Ama Asante',  class: 'Primary 5A', amount: 620, method: 'Cash', time: '42 min ago' },
-  { id: 3, student: 'Kwame Boateng', class: 'JHS 1A', amount: 720, method: 'Vodafone Cash', time: '1h ago' },
-  { id: 4, student: 'Abena Owusu', class: 'Primary 3A', amount: 580, method: 'MTN MoMo', time: '2h ago' },
-  { id: 5, student: 'Yaw Darko', class: 'KG 2A', amount: 420, method: 'Bank Transfer', time: '3h ago' },
-];
-
-const ALERTS = [
-  { severity: 'warning', message: '47 students have outstanding fees older than 14 days', link: '/admin/finance/fees' },
-  { severity: 'danger',  message: '3 students in JHS 3A below 75% attendance threshold', link: '/admin/attendance' },
-  { severity: 'info',    message: '5 inventory items below reorder level', link: '/admin/inventory' },
 ];
 
 // ─── Custom Tooltip ────────────────────────────────────────────────────────────
@@ -117,10 +97,61 @@ export default function AdminDashboard() {
   const { data: studentsData, isLoading: studentsLoading } = useStudents({ schoolId });
   const { data: staffData, isLoading: staffLoading } = useStaff({ schoolId });
   const { data: classesData, isLoading: classesLoading } = useClasses(schoolId);
+  const { data: financeSummary, isLoading: financeLoading } = useFinanceSummary(
+    schoolId,
+    currentTerm?.id
+  );
+  const { data: monthlyFeeAnalytics = [] } = useMonthlyFeeAnalytics(
+    schoolId,
+    new Date().getFullYear(),
+    currentTerm?.id
+  );
+  const { data: recentPayments = [], isLoading: recentPaymentsLoading } = useRecentPayments(
+    schoolId,
+    5
+  );
 
   const totalStudents = studentsData?.count ?? studentsData?.data?.length ?? 0;
   const totalStaff = staffData?.count ?? staffData?.data?.length ?? 0;
   const totalClasses = classesData?.data?.length ?? 0;
+  const feeCollectionRate = Number(financeSummary?.collectionRate ?? 0);
+  const totalCollected = Number(financeSummary?.totalPaid ?? 0);
+  const outstandingAmount = Number(financeSummary?.outstanding ?? 0);
+  const overdueCount = Number(financeSummary?.overdueCount ?? 0);
+
+  const alerts = useMemo(() => {
+    const rows = [];
+
+    if (overdueCount > 0) {
+      rows.push({
+        severity: 'warning',
+        message: `${overdueCount} fee record${overdueCount !== 1 ? 's are' : ' is'} overdue in the current term`,
+        link: '/admin/finance/fees',
+      });
+    }
+
+    if (outstandingAmount > 0) {
+      rows.push({
+        severity: 'info',
+        message: `${formatGHS(outstandingAmount, true)} remains outstanding for this term`,
+        link: '/admin/finance/reports',
+      });
+    }
+
+    return rows;
+  }, [overdueCount, outstandingAmount]);
+
+  const feeChartData = useMemo(() => {
+    if (monthlyFeeAnalytics.length > 0) return monthlyFeeAnalytics;
+
+    return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(
+      (month) => ({
+        month,
+        expected: 0,
+        collected: 0,
+      })
+    );
+  }, [monthlyFeeAnalytics]);
 
   useEffect(() => { setPageTitle('Dashboard'); }, [setPageTitle]);
 
@@ -149,9 +180,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Alerts ───────────────────────────────────────────────────────────── */}
-      {ALERTS.length > 0 && (
+      {alerts.length > 0 && (
         <div className="space-y-2">
-          {ALERTS.map((a, i) => <AlertBanner key={i} {...a} />)}
+          {alerts.map((a, i) => <AlertBanner key={i} {...a} />)}
         </div>
       )}
 
@@ -177,11 +208,12 @@ export default function AdminDashboard() {
         />
         <StatCard
           title="Fee Collection"
-          value="78%"
-          delta="GH₵ 148,200 collected"
+          value={financeLoading ? null : `${feeCollectionRate}%`}
+          delta={financeLoading ? null : `${formatGHS(totalCollected, true)} collected`}
           trend="up"
           icon={CreditCard}
           color="bg-status-successBg text-status-success"
+          loading={financeLoading}
         />
         <StatCard
           title="Today's Attendance"
@@ -196,7 +228,13 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { label: 'Classes', value: classesLoading ? '…' : totalClasses, icon: BookOpen, to: '/admin/classes', color: 'text-purple-600' },
-          { label: 'Outstanding Fees', value: 'GH₵ 34K', icon: Banknote, to: '/admin/finance/fees', color: 'text-status-warning' },
+          {
+            label: 'Outstanding Fees',
+            value: financeLoading ? '…' : formatGHS(outstandingAmount, true),
+            icon: Banknote,
+            to: '/admin/finance/fees',
+            color: 'text-status-warning',
+          },
           { label: 'Unread Notifications', value: '12', icon: Bell, to: '/admin/messaging', color: 'text-status-info' },
         ].map(({ label, value, icon: Icon, to, color }) => (
           <Link
@@ -230,7 +268,7 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={FEE_CHART_DATA} barGap={4} barCategoryGap="30%">
+            <BarChart data={feeChartData} barGap={4} barCategoryGap="30%">
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} tickFormatter={v => `₵${v/1000}K`} />
@@ -279,19 +317,50 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <div className="divide-y divide-border">
-            {MOCK_PAYMENTS.map(p => (
-              <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-muted/40 transition-colors">
-                <Avatar firstName={p.student.split(' ')[0]} lastName={p.student.split(' ')[1]} size="sm" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-text-primary truncate">{p.student}</p>
-                  <p className="text-xs text-text-muted">{p.class} &middot; {p.method}</p>
+            {recentPaymentsLoading ? (
+              Array.from({ length: 5 }).map((_, idx) => (
+                <div key={idx} className="flex items-center gap-3 px-5 py-3.5 animate-pulse">
+                  <div className="w-8 h-8 rounded-full bg-surface-hover" />
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="h-3.5 rounded bg-surface-hover w-32" />
+                    <div className="h-3 rounded bg-surface-hover w-44" />
+                  </div>
+                  <div className="w-20 h-3.5 rounded bg-surface-hover" />
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-semibold text-status-success">{formatGHS(p.amount)}</p>
-                  <p className="text-xs text-text-muted">{p.time}</p>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : recentPayments.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-text-muted">No recent payments yet.</div>
+            ) : (
+              recentPayments.map((payment) => {
+                const firstName = payment.students?.first_name ?? '';
+                const lastName = payment.students?.last_name ?? '';
+                const studentName = `${firstName} ${lastName}`.trim() || 'Unknown Student';
+                const className = payment.students?.classes?.name ?? 'Unassigned class';
+
+                return (
+                  <div
+                    key={payment.id}
+                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-muted/40 transition-colors"
+                  >
+                    <Avatar firstName={firstName} lastName={lastName} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text-primary truncate">{studentName}</p>
+                      <p className="text-xs text-text-muted">
+                        {className} &middot; {payment.payment_method ?? 'Payment'}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-semibold text-status-success">
+                        {formatGHS(payment.amount ?? 0)}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {formatRelativeTime(payment.created_at ?? payment.payment_date)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 

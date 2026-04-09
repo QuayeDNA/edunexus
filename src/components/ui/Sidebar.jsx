@@ -3,7 +3,7 @@ import {
   LayoutDashboard, GraduationCap, Users, BookOpen, ClipboardList,
   CreditCard, Banknote, ArrowLeftRight, Bus, Package, Library,
   MessageSquare, BarChart3, Settings, ChevronLeft, ChevronRight,
-  LogOut, Building2, X,
+  LogOut, Building2, X, Calendar
 } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore.js';
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
@@ -29,6 +29,7 @@ const navSections = [
       { to: '/admin/academics/assessments',  icon: ClipboardList, label: 'Assessments' },
       { to: '/admin/academics/reports',      icon: ClipboardList, label: 'Report Cards' },
       { to: '/admin/attendance',             icon: ClipboardList, label: 'Attendance' },
+      { to: '/admin/academics/calendar',     icon: Calendar, label: 'Calendar' },
     ],
   },
   {

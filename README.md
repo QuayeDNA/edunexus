@@ -81,15 +81,14 @@ The project is structured into 11 phases. Complete each before starting the next
 |---|---|---|
 | **1 — Foundation** | ✅ **Complete** | Project scaffold, auth, routing, onboarding wizard |
 | **2 — Admin Shell** | ✅ **Complete** | DataTable, StatCard, Avatar, ConfirmDialog, live dashboard, Students, Staff, Classes |
-| 3 — Academics | 🔨 Next | Subjects, timetable, assessments, report cards |
-| 4 — Academics | ⬜ Pending | Classes, timetable, assessments, report cards |
-| 5 — Attendance | ⬜ Pending | Mark attendance, reports, heatmap |
-| 6 — Finance | ⬜ Pending | Fees, payments, MoMo, receipts |
-| 7 — Payroll | ⬜ Pending | SSNIT + PAYE auto-calculation, payslips |
-| 8 — Supporting Modules | ⬜ Pending | Library, messaging, transport, inventory |
-| 9 — Role Portals | ⬜ Pending | Teacher, Student, Parent dashboards |
-| 10 — Innovative Features | ⬜ Pending | Behavior gamification, wellness, AI insights |
-| 11 — Production | ⬜ Pending | Offline sync, SMS, Paystack, PWA, RLS |
+| **3 — Academics** | ✅ **Complete** | Subjects, timetable builder (manual), assessments, report cards, academic calendar |
+| **4 — Attendance** | 🔨 **In Progress** | Daily marking, lock windows with admin override, reports/export, analytics enhancements pending |
+| 5 — Finance | ⬜ Pending | Fees, payments, MoMo, receipts |
+| 6 — Payroll | ⬜ Pending | SSNIT + PAYE auto-calculation, payslips |
+| 7 — Supporting Modules | ⬜ Pending | Library, messaging, transport, inventory |
+| 8 — Role Portals | ⬜ Pending | Teacher, Student, Parent dashboards |
+| 9 — Innovative Features | ⬜ Pending | Behavior gamification, wellness, AI insights |
+| 10 — Production | ⬜ Pending | Offline sync, SMS, Paystack, PWA, RLS |
 
 ---
 
@@ -168,4 +167,4 @@ src/
 
 ---
 
-*EduNexus · v1.0.0 · Phase 1 Complete*
+*EduNexus · v1.0.0 · Phase 3 Complete (Academics)*
