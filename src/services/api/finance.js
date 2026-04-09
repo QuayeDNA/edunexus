@@ -108,6 +108,25 @@ const withPaymentSearchFilter = (rows, search) => {
   });
 };
 
+const withExpenseSearchFilter = (rows, search) => {
+  const query = search?.trim().toLowerCase();
+  if (!query) return rows;
+
+  return rows.filter((row) => {
+    const category = (row.category ?? '').toLowerCase();
+    const description = (row.description ?? '').toLowerCase();
+    const approverName = `${row.profiles?.first_name ?? ''} ${row.profiles?.last_name ?? ''}`
+      .trim()
+      .toLowerCase();
+
+    return (
+      category.includes(query) ||
+      description.includes(query) ||
+      approverName.includes(query)
+    );
+  });
+};
+
 export const financeApi = {
   listFeeCategories: (schoolId) => {
     if (!schoolId) return Promise.resolve(EMPTY_LIST);
@@ -400,6 +419,57 @@ export const financeApi = {
     return { data: filtered, error: null, count: filtered.length };
   },
 
+  listExpenses: async ({ schoolId, startDate, endDate, category, search, limit } = {}) => {
+    if (!schoolId) return EMPTY_LIST;
+
+    let query = supabase
+      .from('expenses')
+      .select(
+        'id, school_id, category, description, amount, date, approved_by, receipt_url, created_at, profiles!expenses_approved_by_fkey(id, first_name, last_name)',
+        { count: 'exact' }
+      )
+      .eq('school_id', schoolId)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (startDate) {
+      query = query.gte('date', startDate);
+    }
+
+    if (endDate) {
+      query = query.lte('date', endDate);
+    }
+
+    if (category && category !== 'All') {
+      query = query.eq('category', category);
+    }
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
+    if (error) return { data: [], error, count: 0 };
+
+    const filtered = withExpenseSearchFilter(data ?? [], search);
+    return { data: filtered, error: null, count: filtered.length };
+  },
+
+  createExpense: (payload) =>
+    supabase
+      .from('expenses')
+      .insert(payload)
+      .select(
+        'id, school_id, category, description, amount, date, approved_by, receipt_url, created_at, profiles!expenses_approved_by_fkey(id, first_name, last_name)'
+      )
+      .single(),
+
+  deleteExpense: (id) =>
+    supabase
+      .from('expenses')
+      .delete()
+      .eq('id', id),
+
   createPayment: async ({
     schoolId,
     studentFeeId,
@@ -644,6 +714,123 @@ export const financeApi = {
     }
 
     return buckets.map(({ month, expected, collected }) => ({ month, expected, collected }));
+  },
+
+  getExpenseSummary: async ({ schoolId, year = new Date().getFullYear(), month } = {}) => {
+    const parsedYear = Number(year) || new Date().getFullYear();
+
+    if (!schoolId) {
+      return {
+        year: parsedYear,
+        month: month ? Number(month) : null,
+        totalExpense: 0,
+        totalIncome: 0,
+        netBalance: 0,
+        expenseCount: 0,
+        averageExpense: 0,
+        highestExpense: 0,
+        byCategory: [],
+        monthlyFlow: MONTH_LABELS.map((monthLabel) => ({
+          month: monthLabel,
+          income: 0,
+          expense: 0,
+          net: 0,
+        })),
+      };
+    }
+
+    const start = `${parsedYear}-01-01`;
+    const end = `${parsedYear}-12-31`;
+
+    const [{ data: expenseRows, error: expensesError }, { data: paymentRows, error: paymentsError }] = await Promise.all([
+      supabase
+        .from('expenses')
+        .select('id, amount, date, category')
+        .eq('school_id', schoolId)
+        .gte('date', start)
+        .lte('date', end),
+      supabase
+        .from('payments')
+        .select('id, amount, payment_date')
+        .eq('school_id', schoolId)
+        .gte('payment_date', start)
+        .lte('payment_date', end),
+    ]);
+
+    if (expensesError) throw expensesError;
+    if (paymentsError) throw paymentsError;
+
+    const safeExpenseRows = expenseRows ?? [];
+    const safePaymentRows = paymentRows ?? [];
+
+    const numericMonth = Number(month);
+    const monthPrefix = Number.isInteger(numericMonth) && numericMonth >= 1 && numericMonth <= 12
+      ? `${parsedYear}-${String(numericMonth).padStart(2, '0')}`
+      : null;
+
+    const scopedExpenses = monthPrefix
+      ? safeExpenseRows.filter((row) => (row.date ?? '').startsWith(monthPrefix))
+      : safeExpenseRows;
+
+    const scopedPayments = monthPrefix
+      ? safePaymentRows.filter((row) => (row.payment_date ?? '').startsWith(monthPrefix))
+      : safePaymentRows;
+
+    const monthlyFlow = MONTH_LABELS.map((monthLabel) => ({
+      month: monthLabel,
+      income: 0,
+      expense: 0,
+      net: 0,
+    }));
+
+    safeExpenseRows.forEach((row) => {
+      if (!row.date) return;
+      const monthIndex = new Date(row.date).getMonth();
+      if (Number.isNaN(monthIndex) || !monthlyFlow[monthIndex]) return;
+      monthlyFlow[monthIndex].expense += Number(row.amount ?? 0);
+    });
+
+    safePaymentRows.forEach((row) => {
+      if (!row.payment_date) return;
+      const monthIndex = new Date(row.payment_date).getMonth();
+      if (Number.isNaN(monthIndex) || !monthlyFlow[monthIndex]) return;
+      monthlyFlow[monthIndex].income += Number(row.amount ?? 0);
+    });
+
+    monthlyFlow.forEach((row) => {
+      row.net = row.income - row.expense;
+    });
+
+    const byCategoryMap = {};
+    scopedExpenses.forEach((row) => {
+      const key = (row.category ?? 'Other').trim() || 'Other';
+      byCategoryMap[key] = (byCategoryMap[key] ?? 0) + Number(row.amount ?? 0);
+    });
+
+    const byCategory = Object.entries(byCategoryMap)
+      .map(([categoryName, total]) => ({ category: categoryName, total }))
+      .sort((a, b) => b.total - a.total);
+
+    const totalExpense = scopedExpenses.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+    const totalIncome = scopedPayments.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+
+    const highestExpense = scopedExpenses.reduce(
+      (max, row) => Math.max(max, Number(row.amount ?? 0)),
+      0
+    );
+
+    return {
+      year: parsedYear,
+      month: monthPrefix ? numericMonth : null,
+      totalExpense,
+      totalIncome,
+      netBalance: totalIncome - totalExpense,
+      expenseCount: scopedExpenses.length,
+      averageExpense: scopedExpenses.length > 0 ? totalExpense / scopedExpenses.length : 0,
+      highestExpense,
+      byCategory,
+      monthlyFlow,
+    };
   },
 
   getRecentPayments: async ({ schoolId, limit = 5 } = {}) => {

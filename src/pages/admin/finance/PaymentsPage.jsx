@@ -1,12 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   CalendarDays,
   CreditCard,
+  Download,
   Loader2,
   Receipt,
   Search,
   Wallet,
 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
 import PageHeader from '../../../components/ui/PageHeader.jsx';
 import StatCard from '../../../components/ui/StatCard.jsx';
@@ -31,6 +34,15 @@ import {
 
 const toIsoDate = (date = new Date()) => date.toISOString().slice(0, 10);
 
+const sanitizeFileName = (value) => {
+  const cleaned = String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return cleaned || 'receipt';
+};
+
 const INITIAL_PAYMENT_FORM = {
   student_fee_id: '',
   amount: '',
@@ -42,7 +54,7 @@ const INITIAL_PAYMENT_FORM = {
 
 export default function PaymentsPage() {
   const { schoolId, user } = useAuthContext();
-  const { currentTerm } = useSchoolStore();
+  const { currentTerm, activeSchool } = useSchoolStore();
 
   const [paymentForm, setPaymentForm] = useState(INITIAL_PAYMENT_FORM);
   const [search, setSearch] = useState('');
@@ -97,16 +109,80 @@ export default function PaymentsPage() {
         return {
           id: row.id,
           paymentDate: row.payment_date,
+          paymentDateRaw: row.payment_date,
           studentName,
+          studentIdNumber: row.students?.student_id_number ?? '—',
           className: row.students?.classes?.name ?? '—',
           paymentMethod: row.payment_method ?? '—',
+          paymentMethodRaw: row.payment_method ?? 'Cash',
           amount: Number(row.amount ?? 0),
           referenceNumber: row.reference_number ?? '—',
+          referenceNumberRaw: row.reference_number ?? '',
           receiptNumber: row.receipt_number ?? '—',
+          receiptNumberRaw: row.receipt_number ?? '',
+          mobileMoneyNumber: row.mobile_money_number ?? '',
+          notes: row.notes ?? '',
           recordedAt: row.created_at,
         };
       }),
     [filteredPayments]
+  );
+
+  const handleDownloadReceipt = useCallback(
+    (row) => {
+      const schoolName = activeSchool?.name ?? 'EduNexus';
+      const schoolAddress = activeSchool?.address ?? 'N/A';
+      const schoolPhone = activeSchool?.phone ?? 'N/A';
+      const schoolEmail = activeSchool?.email ?? 'N/A';
+
+      const receiptNumber = row.receiptNumberRaw || `RCPT-${row.id.slice(0, 8)}`;
+      const referenceNumber = row.referenceNumberRaw || `PAY-${row.id.slice(0, 8)}`;
+
+      const provider = row.paymentMethodRaw.includes('MoMo')
+        ? detectMoMoProvider(row.mobileMoneyNumber)
+        : null;
+
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text(`${schoolName} Official Receipt`, 14, 16);
+
+      doc.setFontSize(10);
+      doc.text(`Address: ${schoolAddress}`, 14, 24);
+      doc.text(`Phone: ${schoolPhone}`, 14, 29);
+      doc.text(`Email: ${schoolEmail}`, 14, 34);
+
+      autoTable(doc, {
+        startY: 40,
+        theme: 'grid',
+        head: [['Field', 'Value']],
+        body: [
+          ['Receipt Number', receiptNumber],
+          ['Reference Number', referenceNumber],
+          ['Payment Date', formatDate(row.paymentDateRaw)],
+          ['Student', row.studentName],
+          ['Student ID', row.studentIdNumber],
+          ['Class', row.className],
+          ['Payment Method', row.paymentMethodRaw],
+          ['MoMo Number', row.mobileMoneyNumber || 'N/A'],
+          ['Detected Network', provider?.name ?? 'N/A'],
+          ['Amount', formatGHS(row.amount)],
+          ['Recorded', formatDate(row.recordedAt)],
+          ['Notes', row.notes || 'N/A'],
+        ],
+        headStyles: { fillColor: [99, 102, 241] },
+        styles: { fontSize: 10 },
+      });
+
+      doc.setFontSize(10);
+      const y = (doc.lastAutoTable?.finalY ?? 40) + 10;
+      doc.text('Authorized Signature: __________________________', 14, y);
+
+      const fileName = `${sanitizeFileName(receiptNumber)}-${sanitizeFileName(row.studentName)}.pdf`;
+      doc.save(fileName);
+      toast.success(`Receipt downloaded (${receiptNumber})`);
+    },
+    [activeSchool]
   );
 
   const todayCollected = useMemo(() => {
@@ -155,15 +231,29 @@ export default function PaymentsPage() {
       },
       {
         accessorKey: 'receiptNumber',
-        header: 'Receipt',
+        header: 'Receipt No.',
       },
       {
         accessorKey: 'recordedAt',
         header: 'Recorded',
         cell: ({ getValue }) => formatRelativeTime(getValue()),
       },
+      {
+        id: 'receiptPdf',
+        header: 'Receipt PDF',
+        cell: ({ row }) => (
+          <button
+            onClick={() => handleDownloadReceipt(row.original)}
+            className="btn-secondary h-8 px-2 text-xs"
+            aria-label={`Download receipt ${row.original.receiptNumber}`}
+          >
+            <Download className="w-3.5 h-3.5" />
+            PDF
+          </button>
+        ),
+      },
     ],
-    []
+    [handleDownloadReceipt]
   );
 
   const handleStudentFeeSelect = (nextId) => {

@@ -26,6 +26,15 @@ export const PAYMENTS_KEY = ({ schoolId, startDate, endDate, search, limit } = {
   search ?? '',
   limit ?? 'all',
 ];
+export const EXPENSES_KEY = ({ schoolId, startDate, endDate, category, search, limit } = {}) => [
+  'expenses',
+  schoolId,
+  startDate ?? '',
+  endDate ?? '',
+  category ?? 'all',
+  search ?? '',
+  limit ?? 'all',
+];
 export const FINANCE_SUMMARY_KEY = (schoolId, termId) => ['finance-summary', schoolId, termId ?? 'all'];
 export const MONTHLY_FEE_ANALYTICS_KEY = (schoolId, year, termId) => [
   'monthly-fee-analytics',
@@ -34,6 +43,12 @@ export const MONTHLY_FEE_ANALYTICS_KEY = (schoolId, year, termId) => [
   termId ?? 'all',
 ];
 export const RECENT_PAYMENTS_KEY = (schoolId, limit = 5) => ['recent-payments', schoolId, limit];
+export const EXPENSE_SUMMARY_KEY = (schoolId, year, month) => [
+  'expense-summary',
+  schoolId,
+  year ?? 'current',
+  month ?? 'all',
+];
 
 export const useFeeCategories = (schoolId) =>
   useQuery({
@@ -107,6 +122,18 @@ export const usePayments = ({ schoolId, startDate, endDate, search, limit } = {}
     staleTime: 20_000,
   });
 
+export const useExpenses = ({ schoolId, startDate, endDate, category, search, limit } = {}) =>
+  useQuery({
+    queryKey: EXPENSES_KEY({ schoolId, startDate, endDate, category, search, limit }),
+    queryFn: async () => {
+      const result = await financeApi.listExpenses({ schoolId, startDate, endDate, category, search, limit });
+      if (result.error) throw result.error;
+      return { data: result.data ?? [], count: result.count ?? 0 };
+    },
+    enabled: !!schoolId,
+    staleTime: 20_000,
+  });
+
 export const useFinanceSummary = (schoolId, termId) =>
   useQuery({
     queryKey: FINANCE_SUMMARY_KEY(schoolId, termId),
@@ -133,6 +160,14 @@ export const useRecentPayments = (schoolId, limit = 5) =>
     },
     enabled: !!schoolId,
     staleTime: 20_000,
+  });
+
+export const useExpenseSummary = (schoolId, year = new Date().getFullYear(), month) =>
+  useQuery({
+    queryKey: EXPENSE_SUMMARY_KEY(schoolId, year, month),
+    queryFn: () => financeApi.getExpenseSummary({ schoolId, year, month }),
+    enabled: !!schoolId,
+    staleTime: 30_000,
   });
 
 export const useCreateFeeCategory = () => {
@@ -240,6 +275,43 @@ export const useGenerateStudentFees = () => {
   });
 };
 
+export const useCreateExpense = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload) => {
+      const { data, error } = await financeApi.createExpense(payload);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      const schoolId = data?.school_id;
+      qc.invalidateQueries({ queryKey: ['expenses', schoolId] });
+      qc.invalidateQueries({ queryKey: ['expense-summary', schoolId] });
+      toast.success('Expense recorded');
+    },
+    onError: (err) => toast.error(err.message ?? 'Failed to record expense'),
+  });
+};
+
+export const useDeleteExpense = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, schoolId }) => {
+      const { error } = await financeApi.deleteExpense(id);
+      if (error) throw error;
+      return { schoolId };
+    },
+    onSuccess: ({ schoolId }) => {
+      qc.invalidateQueries({ queryKey: ['expenses', schoolId] });
+      qc.invalidateQueries({ queryKey: ['expense-summary', schoolId] });
+      toast.success('Expense deleted');
+    },
+    onError: (err) => toast.error(err.message ?? 'Failed to delete expense'),
+  });
+};
+
 export const useRecordPayment = () => {
   const qc = useQueryClient();
 
@@ -258,6 +330,7 @@ export const useRecordPayment = () => {
       qc.invalidateQueries({ queryKey: ['student-fees', schoolId] });
       qc.invalidateQueries({ queryKey: ['finance-summary', schoolId] });
       qc.invalidateQueries({ queryKey: ['monthly-fee-analytics', schoolId] });
+      qc.invalidateQueries({ queryKey: ['expense-summary', schoolId] });
 
       const receipt = data?.payment?.receipt_number;
       toast.success(receipt ? `Payment recorded (${receipt})` : 'Payment recorded');
