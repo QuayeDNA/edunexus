@@ -57,6 +57,11 @@ export default function RegisterPage() {
 
   const onSubmit = async ({ schoolName, firstName, lastName, email, phone, password }) => {
     try {
+      // School creation is now restricted to super administrators only
+      // Users should be invited to join existing schools
+      toast.error('School registration is currently disabled. Please contact an administrator to be invited to a school.');
+      return;
+
       // 1. Create school record first
       const school = await schoolsApi.create({
         name: schoolName,

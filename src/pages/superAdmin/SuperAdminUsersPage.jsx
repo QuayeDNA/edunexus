@@ -21,6 +21,8 @@ const ROLE_BADGE_STYLES = {
 
 export default function SuperAdminUsersPage() {
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [usersCursor, setUsersCursor] = useState(null);
   const [inviteForm, setInviteForm] = useState({
     firstName: '',
@@ -40,6 +42,8 @@ export default function SuperAdminUsersPage() {
 
   const usersQuery = useSuperAdminUsers({
     search: search.trim() || undefined,
+    role: roleFilter || undefined,
+    status: statusFilter || undefined,
     limit: 50,
     cursor: usersCursor,
   });
@@ -156,19 +160,62 @@ export default function SuperAdminUsersPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-border shadow-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="search"
-            value={search}
+        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
+          <label className="relative flex-1">
+            <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setUsersCursor(null);
+              }}
+              placeholder="Search users"
+              className="input-base pl-9"
+            />
+          </label>
+          <select
+            value={roleFilter}
             onChange={(event) => {
-              setSearch(event.target.value);
+              setRoleFilter(event.target.value);
               setUsersCursor(null);
             }}
-            placeholder="Search users"
-            className="input-base pl-9"
-          />
-        </label>
+            className="input-base sm:w-40"
+          >
+            <option value="">All roles</option>
+            <option value="super_admin">Super Admin</option>
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="student">Student</option>
+            <option value="parent">Parent</option>
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value);
+              setUsersCursor(null);
+            }}
+            className="input-base sm:w-32"
+          >
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          {(search || roleFilter || statusFilter) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setRoleFilter('');
+                setStatusFilter('');
+                setUsersCursor(null);
+              }}
+              className="btn-secondary text-xs whitespace-nowrap"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <p className="text-xs text-text-muted">
             {usersQuery.data?.count ?? users.length} users

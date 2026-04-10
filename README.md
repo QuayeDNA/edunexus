@@ -45,6 +45,20 @@ This creates:
 - 5 classes, 30 students, 8 staff
 - Demo login: `admin@edunexus.demo` / `Demo1234!`
 
+### 4b. Bootstrap a platform super admin (optional)
+
+```bash
+npm run seed:super-admin
+```
+
+Custom credentials:
+
+```bash
+npm run seed:super-admin -- --email superadmin@yourdomain.com --password "StrongPass123!"
+```
+
+This command creates (or updates) an auth user and upserts a `profiles` row with `role='super_admin'` and `school_id=null`.
+
 ### 5. Start development server
 
 ```bash

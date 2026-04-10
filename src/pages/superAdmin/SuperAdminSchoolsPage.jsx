@@ -16,6 +16,7 @@ const STATUS_STYLES = {
 
 export default function SuperAdminSchoolsPage() {
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [schoolsCursor, setSchoolsCursor] = useState(null);
   const [createSchoolForm, setCreateSchoolForm] = useState({
     name: '',
@@ -28,6 +29,7 @@ export default function SuperAdminSchoolsPage() {
 
   const schoolsQuery = useSuperAdminSchools({
     search: search.trim() || undefined,
+    status: statusFilter || undefined,
     limit: 50,
     cursor: schoolsCursor,
   });
@@ -108,19 +110,46 @@ export default function SuperAdminSchoolsPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-border shadow-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="search"
-            value={search}
+        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
+          <label className="relative flex-1">
+            <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setSchoolsCursor(null);
+              }}
+              placeholder="Search schools"
+              className="input-base pl-9"
+            />
+          </label>
+          <select
+            value={statusFilter}
             onChange={(event) => {
-              setSearch(event.target.value);
+              setStatusFilter(event.target.value);
               setSchoolsCursor(null);
             }}
-            placeholder="Search schools"
-            className="input-base pl-9"
-          />
-        </label>
+            className="input-base sm:w-40"
+          >
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+          {(search || statusFilter) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setStatusFilter('');
+                setSchoolsCursor(null);
+              }}
+              className="btn-secondary text-xs whitespace-nowrap"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <p className="text-xs text-text-muted">
             {schoolsQuery.data?.count ?? schools.length} schools

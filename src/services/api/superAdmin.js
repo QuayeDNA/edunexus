@@ -2,6 +2,8 @@ import { supabase } from '../supabaseClient.js';
 
 const SUPER_ADMIN_FUNCTION_NAME = 'super-admin-ops';
 
+const SESSION_EXPIRED_MESSAGE = 'Your session is invalid or expired. Please sign in again.';
+
 const toNumber = (value, fallback = 0) => {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -34,6 +36,65 @@ const normalizeInvokeError = (error, action) => {
   return normalized;
 };
 
+const isInvalidJwtError = (error) => {
+  const code = String(error?.code ?? error?.status ?? '').toLowerCase();
+  const message = String(error?.message ?? error?.error_description ?? '').toLowerCase();
+
+  if (code === '401' || code === 'unauthorized') return true;
+
+  return (
+    message.includes('invalid jwt') ||
+    message.includes('jwt expired') ||
+    message.includes('jwt malformed') ||
+    (message.includes('jwt') && message.includes('invalid')) ||
+    message.includes('unauthorized')
+  );
+};
+
+const ensureAccessToken = async () => {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw normalizeInvokeError(error, 'auth.session');
+
+  const token = data?.session?.access_token;
+  if (!token) {
+    const missingSessionError = new Error(SESSION_EXPIRED_MESSAGE);
+    missingSessionError.code = 'AUTH_SESSION_MISSING';
+    throw missingSessionError;
+  }
+
+  return token;
+};
+
+const refreshAccessToken = async () => {
+  const { data, error } = await supabase.auth.refreshSession();
+  if (error || !data?.session?.access_token) {
+    await supabase.auth.signOut();
+    const authError = new Error(SESSION_EXPIRED_MESSAGE);
+    authError.code = 'AUTH_INVALID_JWT';
+    throw authError;
+  }
+
+  return data.session.access_token;
+};
+
+const invokeOnce = async ({ action, payload, accessToken }) => {
+  const { data, error } = await supabase.functions.invoke(SUPER_ADMIN_FUNCTION_NAME, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: {
+      action,
+      payload,
+    },
+  });
+
+  const responseError = error ?? data?.error ?? null;
+  return {
+    data,
+    error: responseError,
+  };
+};
+
 export const isMissingSuperAdminBackendError = (error) => {
   const text = String(error?.message ?? '').toLowerCase();
 
@@ -44,19 +105,24 @@ export const isMissingSuperAdminBackendError = (error) => {
 };
 
 const invokeSuperAdminOperation = async (action, payload = {}) => {
-  const { data, error } = await supabase.functions.invoke(SUPER_ADMIN_FUNCTION_NAME, {
-    body: {
-      action,
-      payload,
-    },
-  });
+  let accessToken = await ensureAccessToken();
+  let { data, error } = await invokeOnce({ action, payload, accessToken });
+
+  // Retry once with a fresh token if Supabase rejects a stale/invalid JWT.
+  if (error && isInvalidJwtError(error)) {
+    accessToken = await refreshAccessToken();
+    ({ data, error } = await invokeOnce({ action, payload, accessToken }));
+
+    if (error && isInvalidJwtError(error)) {
+      await supabase.auth.signOut();
+      const authError = new Error(SESSION_EXPIRED_MESSAGE);
+      authError.code = 'AUTH_INVALID_JWT';
+      throw authError;
+    }
+  }
 
   if (error) {
     throw normalizeInvokeError(error, action);
-  }
-
-  if (data?.error) {
-    throw normalizeInvokeError(data.error, action);
   }
 
   return data?.data ?? data ?? {};

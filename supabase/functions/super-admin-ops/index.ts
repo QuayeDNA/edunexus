@@ -743,11 +743,16 @@ const handleUserSetStatus = async (
   await setAuthUserBanState(serviceClient, userId, isActive);
 
   if (!isActive) {
-    await revokeAuthSessionsByUserId({
-      supabaseUrl: authAdmin.supabaseUrl,
-      serviceRoleKey: authAdmin.serviceRoleKey,
-      userId,
-    });
+    try {
+      await revokeAuthSessionsByUserId({
+        supabaseUrl: authAdmin.supabaseUrl,
+        serviceRoleKey: authAdmin.serviceRoleKey,
+        userId,
+      });
+    } catch (revokeError) {
+      // Log the error but don't fail the operation
+      console.error('Failed to revoke sessions for user', userId, revokeError);
+    }
   }
 
   await insertAuditEvent(serviceClient, {

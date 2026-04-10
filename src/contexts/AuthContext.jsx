@@ -137,6 +137,30 @@ export const AuthProvider = ({ children }) => {
             return null;
           }
 
+          // Check if user's school is active (if they have one)
+          if (profileData.school_id && profileData.role !== 'super_admin') {
+            try {
+              const { data: schoolData, error: schoolError } = await supabase
+                .from('schools')
+                .select('lifecycle_status')
+                .eq('id', profileData.school_id)
+                .single();
+
+              if (schoolError) {
+                console.error('Failed to check school status:', schoolError);
+              } else if (schoolData?.lifecycle_status !== 'active') {
+                // School is suspended, sign out the user
+                await supabase.auth.signOut();
+                setProfileError(new Error('Your school account has been suspended. Please contact support.'));
+                setProfileStatus('error');
+                return null;
+              }
+            } catch (err) {
+              console.error('Error checking school status:', err);
+              // Continue with login even if school check fails
+            }
+          }
+
           setProfile(profileData);
           writeProfileCache(userId, profileData);
           setProfileStatus('ready');
