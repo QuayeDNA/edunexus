@@ -1,62 +1,48 @@
-import { and, eq, asc, desc } from 'drizzle-orm';
-import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
+import { and, eq } from 'drizzle-orm';
 import type { DatabaseClient } from './client';
 
-type Table = PgTableWithColumns<TableConfig>;
-
-export function tenantQuery<T extends Table>(
+export function tenantQuery<T extends Record<string, any>>(
   db: DatabaseClient,
   table: T,
-  schoolIdColumn: keyof T['_']['columns'] & string,
+  schoolIdColumn: keyof T,
 ) {
-  function findAll(opts?: { sortBy?: string; sortOrder?: 'asc' | 'desc'; limit?: number; offset?: number }) {
-    const conditions = [eq(table[schoolIdColumn as keyof typeof table] as any, schoolIdColumn)];
-    const query = db.select().from(table).where(and(...conditions));
-    // TODO: apply sorting, pagination
-    return query;
-  }
+  return function (schoolId: string) {
+    const scoped = (col: keyof T) => eq(table[col] as any, schoolId);
 
-  function findById(id: string) {
-    return db
-      .select()
-      .from(table)
-      .where(
-        and(
-          eq((table as any).id, id),
-          eq(table[schoolIdColumn as keyof typeof table] as any, schoolIdColumn),
-        ),
-      )
-      .then((rows) => rows[0] ?? null);
-  }
+    function findAll() {
+      return db.select().from(table as any).where(scoped(schoolIdColumn));
+    }
 
-  function create(data: any) {
-    return db.insert(table).values({ ...data, [schoolIdColumn]: schoolIdColumn }).returning();
-  }
+    function findById(id: string) {
+      return db
+        .select()
+        .from(table as any)
+        .where(and(eq((table as any).id, id), scoped(schoolIdColumn)))
+        .then((rows: any[]) => rows[0] ?? null);
+    }
 
-  function update(id: string, data: any) {
-    return db
-      .update(table)
-      .set(data)
-      .where(
-        and(
-          eq((table as any).id, id),
-          eq(table[schoolIdColumn as keyof typeof table] as any, schoolIdColumn),
-        ),
-      )
-      .returning();
-  }
+    function create(data: Partial<T>) {
+      return db
+        .insert(table as any)
+        .values({ ...data, [schoolIdColumn]: schoolId })
+        .returning();
+    }
 
-  function remove(id: string) {
-    return db
-      .delete(table)
-      .where(
-        and(
-          eq((table as any).id, id),
-          eq(table[schoolIdColumn as keyof typeof table] as any, schoolIdColumn),
-        ),
-      )
-      .returning();
-  }
+    function update(id: string, data: Partial<T>) {
+      return db
+        .update(table as any)
+        .set(data)
+        .where(and(eq((table as any).id, id), scoped(schoolIdColumn)))
+        .returning();
+    }
 
-  return { findAll, findById, create, update, remove };
+    function remove(id: string) {
+      return db
+        .delete(table as any)
+        .where(and(eq((table as any).id, id), scoped(schoolIdColumn)))
+        .returning();
+    }
+
+    return { findAll, findById, create, update, remove };
+  };
 }
