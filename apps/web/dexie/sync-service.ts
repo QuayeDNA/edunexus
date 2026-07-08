@@ -90,7 +90,8 @@ export class SyncService {
     serverUpdatedAt: string,
   ): Promise<void> {
     const store = dexieDb.table<any>(table);
-    return store.update(recordId, { updatedAt: serverUpdatedAt, syncStatus: 'synced' });
+    store.update(recordId, { updatedAt: serverUpdatedAt, syncStatus: 'synced' });
+    return Promise.resolve();
   }
 
   private resolveEndpoint(table: string): string {
