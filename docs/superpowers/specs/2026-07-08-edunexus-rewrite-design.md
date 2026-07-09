@@ -50,11 +50,11 @@ The current EduNexus codebase was AI-scaffolded and relies on Supabase as its ba
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | **Next.js 15** (App Router) | Full-stack, middleware for tenant resolution, SSR, file-based routing, Vercel-deployable or self-hosted |
+| Framework | **Next.js 16** (App Router, Turbopack) | Full-stack, proxy for tenant resolution, SSR, file-based routing, Vercel-deployable or self-hosted |
 | Language | **TypeScript** (strict mode) | Type safety across entire stack — eliminates an entire class of bugs |
 | Database ORM | **Drizzle ORM** | Lighter than Prisma, SQL-like API, better performance for complex queries, excellent migration tooling |
 | Database | **PostgreSQL 17** | ACID-compliant, mature, best for financial/academic data, great with Drizzle |
-| Auth | **Auth.js v5** | Next.js-native, supports email/password + magic links + OAuth, built-in session management |
+| Auth | **Auth.js v5** (Credentials provider) | Next.js-native, email/password via Credentials provider with direct DB query (scrypt hashing), JWT sessions |
 | Real-time | **WebSockets** (`ws`) + optional Redis Pub/Sub | Attendance marking, messaging, notifications — only when needed, not always-on polling |
 | Offline | **Dexie** (IndexedDB) — keep existing | Already battle-tested in current app. Maintain same sync pattern. |
 | File Storage | **S3-compatible** (MinIO dev / Backblaze B2 or AWS S3 prod) | Cheap, scalable, zero lock-in. Cloudflare R2 is a future option. |
@@ -99,7 +99,7 @@ Three approaches were evaluated:
 ### Tenant Resolution Flow
 
 ```
-Request → Next.js Middleware (middleware.ts)
+Request → Next.js Proxy (proxy.ts)
   │
   ├── 1. Parse hostname from request headers
   │     e.g., "academy.edunexus.com" or "console.edunexus.com"
@@ -135,13 +135,13 @@ Request → Next.js Middleware (middleware.ts)
 
 ### Tenant Isolation Rules (Enforced at 3 layers)
 
-**Layer 1 — Middleware (mandatory):**
+**Layer 1 — Proxy (mandatory):**
 - Every request to a school route must have a resolved `school_id`
 - Requests to `console.edunexus.com` bypass school scoping
-- The middleware sets `x-tenant-id` header that downstream code reads
+- The proxy sets `x-tenant-id` header that downstream code reads
 
 **Layer 2 — API Routes & Server Components (defense in depth):**
-- Read `school_id` from the middleware-set header, never from client-provided request body
+- Read `school_id` from the proxy-set header, never from client-provided request body
 - All database queries use a Drizzle helper that auto-injects `WHERE school_id = ?`
 
 ```typescript
@@ -185,14 +185,14 @@ export function getTenantQuery(tenantId: string) {
 
 ```
 1. User visits school subdomain (e.g., academy.edunexus.com)
-2. Next.js middleware checks session cookie
+2. Next.js proxy checks session cookie
 3. No session → redirect to console.edunexus.com/login
 4. User logs in via Auth.js (email/password or magic link)
 5. Auth.js callback:
    a. Looks up user's profile → gets role + school_id
    b. Redirects to appropriate subdomain + route
    c. e.g., admin → academy.edunexus.com/admin/dashboard
-6. Subsequent requests: middleware validates
+6. Subsequent requests: proxy validates
    a. Session is valid (Auth.js)
    b. Role matches route group
    c. School_id matches domain
@@ -216,31 +216,23 @@ interface Session {
 
 ### Route Protection Strategy
 
-**Middleware-level (first line of defense):**
+**Proxy-level (first line of defense):**
 ```typescript
-// middleware.ts
-const roleRouteMap = {
-  '/(super-admin)/*': ['super_admin'],
-  '/(school)/admin/*': ['admin'],
-  '/(school)/teacher/*': ['teacher'],
-  '/(school)/student/*': ['student'],
-  '/(school)/parent/*': ['parent'],
+// proxy.ts
+export const config = {
+  matcher: ['/admin/:path*', '/teacher/:path*', '/student/:path*', '/parent/:path*', '/dashboard'],
 }
 
-export async function middleware(request: NextRequest) {
-  const tenant = await resolveTenant(request)
-  const session = await auth()  // Auth.js
+const proxyHandler = auth(async function proxy(req: NextRequest & { auth: any }) {
+  const { pathname } = req.nextUrl
+  const hostname = req.headers.get('host') ?? ''
+  const session = req.auth
 
-  if (!session) return redirectToLogin(request)
-  if (!validateRoleAccess(session, request.nextUrl.pathname)) return redirectToDashboard(session)
-  if (tenant.isSchool && session.schoolId !== tenant.schoolId) return redirectToDashboard(session)
+  const resolvedTenant = await fetchTenant(hostname)
+  // ... set tenant headers, validate role, route to correct dashboard
+})
 
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-tenant-id', tenant.schoolId || '')
-  requestHeaders.set('x-tenant-slug', tenant.slug || '')
-
-  return NextResponse.next({ request: { headers: requestHeaders } })
-}
+export default proxyHandler
 ```
 
 **API-level (second line of defense):**
@@ -370,7 +362,7 @@ edunexus/
 │       │   ├── schema.ts
 │       │   ├── sync-service.ts
 │       │   └── stores/               # Dexie-backed stores
-│       ├── middleware.ts              # Tenant resolution + auth guard
+│       ├── proxy.ts                   # Tenant resolution + auth guard (Next.js 16)
 │       ├── next.config.ts
 │       ├── tailwind.config.ts
 │       ├── tsconfig.json

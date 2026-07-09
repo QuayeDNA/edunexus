@@ -2,19 +2,21 @@ import { auth } from '@/lib/auth/auth.config';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { tenantCache } from '@/lib/tenant/cache';
-import { parseHostname, isSuperAdminHost } from '@/lib/tenant/resolve';
-import type { TenantInfo } from '@/lib/tenant/resolve';
+import { parseHostname, isSuperAdminHost, type TenantInfo } from '@/lib/tenant/host';
 import { ROLE_ROUTES } from '@edunexus/shared';
 import type { UserRole } from '@edunexus/shared';
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/admin/:path*',
+    '/teacher/:path*',
+    '/student/:path*',
+    '/parent/:path*',
+    '/dashboard',
   ],
 };
 
 const SUPER_ADMIN_PREFIX = '/super-admin';
-const SCHOOL_ROUTE_PREFIXES = ['/admin', '/teacher', '/student', '/parent', '/dashboard'];
 
 async function fetchTenant(hostname: string): Promise<TenantInfo> {
   const { slug } = parseHostname(hostname);
@@ -59,7 +61,7 @@ function getRouteRole(pathname: string): UserRole | null {
   return null;
 }
 
-const middlewareHandler = auth(async function middleware(req: NextRequest & { auth: any }) {
+const proxyHandler = auth(async function proxy(req: NextRequest & { auth: any }) {
   const { pathname } = req.nextUrl;
   const hostname = req.headers.get('host') ?? '';
   const session = req.auth;
@@ -110,11 +112,13 @@ const middlewareHandler = auth(async function middleware(req: NextRequest & { au
     if (!session?.user) {
       return NextResponse.redirect(new URL('/login', url));
     }
-    const redirectPath = ROLE_ROUTES[session.user.role as UserRole] ?? '/login';
-    return NextResponse.redirect(new URL(redirectPath, url));
+    const targetPath = ROLE_ROUTES[session.user.role as UserRole] ?? '/login';
+    if (pathname !== targetPath) {
+      return NextResponse.redirect(new URL(targetPath, url));
+    }
   }
 
   return response;
 }) as unknown as (req: NextRequest) => Promise<NextResponse | undefined>;
 
-export default middlewareHandler;
+export default proxyHandler;

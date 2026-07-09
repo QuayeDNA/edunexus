@@ -2,45 +2,8 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { schools } from '@edunexus/database';
 import { tenantCache } from './cache';
-
-export interface TenantInfo {
-  schoolId: string | null;
-  slug: string | null;
-  name: string | null;
-  isSuperAdmin: boolean;
-}
-
-export function parseHostname(hostname: string): {
-  subdomain: string | null;
-  slug: string | null;
-} {
-  const host = hostname?.replace(/:\d+$/, '').toLowerCase() ?? '';
-  const parts = host.split('.');
-
-  if (parts.length < 3) {
-    return { subdomain: null, slug: null };
-  }
-
-  const subdomain = parts[0];
-
-  const superAdminDomains = ['console', 'app', 'www'];
-  if (superAdminDomains.includes(subdomain)) {
-    return { subdomain, slug: null };
-  }
-
-  return { subdomain, slug: subdomain };
-}
-
-export function isSuperAdminHost(hostname: string): boolean {
-  const host = hostname?.replace(/:\d+$/, '').toLowerCase() ?? '';
-  const parts = host.split('.');
-
-  if (parts.length < 3) return true;
-
-  const subdomain = parts[0];
-  const superAdminDomains = ['console', 'app', 'www'];
-  return superAdminDomains.includes(subdomain);
-}
+import { parseHostname, isSuperAdminHost } from './host';
+import type { TenantInfo } from './host';
 
 export async function resolveTenant(hostname: string): Promise<TenantInfo> {
   const { slug } = parseHostname(hostname);

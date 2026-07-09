@@ -1,6 +1,6 @@
 # EduNexus — Rewrite Roadmap
 
-> From React 19 + Supabase (JS) → Next.js 15 + PostgreSQL (TypeScript)
+> From React 19 + Supabase (JS) → Next.js 16 + PostgreSQL (TypeScript)
 > Full spec: `docs/superpowers/specs/2026-07-08-edunexus-rewrite-design.md`
 
 ---
@@ -11,33 +11,37 @@
 **Goal:** Deployable full-stack scaffold with auth and tenant isolation
 
 ```
-Monorepo → Next.js 15 → Drizzle Schema → Auth.js → Tenant Middleware → Docker → CI
+Monorepo → Next.js 16 → Drizzle Schema → Auth.js → Tenant Proxy → Docker → CI
 ```
 
 **Completed deliverables:**
 - ✅ Turborepo + pnpm workspaces (4 packages: web, database, shared, root config)
-- ✅ Next.js 15 (App Router, TypeScript strict, Tailwind v4 CSS-first config)
-- ✅ Drizzle ORM schema (22 tables) + client + helpers + seed script
-- ✅ Auth.js v5 (email/password via Credentials provider, JWT sessions)
-- ✅ Multi-tenant middleware (subdomain → school_id, in-memory cache)
+- ✅ Next.js 16 (App Router, Turbopack, TypeScript strict, Tailwind v4 CSS-first config)
+- ✅ Drizzle ORM schema (43 tables) + client + helpers + seed script
+- ✅ Auth.js v5 (email/password via Credentials provider, JWT sessions, scrypt password hashing)
+- ✅ Multi-tenant proxy (subdomain → school_id, in-memory cache, Next.js 16 proxy.ts convention)
 - ✅ Role-based route protection (5 roles: super_admin, admin, teacher, student, parent)
 - ✅ Role-specific layouts + dashboards (all 5 roles with sidebar navigation)
 - ✅ Dexie v4 offline schema (10 object stores) + background sync service
 - ✅ GitHub Actions CI (lint, typecheck, test) + Vercel deploy workflow
-- ✅ Seed script with demo school
+- ✅ Seed script with demo school + superadmin account
 - ✅ Dexie v4 migration (named import pattern, EntityTable types)
 - ✅ Tailwind v4 migration (CSS-first `@theme`, no config file)
-- ✅ TypeScript 7, Vitest 4, Drizzle 0.45, all packages updated to latest
+- ✅ TypeScript 6.0.3, Vitest 4, Drizzle 0.45, Next.js 16.2.10, all packages updated
 - ✅ Shared package: types, constants (roles, grades, Ghana), utils (payroll, grades, formatters)
 - ✅ 57 unit tests passing (formatters, payroll, grade-utils)
+- ✅ PostgreSQL 18 (Windows native) — migrate + seed verified
+- ✅ `profiles.school_id` nullable — superadmins have no school association
+- ✅ `.env` at monorepo root, loaded via `dotenv -e ../../.env` in dev script
 
 **Exit criteria:**
 - 🟡 `docker compose up` gives a working dev environment — **pending** (requires Docker Desktop)
 - 🟡 Two subdomains resolve to separate tenant data — **pending** (requires local DNS or hosts entries)
-- 🟡 Login → role-based redirect → session persists — **pending** (requires DB + migrate)
-- ✅ Auth.js session contains role + school_id — verified via type augmentation
-- ✅ Middleware enforces tenant isolation — verified via type-checked route guards
 - 🟡 CI passes on every PR — **pending** (requires GitHub push to trigger)
+- ✅ Database migrate + seed working (41 tables created)
+- ✅ Login page renders at localhost:3000
+- ✅ Auth.js credentials flow queries DB directly (no circular API fetch)
+- ✅ Proxy guards authenticated routes redirect to role-specific dashboards
 
 ---
 

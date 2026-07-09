@@ -9,8 +9,8 @@ export const ROLES: Record<string, UserRole> = {
 } as const;
 
 export const ROLE_ROUTES: Record<UserRole, string> = {
-  super_admin: '/super-admin/dashboard',
-  admin: '/dashboard',
+  super_admin: '/dashboard',
+  admin: '/admin/dashboard',
   teacher: '/teacher/dashboard',
   student: '/student/dashboard',
   parent: '/parent/dashboard',

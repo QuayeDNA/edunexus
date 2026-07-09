@@ -5,7 +5,7 @@ import { schools } from './schools';
 
 export const profiles = pgTable('profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  schoolId: uuid('school_id').notNull().references(() => schools.id),
+  schoolId: uuid('school_id').references(() => schools.id),
   email: varchar('email', { length: 255 }).notNull(),
   passwordHash: text('password_hash'),
   role: varchar('role', { length: 20 }).notNull(),

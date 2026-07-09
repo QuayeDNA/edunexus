@@ -4,7 +4,7 @@
 
 **Product:** EduNexus — Multi-tenant K-12 School Management System
 **Target Market:** Ghana & West Africa (configurable for British/American curricula)
-**Status:** Rewrite from React 19 + Supabase (JS) → Next.js 15 + PostgreSQL (TypeScript)
+**Status:** Rewrite from React 19 + Supabase (JS) → Next.js 16 + PostgreSQL (TypeScript)
 **Design Doc:** `docs/superpowers/specs/2026-07-08-edunexus-rewrite-design.md`
 
 ## Key Contacts
@@ -17,7 +17,7 @@
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 15 (App Router, TypeScript strict) |
+| Framework | Next.js 16 (App Router, Turbopack, TypeScript strict) |
 | Database ORM | Drizzle ORM |
 | Database | PostgreSQL 17 |
 | Auth | Auth.js v5 (NextAuth) |
@@ -55,11 +55,22 @@
 - All Dexie records must have `syncStatus: 'pending' | 'synced' | 'error'`
 
 ### Auth (MANDATORY)
-- Auth.js v5 for authentication (email/password + magic link)
+- Auth.js v5 for authentication (email/password via Credentials provider)
+- Credentials authorize function queries profiles DB directly (no fetch to API route)
+- Passwords hashed with `scrypt` (64-byte salt + hash), stored as `scrypt:{salt}:{hash}`
 - Session contains: `user.id`, `user.role`, `user.schoolId` (null for super_admin)
-- Middleware validates: auth → role matches route → tenant matches domain
+- Proxy (Next.js 16 replaces `middleware.ts` with `proxy.ts`) validates: auth → role matches route → tenant matches domain
 - API routes have a second layer of role validation via `requireRole()` guard
 - Super admin write operations (school CRUD, user lifecycle) use elevated privilege
+- `profiles.school_id` is nullable — super admins have no school association
+
+### Future Auth Improvements (Phase 2+)
+- Password reset flow (email-based)
+- Email verification on registration
+- Account lockout after N failed attempts
+- Session management (view/revoke active sessions)
+- Rate limiting on `/api/auth/*` endpoints
+- Consider SMS OTP (via Africa's Talking) for parent/student accounts — more natural for Ghana's mobile-first market than OAuth
 
 ### URL Structure
 - `console.edunexus.com` — Super admin portal + login
@@ -81,7 +92,7 @@
 
 | Phase | Description | Status |
 |---|---|---|
-| **1 — Foundation** | Next.js scaffold, Drizzle schema, middleware, Auth.js, Docker, CI | ✅ Complete |
+| **1 — Foundation** | Next.js scaffold, Drizzle schema, proxy, Auth.js, Docker, CI | ✅ Complete |
 | **2 — Core School Ops** | Students, Staff, Classes, Subjects, Timetable, Assessments, Report Cards | ⬜ Pending |
 | **3 — Attendance & Finance** | Attendance marking, Fees, Payments, Paystack, Receipts, Financial reports | ⬜ Pending |
 | **4 — Communication & Payroll** | Notifications, Messaging, SMS/Email, Payroll, Payslips | ⬜ Pending |
@@ -93,7 +104,7 @@
 
 ## Current Working Phase
 
-**Phase 1 — Foundation** is being planned. Do not start implementation until the writing-plans skill has been invoked and the implementation plan is approved.
+**Phase 1 — Foundation** is complete and verified. All exit criteria met except Docker/DNS/CI trigger (Phase 2 concerns). Proceeding to Phase 2 planning.
 
 ---
 
@@ -105,8 +116,9 @@ For users running PostgreSQL directly on Windows (no Docker Desktop):
 # PostgreSQL runs as a Windows service — just verify it's started
 pnpm install
 pnpm db:migrate    # drizzle-kit push (creates tables)
-pnpm db:seed       # seed demo school + data
+pnpm db:seed       # seed demo school + superadmin data
 pnpm dev           # http://localhost:3000
+# Login: admin@edunexus.com / Admin@123
 ```
 
 Redis/MinIO are optional — only needed for BullMQ queues & file uploads (Phase 3+).

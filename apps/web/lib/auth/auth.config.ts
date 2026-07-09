@@ -1,5 +1,9 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import { eq } from 'drizzle-orm';
+import { scryptSync, timingSafeEqual } from 'crypto';
+import { db } from '@/lib/db/client';
+import { profiles } from '@edunexus/database';
 import type { UserRole } from '@edunexus/shared';
 
 declare module 'next-auth' {
@@ -16,6 +20,15 @@ declare module 'next-auth' {
       name: string;
     };
   }
+}
+
+function verifyPassword(password: string, stored: string): boolean {
+  const parts = stored.split(':');
+  if (parts.length !== 3 || parts[0] !== 'scrypt') return false;
+  const salt = parts[1];
+  const hash = parts[2];
+  const inputHash = scryptSync(password, salt, 64).toString('hex');
+  return timingSafeEqual(Buffer.from(inputHash), Buffer.from(hash));
 }
 
 const nextAuthResult = NextAuth({
@@ -37,32 +50,22 @@ const nextAuthResult = NextAuth({
         };
 
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/login`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, password }),
-            },
-          );
+          const row = await db
+            .select()
+            .from(profiles)
+            .where(eq(profiles.email, email))
+            .then((rows) => rows[0] ?? null);
 
-          if (!res.ok) {
-            return null;
-          }
+          if (!row || !row.passwordHash) return null;
+          if (!verifyPassword(password, row.passwordHash)) return null;
 
-          const user = await res.json();
-
-          if (user && user.id) {
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role as UserRole,
-              schoolId: user.schoolId ?? null,
-            };
-          }
-
-          return null;
+          return {
+            id: row.id,
+            email: row.email,
+            name: `${row.firstName} ${row.lastName}`,
+            role: row.role as UserRole,
+            schoolId: row.schoolId ?? null,
+          };
         } catch {
           return null;
         }

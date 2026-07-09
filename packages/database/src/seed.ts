@@ -1,11 +1,15 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+config({ path: resolve(__dirname, '../../../.env') });
 import { createClient } from './client';
 import {
   schools,
   academicYears,
   terms,
   gradeLevels,
+  profiles,
 } from './schema/index';
+import { randomBytes, scryptSync } from 'crypto';
 
 const SCHOOL_NAME = 'Accra Academy Basic School';
 const SCHOOL_SLUG = 'academy';
@@ -89,11 +93,31 @@ async function main() {
     });
   }
 
+  console.log('Creating superadmin profile...');
+  const password = 'Admin@123';
+  const salt = randomBytes(16).toString('hex');
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  const passwordHash = `scrypt:${salt}:${hash}`;
+
+  await db.insert(profiles).values({
+    schoolId: null,
+    email: 'admin@edunexus.com',
+    passwordHash,
+    role: 'super_admin',
+    firstName: 'Super',
+    lastName: 'Admin',
+    isActive: true,
+  });
+
+  console.log('   Email: admin@edunexus.com');
+  console.log('   Password: Admin@123');
+
   console.log('\n✅ Seed complete!');
   console.log(`   School: ${SCHOOL_NAME} (${SCHOOL_SLUG})`);
   console.log(`   Academic Year: ${ACADEMIC_YEAR_NAME}`);
   console.log(`   Terms: ${TERMS.length}`);
   console.log(`   Grade Levels: ${GRADE_LEVELS.length}`);
+  console.log(`   Superadmin: admin@edunexus.com / ${password}`);
 
   process.exit(0);
 }

@@ -9,10 +9,10 @@ import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 
 const NAV_ITEMS = [
-  { href: '/super-admin/dashboard', label: 'Dashboard', icon: Building2 },
-  { href: '/super-admin/schools', label: 'Schools', icon: Building2 },
-  { href: '/super-admin/users', label: 'Users', icon: Users },
-  { href: '/super-admin/audit-log', label: 'Audit Log', icon: ScrollText },
+  { href: '/dashboard', label: 'Dashboard', icon: Building2 },
+  { href: '/schools', label: 'Schools', icon: Building2 },
+  { href: '/users', label: 'Users', icon: Users },
+  { href: '/audit-log', label: 'Audit Log', icon: ScrollText },
 ];
 
 export function SuperAdminSidebar() {
