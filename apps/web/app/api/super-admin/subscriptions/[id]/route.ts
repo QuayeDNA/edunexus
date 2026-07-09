@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@edunexus/database';
+import { db } from '@/lib/db';
 import { schoolSubscriptions } from '@edunexus/database/src/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';

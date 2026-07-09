@@ -2,19 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { PageHeader } from '@/components/page-header';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 const schoolSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -64,96 +62,94 @@ export default function NewSchoolPage() {
   return (
     <div className="max-w-2xl">
       <PageHeader title="Add School" description="Create a new school on the platform" />
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField control={form.control} name="name" render={({ field }) => (
-            <FormItem>
-              <FormLabel>School Name</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Controller control={form.control} name="name" render={({ field, fieldState }) => (
+          <div className="space-y-2">
+            <Label htmlFor={field.name}>School Name</Label>
+            <Input id={field.name} {...field} />
+            {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+          </div>
+        )} />
+        <div className="grid grid-cols-2 gap-4">
+          <Controller control={form.control} name="slug" render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <Label htmlFor={field.name}>Slug (subdomain)</Label>
+              <Input id={field.name} {...field} placeholder="my-school" />
+              {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+            </div>
           )} />
-          <div className="grid grid-cols-2 gap-4">
-            <FormField control={form.control} name="slug" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Slug (subdomain)</FormLabel>
-                <FormControl><Input {...field} placeholder="my-school" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="code" render={({ field }) => (
-              <FormItem>
-                <FormLabel>School Code</FormLabel>
-                <FormControl><Input {...field} placeholder="SCH001" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField control={form.control} name="email" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl><Input {...field} type="email" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="phone" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-          </div>
-          <FormField control={form.control} name="address" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
+          <Controller control={form.control} name="code" render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <Label htmlFor={field.name}>School Code</Label>
+              <Input id={field.name} {...field} placeholder="SCH001" />
+              {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+            </div>
           )} />
-          <div className="grid grid-cols-3 gap-4">
-            <FormField control={form.control} name="region" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Region</FormLabel>
-                <FormControl><Input {...field} placeholder="Greater Accra" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="curriculum" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Curriculum</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    <SelectItem value="ghana_basic">Ghana Basic</SelectItem>
-                    <SelectItem value="british">British</SelectItem>
-                    <SelectItem value="american">American</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="calendar" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Calendar</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    <SelectItem value="ghana_3_terms">Ghana (3 Terms)</SelectItem>
-                    <SelectItem value="british_3_terms">British (3 Terms)</SelectItem>
-                    <SelectItem value="american_semester">American (Semester)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Controller control={form.control} name="email" render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <Label htmlFor={field.name}>Email</Label>
+              <Input id={field.name} {...field} type="email" />
+              {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+            </div>
+          )} />
+          <Controller control={form.control} name="phone" render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <Label htmlFor={field.name}>Phone</Label>
+              <Input id={field.name} {...field} />
+              {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+            </div>
+          )} />
+        </div>
+        <Controller control={form.control} name="address" render={({ field, fieldState }) => (
+          <div className="space-y-2">
+            <Label htmlFor={field.name}>Address</Label>
+            <Input id={field.name} {...field} />
+            {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
           </div>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'Create School'}
-          </Button>
-        </form>
-      </Form>
+        )} />
+        <div className="grid grid-cols-3 gap-4">
+          <Controller control={form.control} name="region" render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <Label htmlFor={field.name}>Region</Label>
+              <Input id={field.name} {...field} placeholder="Greater Accra" />
+              {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+            </div>
+          )} />
+          <Controller control={form.control} name="curriculum" render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <Label>Curriculum</Label>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ghana_basic">Ghana Basic</SelectItem>
+                  <SelectItem value="british">British</SelectItem>
+                  <SelectItem value="american">American</SelectItem>
+                </SelectContent>
+              </Select>
+              {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+            </div>
+          )} />
+          <Controller control={form.control} name="calendar" render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <Label>Calendar</Label>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ghana_3_terms">Ghana (3 Terms)</SelectItem>
+                  <SelectItem value="british_3_terms">British (3 Terms)</SelectItem>
+                  <SelectItem value="american_semester">American (Semester)</SelectItem>
+                </SelectContent>
+              </Select>
+              {fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}
+            </div>
+          )} />
+        </div>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Creating...' : 'Create School'}
+        </Button>
+      </form>
     </div>
   );
 }

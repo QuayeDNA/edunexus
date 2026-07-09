@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@edunexus/database';
+import { db } from '@/lib/db';
 import { auditLogs } from '@edunexus/database/src/schema';
 import { desc, eq, and, gte, lte, count } from 'drizzle-orm';
 import { requireRole } from '@/lib/api/require-role';

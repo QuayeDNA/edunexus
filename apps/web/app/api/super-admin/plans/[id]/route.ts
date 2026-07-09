@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@edunexus/database';
+import { db } from '@/lib/db';
 import { schoolPlans } from '@edunexus/database/src/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -29,8 +29,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const [existing] = await db.select().from(schoolPlans).where(eq(schoolPlans.id, params.id)).limit(1);
   if (!existing) return apiError(404, 'Plan not found');
 
+  const updateData = { ...parsed.data, updatedAt: new Date() } as Record<string, unknown>;
+  if (updateData.price !== undefined) updateData.price = String(updateData.price);
+
   const [updated] = await db.update(schoolPlans)
-    .set({ ...parsed.data, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(schoolPlans.id, params.id))
     .returning();
 

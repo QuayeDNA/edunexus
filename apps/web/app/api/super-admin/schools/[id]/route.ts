@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@edunexus/database';
+import { db } from '@/lib/db';
 import { schools, auditLogs } from '@edunexus/database/src/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -26,7 +26,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  const { error: authError } = await requireRole('super_admin');
+  const { error: authError, user } = await requireRole('super_admin');
   if (authError) return authError;
 
   const body = await request.json();
@@ -44,6 +44,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     .returning();
 
   await db.insert(auditLogs).values({
+    schoolId: existing.id,
+    userId: user!.id,
     action: 'school.updated',
     tableName: 'schools',
     recordId: params.id,
@@ -55,7 +57,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
-  const { error: authError } = await requireRole('super_admin');
+  const { error: authError, user } = await requireRole('super_admin');
   if (authError) return authError;
 
   const [existing] = await db.select().from(schools).where(eq(schools.id, params.id)).limit(1);
@@ -66,6 +68,8 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     .where(eq(schools.id, params.id));
 
   await db.insert(auditLogs).values({
+    schoolId: existing.id,
+    userId: user!.id,
     action: 'school.deleted',
     tableName: 'schools',
     recordId: params.id,

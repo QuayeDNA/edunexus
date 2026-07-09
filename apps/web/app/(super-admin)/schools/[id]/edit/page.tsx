@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { PageHeader } from '@/components/page-header';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 const editSchema = z.object({
   name: z.string().min(2).optional(),
@@ -75,34 +75,32 @@ export default function EditSchoolPage({ params }: { params: { id: string } }) {
   return (
     <div className="max-w-2xl">
       <PageHeader title={`Edit: ${data.name}`} description="Update school information" />
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField control={form.control} name="name" render={({ field }) => (
-            <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Controller control={form.control} name="name" render={({ field, fieldState }) => (
+          <div className="space-y-2"><Label htmlFor={field.name}>Name</Label><Input id={field.name} {...field} />{fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}</div>
+        )} />
+        <div className="grid grid-cols-2 gap-4">
+          <Controller control={form.control} name="email" render={({ field, fieldState }) => (
+            <div className="space-y-2"><Label htmlFor={field.name}>Email</Label><Input id={field.name} {...field} />{fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}</div>
           )} />
-          <div className="grid grid-cols-2 gap-4">
-            <FormField control={form.control} name="email" render={({ field }) => (
-              <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-            <FormField control={form.control} name="phone" render={({ field }) => (
-              <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
+          <Controller control={form.control} name="phone" render={({ field, fieldState }) => (
+            <div className="space-y-2"><Label htmlFor={field.name}>Phone</Label><Input id={field.name} {...field} />{fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}</div>
+          )} />
+        </div>
+        <Controller control={form.control} name="address" render={({ field, fieldState }) => (
+          <div className="space-y-2"><Label htmlFor={field.name}>Address</Label><Input id={field.name} {...field} />{fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}</div>
+        )} />
+        <Controller control={form.control} name="region" render={({ field, fieldState }) => (
+          <div className="space-y-2"><Label htmlFor={field.name}>Region</Label><Input id={field.name} {...field} />{fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}</div>
+        )} />
+        <Controller control={form.control} name="isActive" render={({ field }) => (
+          <div className="flex items-center gap-2">
+            <Switch checked={field.value} onCheckedChange={field.onChange} />
+            <Label htmlFor={field.name}>Active</Label>
           </div>
-          <FormField control={form.control} name="address" render={({ field }) => (
-            <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-          )} />
-          <FormField control={form.control} name="region" render={({ field }) => (
-            <FormItem><FormLabel>Region</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-          )} />
-          <FormField control={form.control} name="isActive" render={({ field }) => (
-            <FormItem className="flex items-center gap-2">
-              <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-              <FormLabel className="!mt-0">Active</FormLabel>
-            </FormItem>
-          )} />
-          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Changes'}</Button>
-        </form>
-      </Form>
+        )} />
+        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Changes'}</Button>
+      </form>
     </div>
   );
 }

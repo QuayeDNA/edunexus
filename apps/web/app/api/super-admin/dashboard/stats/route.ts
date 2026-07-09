@@ -1,4 +1,4 @@
-import { db } from '@edunexus/database';
+import { db } from '@/lib/db';
 import { schools, profiles, auditLogs } from '@edunexus/database/src/schema';
 import { sql, count, gte, desc } from 'drizzle-orm';
 import { requireRole } from '@/lib/api/require-role';

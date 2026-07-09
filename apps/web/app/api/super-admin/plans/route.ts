@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@edunexus/database';
+import { db } from '@/lib/db';
 import { schoolPlans } from '@edunexus/database/src/schema';
 import { desc } from 'drizzle-orm';
 import { z } from 'zod';
@@ -35,6 +35,6 @@ export async function POST(request: NextRequest) {
     return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
-  const [plan] = await db.insert(schoolPlans).values(parsed.data).returning();
+  const [plan] = await db.insert(schoolPlans).values({ ...parsed.data, price: String(parsed.data.price) }).returning();
   return apiSuccess(plan);
 }

@@ -28,7 +28,7 @@
 | Payments | Paystack API |
 | Email | Resend API |
 | SMS | Africa's Talking API |
-| UI Framework | shadcn/ui (Radix primitives) |
+| UI Framework | shadcn/ui v4 Nova (Base UI primitives) |
 | Charts | Recharts |
 | Forms | react-hook-form + zod |
 | Tables | TanStack Table v8 |
@@ -79,7 +79,7 @@
 
 ### Code Conventions
 - TypeScript strict mode everywhere
-- Use `cn()` from `@/lib/utils/cn` for conditional class names
+- Use `cn()` from `@/lib/utils` for conditional class names
 - All monetary values stored as `numeric` in GHS
 - All dates stored as ISO 8601 UTC, displayed in `en-GH` locale
 - Delete actions must always show a confirmation dialog
@@ -110,6 +110,21 @@
 ## Current Working Phase
 
 **Phase 2 — Super Admin Portal** is complete. Proceeding to Phase 3 (Admin Portal).
+
+---
+
+## Lesson Learned (Jul 2026)
+
+Phase 2 was implemented in one large batch — this introduced several type errors, schema mismatches, and component library inconsistencies that had to be fixed post-hoc. **Future phases will be broken down into smaller, verifiable tasks**, each with its own typecheck + test gate before proceeding to the next.
+
+### Small-Task Workflow (all phases going forward)
+
+1. **Write the plan first** — `docs/superpowers/plans/` with task-level granularity
+2. **One task at a time** — implement, typecheck, test, then move on
+3. **Never batch-implement** across API + UI + schema in a single pass
+4. **Use shadcn/ui Nova components only** — no custom wrappers; prefer `Controller` + Nova primitives over `FormField`/`FormItem` pattern
+5. **Verify DB schema types** before writing routes (numeric → string, nullability, required fields)
+6. **Commit after each working task**, not at phase end
 
 ---
 

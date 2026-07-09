@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Geist } from 'next/font/google';
 import { Providers } from '@/components/layouts/providers';
 import { APP_NAME, APP_DESCRIPTION } from '@/lib/utils/constants';
+import { cn } from '@/lib/utils';
 import './globals.css';
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-GH" className={inter.variable}>
+    <html lang="en-GH" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

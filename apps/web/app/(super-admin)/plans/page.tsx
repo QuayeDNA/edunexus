@@ -38,7 +38,7 @@ const columns: ColumnDef<Plan>[] = [
     accessorKey: 'isActive',
     header: 'Status',
     cell: ({ row }) => (
-      <Badge variant={row.original.isActive ? 'default' : 'secondary'}>
+      <Badge variant={row.original.isActive ? 'default' : 'outline'}>
         {row.original.isActive ? 'Active' : 'Inactive'}
       </Badge>
     ),

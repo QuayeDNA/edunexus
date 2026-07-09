@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils/cn';
+import { cn } from '@/lib/utils';
 import { LayoutDashboard, BookOpen, CalendarCheck, LogOut } from 'lucide-react';
 import { APP_NAME } from '@/lib/utils/constants';
 import { signOut } from 'next-auth/react';

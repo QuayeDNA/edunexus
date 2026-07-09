@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@edunexus/database';
+import { db } from '@/lib/db';
 import { schools, academicYears, terms, gradeLevels, auditLogs } from '@edunexus/database/src/schema';
 import { desc, eq, like, and, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { error: authError } = await requireRole('super_admin');
+  const { error: authError, user } = await requireRole('super_admin');
   if (authError) return authError;
 
   const body = await request.json();
@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
 
   await db.insert(auditLogs).values({
     schoolId: school.id,
+    userId: user!.id,
     action: 'school.created',
     tableName: 'schools',
     recordId: school.id,

@@ -47,7 +47,7 @@ shadcn/ui → Billing Schema → Shared Infrastructure (API, UI, hooks, email, p
 ```
 
 **Key deliverables:**
-- ✅ shadcn/ui installed (14 core components)
+- ✅ shadcn/ui v4 Nova installed (Base UI preset, 14+ core components)
 - ✅ Billing schema: school_plans, school_subscriptions, invoices + domain/customDomain on schools
 - ✅ Shared API infrastructure: response helpers, error classes, require-role guard, TanStack Query client
 - ✅ Shared UI components: data-table, confirm-dialog, empty-state, page-header, stat-card
@@ -59,6 +59,15 @@ shadcn/ui → Billing Schema → Shared Infrastructure (API, UI, hooks, email, p
 - ✅ User management: CRUD, create admin per school, auto-generate password, send welcome email
 - ✅ Audit log viewer: filterable by action/date/school
 - ✅ Billing management: plans CRUD, subscriptions list with school/plan join
+
+**Post-hoc fixes (Jul 2026):**
+- 🛠 Removed Radix-based `form.tsx` custom component — forms rewritten using `react-hook-form` `Controller` + Nova `Label`/`Input` primitives
+- 🛠 Moved `cn()` utility from `lib/utils/cn.ts` to `lib/utils.ts` per shadcn conventions
+- 🛠 Fixed `numeric` price columns — Drizzle expects `string`, routes now convert with `String()`
+- 🛠 Added missing `userId`/`schoolId` to all `audit_logs` inserts
+- 🛠 Fixed DB client import — `@edunexus/database` exports `createClient()`, not `db` singleton
+- 🛠 Fixed badge `secondary` variant (Nova uses `outline`), sonner toast import path, `require-role` type errors
+- 🛠 Added `suppressHydrationWarning` to `<html>` element for browser extension compatibility
 
 ---
 

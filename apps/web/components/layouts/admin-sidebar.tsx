@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils/cn';
+import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Briefcase, GraduationCap, BookOpen,
   CalendarCheck, Wallet, DollarSign, MessageSquare, FileText,
