@@ -59,7 +59,7 @@ function getRouteRole(pathname: string): UserRole | null {
   return null;
 }
 
-export default auth(async function middleware(req: NextRequest & { auth: any }) {
+const middlewareHandler = auth(async function middleware(req: NextRequest & { auth: any }) {
   const { pathname } = req.nextUrl;
   const hostname = req.headers.get('host') ?? '';
   const session = req.auth;
@@ -115,4 +115,6 @@ export default auth(async function middleware(req: NextRequest & { auth: any }) 
   }
 
   return response;
-});
+}) as unknown as (req: NextRequest) => Promise<NextResponse | undefined>;
+
+export default middlewareHandler;

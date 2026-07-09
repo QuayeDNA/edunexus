@@ -11,7 +11,7 @@ export async function requireRole(...roles: UserRole[]) {
   }
 
   if (!roles.includes(session.user.role)) {
-    redirect(ROLE_ROUTES[session.user.role] ?? '/');
+    redirect(ROLE_ROUTES[session.user.role as UserRole] ?? '/');
   }
 
   return session;

@@ -21,14 +21,11 @@ export const GHANA_PAYE_BANDS: GHANA_PAYE_BAND[] = [
 ] as const;
 
 export function calculateGhanaPAYE(monthlyGross: number): number {
-  for (let i = GHANA_PAYE_BANDS.length - 1; i >= 0; i--) {
-    const band = GHANA_PAYE_BANDS[i];
-    if (band.max === null || monthlyGross > band.min) {
-      if (band.max === null || monthlyGross <= band.max) {
-        const taxableInBand = monthlyGross - band.min;
-        return taxableInBand * band.rate + band.cumulative_base;
-      }
-    }
+  if (monthlyGross <= 0) return 0;
+  for (const band of GHANA_PAYE_BANDS) {
+    if (band.max !== null && monthlyGross > band.max) continue;
+    const taxableInBand = monthlyGross - band.min;
+    return taxableInBand * band.rate + band.cumulative_base;
   }
   return 0;
 }

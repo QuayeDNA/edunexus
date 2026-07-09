@@ -20,7 +20,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     id: session.user.id,
     email: session.user.email,
     name: session.user.name,
-    role: session.user.role,
-    schoolId: session.user.schoolId,
+    role: session.user.role as UserRole,
+    schoolId: session.user.schoolId as string | null,
   };
 }

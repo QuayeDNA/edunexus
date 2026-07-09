@@ -5,7 +5,7 @@ describe('formatGHS', () => {
   it('formats whole numbers with two decimal places', () => {
     const result = formatGHS(100);
     expect(result).toContain('100');
-    expect(result).toContain('GHS');
+    expect(result).toContain('GH₵');
   });
 
   it('formats decimal amounts', () => {

@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie';
+import { Dexie, type EntityTable } from 'dexie';
 
 export interface DexieStudent {
   id: string;

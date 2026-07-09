@@ -18,9 +18,7 @@ declare module 'next-auth' {
   }
 }
 
-
-
-export const { auth, handlers, signIn, signOut } = NextAuth({
+const nextAuthResult = NextAuth({
   providers: [
     Credentials({
       name: 'credentials',
@@ -95,3 +93,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     strategy: 'jwt',
   },
 });
+
+export const auth = nextAuthResult.auth as unknown as (...args: any[]) => any;
+export const handlers = nextAuthResult.handlers as unknown as {
+  GET: (req: Request) => Promise<Response>;
+  POST: (req: Request) => Promise<Response>;
+};
+export const signIn = nextAuthResult.signIn as unknown as (...args: any[]) => any;
+export const signOut = nextAuthResult.signOut as unknown as (...args: any[]) => any;

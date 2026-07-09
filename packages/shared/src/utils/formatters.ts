@@ -32,7 +32,7 @@ export function formatPhone(phone: string): string {
 
   if (cleaned.length === 12 && cleaned.startsWith('233')) {
     const national = cleaned.slice(3);
-    const match = national.match(/^(\d{3})(\d{3})(\d{4})$/);
+    const match = national.match(/^(\d{2})(\d{3})(\d{4})$/);
     if (match) return `0${match[1]} ${match[2]} ${match[3]}`;
   }
 
@@ -53,5 +53,9 @@ export function truncate(str: string, maxLength: number): string {
 }
 
 export function pluralize(count: number, singular: string, plural?: string): string {
-  return count === 1 ? singular : (plural ?? `${singular}s`);
+  if (count === 1) return singular;
+  if (plural) return plural;
+  if (/[sxz]$/.test(singular) || /[cs]h$/.test(singular)) return `${singular}es`;
+  if (/[^aeiou]y$/.test(singular)) return `${singular.slice(0, -1)}ies`;
+  return `${singular}s`;
 }
