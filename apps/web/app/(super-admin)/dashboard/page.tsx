@@ -1,71 +1,81 @@
-import { requireRole } from '@/lib/auth/auth.guard';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Building2, Users, Activity } from 'lucide-react';
+'use client';
 
-export default async function SuperAdminDashboard() {
-  await requireRole('super_admin');
+import { useQuery } from '@tanstack/react-query';
+import { Building2, Users, UserPlus, Activity } from 'lucide-react';
+import { StatCard } from '@/components/stat-card';
+import { PageHeader } from '@/components/page-header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+
+async function fetchStats() {
+  const res = await fetch('/api/super-admin/dashboard/stats');
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data;
+}
+
+export default function SuperAdminDashboard() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['super-admin-dashboard-stats'],
+    queryFn: fetchStats,
+  });
+
+  if (isLoading) {
+    return (
+      <div>
+        <PageHeader title="Super Admin Dashboard" description="Platform overview" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-text-primary">Super Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Platform-wide overview and management
-        </p>
+    <div>
+      <PageHeader title="Super Admin Dashboard" description="Platform overview" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total Schools"
+          value={data?.totalSchools ?? 0}
+          icon={Building2}
+        />
+        <StatCard
+          title="Active Users"
+          value={data?.totalUsers ?? 0}
+          icon={Users}
+        />
+        <StatCard
+          title="New Signups (30d)"
+          value={data?.newSignupsLast30Days ?? 0}
+          icon={UserPlus}
+        />
+        <StatCard
+          title="System Status"
+          value={data?.systemStatus ?? 'Unknown'}
+          icon={Activity}
+        />
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-4 pb-2">
-            <div className="rounded-xl bg-brand-50 p-3">
-              <Building2 className="h-6 w-6 text-brand-600" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-medium text-text-secondary">
-                Total Schools
-              </CardTitle>
-              <p className="text-3xl font-bold text-text-primary">0</p>
-            </div>
+      {data?.usersByRole && data.usersByRole.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Users by Role</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-text-muted">Schools registered on the platform</p>
+            <div className="space-y-2">
+              {data.usersByRole.map((r: { role: string; count: number }) => (
+                <div key={r.role} className="flex items-center justify-between text-sm">
+                  <span className="capitalize">{r.role.replace('_', ' ')}</span>
+                  <span className="font-medium">{r.count}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-4 pb-2">
-            <div className="rounded-xl bg-accent-50 p-3">
-              <Users className="h-6 w-6 text-accent-600" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-medium text-text-secondary">
-                Active Users
-              </CardTitle>
-              <p className="text-3xl font-bold text-text-primary">0</p>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-text-muted">Users across all schools</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-4 pb-2">
-            <div className="rounded-xl bg-blue-50 p-3">
-              <Activity className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-medium text-text-secondary">
-                Status
-              </CardTitle>
-              <p className="text-3xl font-bold text-text-primary">Healthy</p>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-text-muted">All systems operational</p>
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </div>
   );
 }
