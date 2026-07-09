@@ -81,7 +81,7 @@
 
 | Phase | Description | Status |
 |---|---|---|
-| **1 — Foundation** | Next.js scaffold, Drizzle schema, middleware, Auth.js, Docker, CI | ⬜ Pending |
+| **1 — Foundation** | Next.js scaffold, Drizzle schema, middleware, Auth.js, Docker, CI | ✅ Complete |
 | **2 — Core School Ops** | Students, Staff, Classes, Subjects, Timetable, Assessments, Report Cards | ⬜ Pending |
 | **3 — Attendance & Finance** | Attendance marking, Fees, Payments, Paystack, Receipts, Financial reports | ⬜ Pending |
 | **4 — Communication & Payroll** | Notifications, Messaging, SMS/Email, Payroll, Payslips | ⬜ Pending |
@@ -94,6 +94,30 @@
 ## Current Working Phase
 
 **Phase 1 — Foundation** is being planned. Do not start implementation until the writing-plans skill has been invoked and the implementation plan is approved.
+
+---
+
+## Lightweight Dev Setup (Windows + WSL)
+
+For users running PostgreSQL directly on Windows (no Docker Desktop):
+
+```bash
+# PostgreSQL runs as a Windows service — just verify it's started
+pnpm install
+pnpm db:migrate    # drizzle-kit push (creates tables)
+pnpm db:seed       # seed demo school + data
+pnpm dev           # http://localhost:3000
+```
+
+Redis/MinIO are optional — only needed for BullMQ queues & file uploads (Phase 3+).
+When you need them later, install Redis via WSL (`sudo apt install redis`) or use a free Redis Cloud tier.
+
+If using Docker in WSL (not Docker Desktop):
+```bash
+# Install docker.io inside WSL2, set DOCKER_HOST
+sudo apt install docker.io
+# Then docker-compose up works without Docker Desktop overhead
+```
 
 ---
 
