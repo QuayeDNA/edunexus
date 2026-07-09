@@ -16,6 +16,8 @@ export const schools = pgTable('schools', {
   curriculum: varchar('curriculum', { length: 50 }).default('ghana_basic').notNull(),
   calendar: varchar('calendar', { length: 50 }).default('ghana_3_terms').notNull(),
   grading: varchar('grading', { length: 50 }).default('ghana_basic').notNull(),
+  domain: varchar('domain', { length: 255 }),
+  customDomain: varchar('custom_domain', { length: 255 }),
   config: jsonb('config').default({}),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

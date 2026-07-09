@@ -17,3 +17,4 @@ export { inventoryItems, inventoryTransactions } from './inventory';
 export { announcements, messages, notifications } from './messaging';
 export { behaviorRecords, wellnessCheckins, parentEngagements, lessonPlans } from './behavior';
 export { auditLogs } from './audit';
+export { schoolPlans, schoolSubscriptions, invoices } from './billing';
