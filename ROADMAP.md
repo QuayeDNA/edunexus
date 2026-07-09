@@ -1,7 +1,7 @@
 # EduNexus — Rewrite Roadmap
 
 > From React 19 + Supabase (JS) → Next.js 16 + PostgreSQL (TypeScript)
-> Full spec: `docs/superpowers/specs/2026-07-08-edunexus-rewrite-design.md`
+> Restructured: Feature-based → Role-based (Jul 2026)
 
 ---
 
@@ -9,10 +9,6 @@
 
 **Timeline:** 1 week (accelerated via subagent-driven development)
 **Goal:** Deployable full-stack scaffold with auth and tenant isolation
-
-```
-Monorepo → Next.js 16 → Drizzle Schema → Auth.js → Tenant Proxy → Docker → CI
-```
 
 **Completed deliverables:**
 - ✅ Turborepo + pnpm workspaces (4 packages: web, database, shared, root config)
@@ -25,111 +21,157 @@ Monorepo → Next.js 16 → Drizzle Schema → Auth.js → Tenant Proxy → Dock
 - ✅ Dexie v4 offline schema (10 object stores) + background sync service
 - ✅ GitHub Actions CI (lint, typecheck, test) + Vercel deploy workflow
 - ✅ Seed script with demo school + superadmin account
-- ✅ Dexie v4 migration (named import pattern, EntityTable types)
-- ✅ Tailwind v4 migration (CSS-first `@theme`, no config file)
-- ✅ TypeScript 6.0.3, Vitest 4, Drizzle 0.45, Next.js 16.2.10, all packages updated
-- ✅ Shared package: types, constants (roles, grades, Ghana), utils (payroll, grades, formatters)
 - ✅ 57 unit tests passing (formatters, payroll, grade-utils)
 - ✅ PostgreSQL 18 (Windows native) — migrate + seed verified
 - ✅ `profiles.school_id` nullable — superadmins have no school association
-- ✅ `.env` at monorepo root, loaded via `dotenv -e ../../.env` in dev script
 
 **Exit criteria:**
-- 🟡 `docker compose up` gives a working dev environment — **pending** (requires Docker Desktop)
-- 🟡 Two subdomains resolve to separate tenant data — **pending** (requires local DNS or hosts entries)
-- 🟡 CI passes on every PR — **pending** (requires GitHub push to trigger)
+- 🟡 `docker compose up` gives a working dev environment — **pending** (Phase 9)
+- 🟡 Two subdomains resolve to separate tenant data — **pending** (requires DNS)
+- 🟡 CI passes on every PR — **pending** (requires GitHub push)
 - ✅ Database migrate + seed working (41 tables created)
 - ✅ Login page renders at localhost:3000
-- ✅ Auth.js credentials flow queries DB directly (no circular API fetch)
+- ✅ Auth.js credentials flow queries DB directly
 - ✅ Proxy guards authenticated routes redirect to role-specific dashboards
 
 ---
 
-## Phase 2 — Core School Ops ⬜ Pending
+## Phase 2 — Super Admin Portal ✅ Complete
 
-**Timeline:** 6-8 weeks
-**Goal:** Admin can manage students, staff, classes, scheduling, and report cards
+**Timeline:** 1 week
+**Goal:** Fully functional multi-tenant management console for platform operator
 
 ```
-Students → Staff → Classes → Subjects → Timetable → Assessments → Report Cards
+shadcn/ui → Billing Schema → Shared Infrastructure (API, UI, hooks, email, payments)
+          → Dashboard → Schools CRUD → Users CRUD → Audit Logs → Plans & Subscriptions
 ```
 
 **Key deliverables:**
-- Students: List (DataTable), detail (profile tabs), new/edit, bulk import, QR codes
+- ✅ shadcn/ui installed (14 core components)
+- ✅ Billing schema: school_plans, school_subscriptions, invoices + domain/customDomain on schools
+- ✅ Shared API infrastructure: response helpers, error classes, require-role guard, TanStack Query client
+- ✅ Shared UI components: data-table, confirm-dialog, empty-state, page-header, stat-card
+- ✅ Shared hooks: use-pagination, use-filters, use-debounce, use-payment
+- ✅ Email service: Resend wrapper + welcome admin template
+- ✅ Payment infrastructure: IPaymentProvider interface, Paystack provider, payment button/status, webhook
+- ✅ Super admin dashboard: real stats (schools, users, signups) from DB queries
+- ✅ School management: CRUD, list with search/filter, create with seed (year + terms + grades), detail with tabs, edit
+- ✅ User management: CRUD, create admin per school, auto-generate password, send welcome email
+- ✅ Audit log viewer: filterable by action/date/school
+- ✅ Billing management: plans CRUD, subscriptions list with school/plan join
+
+---
+
+## Phase 3 — Admin (School) Portal ⬜ Pending
+
+**Goal:** School admin manages students, staff, classes, scheduling, fees, and payroll
+
+```
+Students → Staff → Classes → Subjects → Timetable → Fees → Payroll → Reports
+```
+
+**Key deliverables:**
+- Students: List, detail, new/edit, bulk import
 - Staff: List, detail, new/edit, leave management
 - Classes & Subjects: CRUD, assignment, roster
 - Academic Years & Terms: CRUD, set current
 - Timetable: Drag-drop grid, conflict detection, PDF export
-- Assessments: Score entry grid, weighted averages, grade distribution
-- Report Cards: Batch generation, Ghana format, PDF, lock after finalization
+- Fee setup: categories, schedules, auto-generation of student fees
+- Expense tracking
+- Payroll runs: draft → approve → process, SSNIT (5.5%/13%) + Ghana PAYE
+- Payslip PDF generation
+- Reports hub
 
 ---
 
-## Phase 3 — Attendance & Finance ⬜ Pending
+## Phase 4 — Teacher Portal ⬜ Pending
 
-**Timeline:** 4-6 weeks
-**Goal:** Daily attendance tracking and fee management
+**Goal:** Teachers can mark attendance, enter grades, generate report cards, manage lesson plans
 
 ```
-Attendance → Fees → Payments → Paystack → Receipts → Reports
+Attendance → Assessments → Grades → Report Cards → Lesson Plans
 ```
 
 **Key deliverables:**
-- Teacher attendance: Card grid, real-time updates
-- Admin attendance: View/edit any class/date, override lock
-- Attendance reports: Per student, per class, date range
-- Parent SMS alerts on absence
-- Fee categories, schedules, auto-generation of student fees
-- Payment recording (cash, MoMo, bank transfer)
-- Paystack integration (card + MoMo + bank online)
-- Receipt PDFs with school logo + QR code
-- Financial reports (daily, term, outstanding debtors)
+- Teacher dashboard: classes today, pending assessments, quick actions
+- Attendance marking: class grid, date picker, status toggles
+- Assessment/grade entry: score grid, weighted averages, grade distribution
+- Report cards: batch generation, Ghana format, PDF, lock after finalization
+- Lesson plan management: create, edit, publish
 
 ---
 
-## Phase 4 — Communication & Payroll ⬜ Pending
+## Phase 5 — Student Portal ⬜ Pending
 
-**Timeline:** 4-5 weeks
-**Goal:** Staff communication and payroll processing
+**Goal:** Students view their timetable, grades, attendance, and fee status
 
 ```
-Notifications → Messaging → SMS/Email → Payroll → Payslips
+My Classes → Timetable → Grades → Attendance → Fees
 ```
 
 **Key deliverables:**
-- In-app notifications (real-time)
-- Announcements (targeted by role/class)
+- Student dashboard: current term overview
+- Class schedule / Timetable view
+- Grade history with report card PDFs
+- Attendance record
+- Fee statement and payment status
+
+---
+
+## Phase 6 — Parent Portal ⬜ Pending
+
+**Goal:** Parents/guardians monitor their children's progress and handle payments
+
+```
+Children → Attendance → Progress → Fees → Payments (Paystack/MoMo)
+```
+
+**Key deliverables:**
+- Parent dashboard: all children overview
+- Child's attendance, grades, fee status views
+- Online fee payment via Paystack (card + MoMo)
+- Payment history and receipts
+- School announcements
+
+---
+
+## Phase 7 — Design System & Polish ⬜ Pending
+
+**Goal:** Production-grade UI across all portals
+
+```
+Theme → Animations → Responsive → Accessibility → States
+```
+
+**Key deliverables:**
+- Full design system: colors, typography, spacing, shadows
+- Animation system: transitions, micro-interactions
+- Responsive layouts for mobile/tablet
+- Accessibility audit and fixes
+- Empty/loading/error states across all pages
+
+---
+
+## Phase 8 — Cross-Role Communication ⬜ Pending
+
+**Goal:** Announcements, messaging, and notification infrastructure
+
+```
+Announcements → Messaging → SMS/Email → Notifications
+```
+
+**Key deliverables:**
+- In-app notifications (real-time via WebSockets)
+- Targeted announcements (by role/class/school)
 - Internal messaging (compose, inbox, threads)
-- SMS via Africa's Talking + email via Resend
-- Payroll runs (draft → approve → process workflow)
-- Auto-calc SSNIT (5.5%/13%) + Ghana PAYE
-- Payslip PDF generation + email delivery
-- Payroll reports (cost by department, SSNIT summary, P9 export)
+- SMS via Africa's Talking
+- Email via Resend
+- Notification preferences
 
 ---
 
-## Phase 5 — Role Portals & Polish ⬜ Pending
+## Phase 9 — Production Hardening ⬜ Pending
 
-**Timeline:** 3-4 weeks
-**Goal:** Every user role gets a tailored experience
-
-```
-Super Admin → Teacher → Student → Parent → Reports → Settings
-```
-
-**Key deliverables:**
-- Super admin console (dashboard, schools, users, audit log)
-- Teacher dashboard (classes today, pending assessments)
-- Student dashboard (schedule, grades, fees)
-- Parent dashboard (children's progress, fee payment)
-- Reports & analytics hub
-- Settings pages (school profile, curriculum, grading, calendar)
-
----
-
-## Phase 6 — Production Hardening ⬜ Pending
-
-**Timeline:** 3-4 weeks
 **Goal:** Production-ready reliability, performance, and security
 
 ```
@@ -140,16 +182,15 @@ Monitoring → Security → Backups → PWA → Performance → Docs
 - Sentry error monitoring
 - Rate limiting + security headers
 - Automated PostgreSQL backups
-- PWA with full offline support
+- PWA with full offline support (Dexie sync)
 - Performance optimization (React Compiler, images, caching)
 - Documentation (admin manual, deploy guide, API reference)
 - Load testing (k6)
 
 ---
 
-## Phase 7 — Extended Features ⬜ Pending
+## Phase 10 — Extended Features ⬜ Pending
 
-**Timeline:** Ongoing
 **Goal:** Differentiation and innovation
 
 ```
@@ -159,36 +200,41 @@ Library → Transport → Inventory → Gamification → Wellness → AI
 **Key deliverables:**
 - Library management (catalog, loans, fines, barcode scanner)
 - Transport management (fleet, routes, manifests, GPS)
-- Inventory & procurement (stock movements, purchase orders, asset tracking)
+- Inventory & procurement (stock movements, purchase orders)
 - Behavior gamification (points, badges, leaderboards)
 - Wellness check-ins (mood tracking, flagged reviews)
-- AI insights (grade prediction, attendance anomalies, plagiarism detection)
+- AI insights (grade prediction, attendance anomalies)
 
 ---
 
 ## Milestone Summary
 
-| Phase | Weeks | Cumulative | Value |
+| Phase | Weeks | Cumulative | Delivers Value To |
 |---|---|---|---|
-| 1 — Foundation | 1 (actual) | 1 | Scaffold + auth + CI + offline |
-| 2 — Core School Ops | 6-8 | 10-14 | First usable admin features |
-| 3 — Attendance & Finance | 4-6 | 14-20 | Daily ops + money in |
-| 4 — Communication & Payroll | 4-5 | 18-25 | Staff tools + payroll |
-| 5 — Role Portals & Polish | 3-4 | 21-29 | All roles have dashboards |
-| 6 — Production Hardening | 3-4 | 24-33 | Production ready |
-| 7 — Extended Features | Ongoing | — | Competitive moat |
+| 1 — Foundation | 1 (actual) | 1 | Developers |
+| 2 — Super Admin Portal | 1 (actual) | 2 | Platform operator |
+| 3 — Admin Portal | 4-6 | 6-8 | School admin |
+| 4 — Teacher Portal | 3-4 | 9-12 | Teachers |
+| 5 — Student Portal | 2-3 | 11-15 | Students |
+| 6 — Parent Portal | 3-4 | 14-19 | Parents |
+| 7 — Design System | 2-3 | 16-22 | All roles |
+| 8 — Communication | 3-4 | 19-26 | All roles |
+| 9 — Production | 3-4 | 22-30 | Platform |
+| 10 — Extended | Ongoing | — | All roles |
 
-**Total estimated time to production-ready (Phase 6): ~24-33 weeks**
+**Total estimated time to production-ready (Phase 9): ~22-30 weeks**
 
 ---
 
 ## Key Decisions Summary
 
-- **Backend:** No Supabase → Custom Next.js API + PostgreSQL via Drizzle ORM
-- **Multi-tenancy:** Shared DB, middleware-enforced `school_id` isolation
+- **Backend:** Custom Next.js API + PostgreSQL via Drizzle ORM
+- **Multi-tenancy:** Shared DB, proxy-enforced `school_id` isolation
 - **URLs:** Subdomain-based (`{school}.edunexus.com`) + custom domain support
-- **Offline:** Optimistic writes → Dexie → background sync → API
-- **Payments:** Paystack (Ghana's dominant gateway, MoMo + card + bank)
-- **SMS:** Africa's Talking (MTN, Vodafone, AirtelTigo)
+- **Phases:** Role-based (not feature-based) — each phase delivers a complete portal
+- **Offline:** Optimistic writes → Dexie → background sync → API (Phase 9)
+- **Payments:** Paystack via abstract provider interface (Phase 2 infra, Phase 6 usage)
+- **SMS:** Africa's Talking (Phase 8)
+- **UI:** shadcn/ui primitives → design system polish (Phase 7)
 - **Testing:** Vitest + Playwright (unit, integration, component, E2E, tenant isolation)
-- **Deploy:** Vercel (Next.js) + Railway (PostgreSQL + Redis) — self-hostable via Docker
+- **Deploy:** Vercel (Next.js) + Railway (PostgreSQL + Redis)

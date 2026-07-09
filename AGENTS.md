@@ -88,23 +88,28 @@
 
 ---
 
-## Build Phases
+## Build Phases (Role-Based)
 
 | Phase | Description | Status |
 |---|---|---|
 | **1 — Foundation** | Next.js scaffold, Drizzle schema, proxy, Auth.js, Docker, CI | ✅ Complete |
-| **2 — Core School Ops** | Students, Staff, Classes, Subjects, Timetable, Assessments, Report Cards | ⬜ Pending |
-| **3 — Attendance & Finance** | Attendance marking, Fees, Payments, Paystack, Receipts, Financial reports | ⬜ Pending |
-| **4 — Communication & Payroll** | Notifications, Messaging, SMS/Email, Payroll, Payslips | ⬜ Pending |
-| **5 — Role Portals & Polish** | Super admin, Teacher, Student, Parent dashboards. Reports hub. Settings. | ⬜ Pending |
-| **6 — Production Hardening** | Sentry, rate limiting, backups, PWA, performance, docs | ⬜ Pending |
-| **7 — Extended Features** | Library, Transport, Inventory, Behavior, AI insights | ⬜ Pending |
+| **2 — Super Admin Portal** | School CRUD, user lifecycle, billing schema, payment infra, email service, audit logs, shadcn/ui | ✅ Complete |
+| **3 — Admin Portal** | Students, Staff, Classes, Subjects, Timetable, Fee setup, Payroll, Reports | ⬜ Pending |
+| **4 — Teacher Portal** | Attendance, Assessments, Grades, Report Cards, Lesson Plans | ⬜ Pending |
+| **5 — Student Portal** | View timetable, grades, report cards, attendance, fees | ⬜ Pending |
+| **6 — Parent Portal** | Children overview, payments (Paystack/MoMo), communication | ⬜ Pending |
+| **7 — Design System** | Full design system, animations, responsive, a11y, all UI states | ⬜ Pending |
+| **8 — Communication** | Announcements, messaging, SMS/Email, notifications | ⬜ Pending |
+| **9 — Production** | Sentry, rate limits, backups, PWA, offline, performance, security | ⬜ Pending |
+| **10 — Extended** | Library, Transport, Inventory, Behavior, AI insights | ⬜ Pending |
+
+**Note:** Phases 2+ were restructured from feature-based to role-based in July 2026. See `docs/superpowers/specs/2026-07-09-edunexus-phase-restructure.md` for details.
 
 ---
 
 ## Current Working Phase
 
-**Phase 1 — Foundation** is complete and verified. All exit criteria met except Docker/DNS/CI trigger (Phase 2 concerns). Proceeding to Phase 2 planning.
+**Phase 2 — Super Admin Portal** is complete. Proceeding to Phase 3 (Admin Portal).
 
 ---
 
