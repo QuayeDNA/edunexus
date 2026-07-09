@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
@@ -22,14 +22,18 @@ const editSchema = z.object({
   isActive: z.boolean(),
 });
 
-export default function EditSchoolPage({ params }: { params: { id: string } }) {
+export default function EditSchoolPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { id } = use(params);
 
+  // TODO(separation-of-concern): Move the API calls out of the page component.
+  // Future: extract fetching into a hook (e.g. useSchool(id)) and the PATCH submit
+  // into a Server Action / route-handler wrapper, keeping this page presentational.
   const { data } = useQuery({
-    queryKey: ['school', params.id],
+    queryKey: ['school', id],
     queryFn: async () => {
-      const res = await fetch(`/api/super-admin/schools/${params.id}`);
+      const res = await fetch(`/api/super-admin/schools/${id}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       return json.data;
@@ -51,7 +55,7 @@ export default function EditSchoolPage({ params }: { params: { id: string } }) {
   async function onSubmit(formData: z.infer<typeof editSchema>) {
     setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/super-admin/schools/${params.id}`, {
+      const res = await fetch(`/api/super-admin/schools/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -62,7 +66,7 @@ export default function EditSchoolPage({ params }: { params: { id: string } }) {
         return;
       }
       toast.success('School updated');
-      router.push(`/schools/${params.id}`);
+      router.push(`/schools/${id}`);
     } catch {
       toast.error('Update failed');
     } finally {

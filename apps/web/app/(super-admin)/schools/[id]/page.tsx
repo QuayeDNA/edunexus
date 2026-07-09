@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,12 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
-export default function SchoolDetailPage({ params }: { params: { id: string } }) {
+export default function SchoolDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { id } = use(params);
+
+  // TODO(separation-of-concern): Move this API call out of the page component.
+  // Future: extract into a dedicated hook (e.g. useSchool(id)) or a Server Component /
+  // Server Action so this page stays a presentational client component.
   const { data, isLoading } = useQuery({
-    queryKey: ['school', params.id],
+    queryKey: ['school', id],
     queryFn: async () => {
-      const res = await fetch(`/api/super-admin/schools/${params.id}`);
+      const res = await fetch(`/api/super-admin/schools/${id}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       return json.data;
@@ -26,7 +32,7 @@ export default function SchoolDetailPage({ params }: { params: { id: string } })
   return (
     <div>
       <PageHeader title={data.name} description={`Code: ${data.code} | Slug: ${data.slug}`}>
-        <Button onClick={() => router.push(`/schools/${params.id}/edit`)}>Edit School</Button>
+        <Button onClick={() => router.push(`/schools/${id}/edit`)}>Edit School</Button>
       </PageHeader>
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">

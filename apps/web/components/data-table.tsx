@@ -57,15 +57,19 @@ export function DataTable<TData>({
     initialState: { pagination: { pageSize } },
   });
 
+  const searchColumn = searchKey
+    ? table.getAllLeafColumns().find((c) => c.id === searchKey)
+    : undefined;
+
   return (
     <div>
-      {searchKey && (
+      {searchColumn && (
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
-            value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ''}
-            onChange={(e) => table.getColumn(searchKey)?.setFilterValue(e.target.value)}
+            value={(searchColumn.getFilterValue() as string) ?? ''}
+            onChange={(e) => searchColumn.setFilterValue(e.target.value)}
             className="max-w-sm pl-9"
           />
         </div>

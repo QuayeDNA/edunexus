@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
@@ -23,9 +23,10 @@ const editPlanSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export default function EditPlanPage({ params }: { params: { id: string } }) {
+export default function EditPlanPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { id } = use(params);
 
   const { data } = useQuery({
     queryKey: ['plans'],
@@ -33,7 +34,7 @@ export default function EditPlanPage({ params }: { params: { id: string } }) {
       const res = await fetch('/api/super-admin/plans');
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      return json.data.find((p: { id: string }) => p.id === params.id);
+      return json.data.find((p: { id: string }) => p.id === id) ?? null;
     },
   });
 
@@ -52,11 +53,16 @@ export default function EditPlanPage({ params }: { params: { id: string } }) {
   async function onSubmit(formData: z.infer<typeof editPlanSchema>) {
     setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/super-admin/plans/${params.id}`, {
+      const res = await fetch(`/api/super-admin/plans/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      // TODO(error-display): Server error messages are not currently surfaced in the UI.
+      // <Toaster /> (components/ui/sonner) is never mounted in the app tree
+      // (see components/layouts/providers.tsx), so toast.error(...) renders nothing.
+      // Future: mount <Toaster /> in Providers and add a shared API-error handler that
+      // maps json.error / json.errors into toast + inline field messages.
       const json = await res.json();
       if (!json.success) { toast.error(json.error); return; }
       toast.success('Plan updated');
@@ -65,7 +71,7 @@ export default function EditPlanPage({ params }: { params: { id: string } }) {
     finally { setIsSubmitting(false); }
   }
 
-  if (!data) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+  if (!data) return <div className="p-8 text-center text-muted-foreground">Plan not found.</div>;
 
   return (
     <div className="max-w-2xl">

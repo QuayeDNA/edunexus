@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
-import { schools, profiles, auditLogs } from '@edunexus/database/src/schema';
-import { sql, count, gte, desc } from 'drizzle-orm';
+import { schools, profiles, auditLogs, schoolSubscriptions, schoolPlans } from '@edunexus/database/src/schema';
+import { sql, count, gte, desc, eq } from 'drizzle-orm';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess } from '@/lib/api/response';
 
@@ -35,6 +35,19 @@ export async function GET() {
     .from(profiles)
     .groupBy(profiles.role);
 
+  const [subscriptionStats] = await db
+    .select({ total: count() })
+    .from(schoolSubscriptions)
+    .where(eq(schoolSubscriptions.status, 'active'));
+
+  const [mrrResult] = await db
+    .select({
+      total: sql<number>`coalesce(sum(${schoolPlans.price}), 0)`,
+    })
+    .from(schoolSubscriptions)
+    .leftJoin(schoolPlans, eq(schoolSubscriptions.planId, schoolPlans.id))
+    .where(eq(schoolSubscriptions.status, 'active'));
+
   const recentActivity = await db
     .select({
       id: auditLogs.id,
@@ -51,6 +64,8 @@ export async function GET() {
     activeSchools: Number(schoolStats.active),
     totalUsers: Number(userStats.total),
     newSignupsLast30Days: Number(newSignups.count),
+    activeSubscriptions: Number(subscriptionStats.total),
+    monthlyRecurringRevenue: Number(mrrResult.total),
     usersByRole,
     recentActivity,
     systemStatus: 'healthy',

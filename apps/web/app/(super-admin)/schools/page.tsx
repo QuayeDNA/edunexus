@@ -22,6 +22,7 @@ interface School {
 
 const columns: ColumnDef<School>[] = [
   {
+    accessorKey: 'name',
     header: 'Name',
     cell: ({ row }) => (
       <a href={`/schools/${row.original.id}`} className="font-medium hover:underline">

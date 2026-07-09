@@ -1,6 +1,8 @@
 # EduNexus — One platform. Every learner. Every school.
 
-A production-ready School Management System built for K-12 schools across Ghana and West Africa, configurable for British/American curricula.
+A production-ready, multi-tenant K-12 School Management System for Ghana & West Africa, configurable for British/American curricula.
+
+> **Stack:** Next.js 16 (App Router, Turbopack, TypeScript strict) · PostgreSQL 17 · Drizzle ORM · Auth.js v5 · Turborepo monorepo. Supersedes the original React 19 + Supabase (JS) codebase.
 
 ---
 
@@ -9,7 +11,7 @@ A production-ready School Management System built for K-12 schools across Ghana 
 ### 1. Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. Configure environment
@@ -18,83 +20,90 @@ npm install
 cp .env.example .env.local
 ```
 
-Open `.env.local` and fill in:
+Open `.env.local` and fill in (see `AGENTS.md` → "Key Conventions" for required vars):
 
-| Variable | Where to find it |
+| Variable | Purpose |
 |---|---|
-| `VITE_SUPABASE_URL` | Supabase dashboard → Settings → API |
-| `VITE_SUPABASE_ANON_KEY` | Supabase dashboard → Settings → API |
-| `VITE_PAYSTACK_PUBLIC_KEY` | Paystack dashboard → Settings → API Keys |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `AUTH_SECRET` | Auth.js session secret |
+| `RESEND_API_KEY` | Resend transactional email |
+| `PAYSTACK_SECRET_KEY` | Paystack payments |
+| `AFRICAS_TALKING_API_KEY` | SMS (Phase 8) |
 
 ### 3. Set up the database
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Open the **SQL Editor** in your Supabase dashboard
-3. Run the complete schema from `src/db/schema.sql` (see below)
-
-### 4. Seed development data (optional)
-
 ```bash
-npm run seed
+pnpm db:migrate   # drizzle-kit push — creates all tables
+pnpm db:seed      # seed demo school + super-admin
 ```
 
-This creates:
-- 1 school (Accra Academy Basic School)
-- 3 academic years + terms
-- All Ghana grade levels (Crèche → JHS 3)
-- 5 classes, 30 students, 8 staff
-- Demo login: `admin@edunexus.demo` / `Demo1234!`
+On Windows, PostgreSQL runs as a native service (see `AGENTS.md` → "Lightweight Dev Setup" for the WSL/Docker path).
 
-### 4b. Bootstrap a platform super admin (optional)
+### 4. Start the development server
 
 ```bash
-npm run seed:super-admin
+pnpm dev
 ```
 
-Custom credentials:
+Open [http://localhost:3000](http://localhost:3000).
 
-```bash
-npm run seed:super-admin -- --email superadmin@yourdomain.com --password "StrongPass123!"
-```
+- **Super admin portal:** `console.edunexus.local` (or `/` when running locally) — `admin@edunexus.com` / `Admin@123`
+- **Per-school portal:** `{school-slug}.edunexus.local`
 
-This command creates (or updates) an auth user and upserts a `profiles` row with `role='super_admin'` and `school_id=null`.
+---
 
-### 5. Start development server
+## Repository Structure (Monorepo)
 
-```bash
-npm run dev
-```
+The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; the app lives in `apps/web`.
 
-Open [http://localhost:5173](http://localhost:5173)
+| Path | Responsibility |
+|---|---|
+| `apps/web` | Next.js 16 app (App Router). All pages, `app/api/*` route handlers, `components/`, `hooks/`, `services/`, `lib/`. Imports shared packages via `@/...`. |
+| `packages/database` | Drizzle schema (`src/schema/*`), client, migrations, seed. Imported as `@edunexus/database`. |
+| `packages/shared` | Shared TypeScript types (`UserRole`, etc.), constants (roles, grades, Ghana), utilities (payroll, grade, formatters). Imported as `@edunexus/shared`. |
+| root | `turbo.json`, pnpm workspace config, GitHub Actions CI (`lint`, `typecheck`, `test`), Docker/dev env. |
+
+**Import conventions:**
+- Within `apps/web`: use the `@/` alias (e.g. `@/components/ui`, `@/lib/api`).
+- Cross-package: `@edunexus/database` and `@edunexus/shared` (never reach into a package's `src` path directly).
+- DB access happens only in API route handlers / Server Components / server scripts — never in client components.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
+| Layer | Choice |
 |---|---|
-| Frontend | React 19, Vite 6, Tailwind CSS v4 |
-| Components | shadcn/ui, lucide-react |
-| State (server) | TanStack Query v5 |
-| State (client) | Zustand v5 |
+| Framework | Next.js 16 (App Router, Turbopack, TypeScript strict) |
+| Database ORM | Drizzle ORM |
+| Database | PostgreSQL 17 |
+| Auth | Auth.js v5 (Credentials provider, scrypt) |
+| Multi-tenancy | Proxy (`proxy.ts`) resolves subdomain → `school_id`; API routes read it via `requireRole()` |
+| Real-time | WebSockets (`ws`) + optional Redis |
+| Offline | Dexie (IndexedDB) |
+| File Storage | S3-compatible (MinIO dev / Backblaze B2 prod) |
+| Queue | BullMQ (Redis) |
+| Payments | Paystack API (abstract `IPaymentProvider`) |
+| Email | Resend API |
+| SMS | Africa's Talking API |
+| UI Framework | shadcn/ui v4 Nova (Base UI primitives) |
+| Charts | Recharts |
+| Forms | react-hook-form + zod |
 | Tables | TanStack Table v8 |
-| Charts | Recharts v2 |
-| Animations | Framer Motion v11 |
-| Backend | Supabase (PostgreSQL + Auth + Storage + Realtime) |
-| Offline | Dexie v4 (IndexedDB) |
-| Forms | react-hook-form v7 + yup v1 |
-| Routing | React Router v7 |
+| PDF | jsPDF + jsPDF-AutoTable |
+| Deployment | Vercel (Next.js) + Railway (DB/Redis) |
+| Monorepo | Turborepo (pnpm workspaces) |
 
 ---
 
-## Access Model (Option A)
+## Access Model
 
 The codebase follows a platform-level access model:
 
-- `super_admin` is a cross-school platform role.
+- `super_admin` is a cross-school platform role (`profiles.school_id` is `null`).
 - `admin`, `teacher`, `student`, and `parent` are school-scoped roles tied to `profiles.school_id`.
-- Super admin write operations must execute through Supabase Edge Functions using service role credentials.
-- Client-side code must never perform service-role operations directly.
+- Super admin write operations (school CRUD, user lifecycle) run server-side via `requireRole('super_admin')` guards on API routes.
+- Multi-tenant isolation is enforced in 3 layers: proxy `school_id` header → API `requireRole`/`requireSchool` guard → Drizzle query helper auto-injecting `WHERE school_id = ?`.
 
 ### User Hierarchy
 
@@ -108,82 +117,36 @@ The codebase follows a platform-level access model:
 
 ---
 
-## Build Phases
+## Build Phases (Role-Based)
 
-The project is structured into 11 phases. Complete each before starting the next.
+Each phase delivers a complete, working portal for one stakeholder. See `ROADMAP.md` for the full phase map and `docs/superpowers/plans/` for task-level plans.
 
 | Phase | Status | Description |
 |---|---|---|
-| **1 — Foundation** | ✅ **Complete** | Project scaffold, auth, routing, onboarding wizard |
-| **2 — Admin Shell** | ✅ **Complete** | DataTable, StatCard, Avatar, ConfirmDialog, live dashboard, Students, Staff, Classes |
-| **3 — Academics** | ✅ **Complete** | Subjects, timetable builder (manual), assessments, report cards, academic calendar |
-| **4 — Attendance** | 🔨 **In Progress** | Daily marking, lock windows with admin override, reports/export, analytics enhancements pending |
-| 5 — Finance | ⬜ Pending | Fees, payments, MoMo, receipts |
-| 6 — Payroll | ⬜ Pending | SSNIT + PAYE auto-calculation, payslips |
-| 7 — Supporting Modules | ⬜ Pending | Library, messaging, transport, inventory |
-| 8 — Role Portals | ⬜ Pending | Teacher, Student, Parent dashboards + super-admin console |
-| 9 — Innovative Features | ⬜ Pending | Behavior gamification, wellness, AI insights |
-| 10 — Production | ⬜ Pending | Offline sync, SMS, Paystack, PWA, RLS, service-role super-admin workflows |
-
-### Future Feature Roadmaps
-
-- Attendance roadmap: `docs/ATTENDANCE_TODO.md`
-- Messaging roadmap: `docs/MESSAGING_TODO.md`
-
----
-
-## Project Structure
-
-```
-src/
-├── components/
-│   ├── ui/              # Shared UI components (Sidebar, Header, etc.)
-│   ├── layouts/         # Page layouts (AdminLayout, AuthLayout, etc.)
-│   └── [feature]/       # Feature-specific components
-├── contexts/
-│   └── AuthContext.jsx  # Supabase auth state
-├── db/
-│   ├── schema.js        # Dexie (IndexedDB) schema
-│   └── seed.js          # Development seed script
-├── hooks/               # TanStack Query hooks (one file per domain)
-├── pages/
-│   ├── auth/            # Login, Register, Onboarding, ForgotPassword
-│   ├── admin/           # All admin pages (grouped by module)
-│   ├── teacher/         # Teacher-facing pages
-│   ├── student/         # Student-facing pages
-│   └── parent/          # Parent portal pages
-├── routes/
-│   ├── AppRouter.jsx    # All routes with lazy loading
-│   └── ProtectedRoute.jsx
-├── services/
-│   ├── api/             # Supabase API wrappers (one per domain)
-│   ├── supabaseClient.js
-│   └── local/           # Dexie service layer
-├── store/
-│   ├── uiStore.js       # Sidebar, modals, page state (Zustand)
-│   └── schoolStore.js   # Active school config, term, year
-└── utils/
-    ├── cn.js            # clsx + tailwind-merge
-    ├── constants.js     # App-wide constants
-    ├── formatters.js    # GHS, dates, names, phone
-    ├── gradeUtils.js    # All grading systems
-    ├── ghanaPayroll.js  # SSNIT + PAYE calculations
-    └── ghanaCalendar.js # Ghana terms, grade levels
-```
+| **1 — Foundation** | ✅ Complete | Next.js scaffold, Drizzle schema, proxy, Auth.js, Docker, CI |
+| **2 — Super Admin Portal** | ✅ Complete | School CRUD, user lifecycle, billing schema, payment infra, email service, audit logs, shadcn/ui |
+| **3 — Admin (School) Portal** | ⬜ Pending | Students, staff, classes, subjects, timetable, fee setup, payroll, reports |
+| **4 — Teacher Portal** | ⬜ Pending | Attendance, assessments, grades, report cards, lesson plans |
+| **5 — Student Portal** | ⬜ Pending | View timetable, grades, report cards, attendance, fees |
+| **6 — Parent Portal** | ⬜ Pending | Children overview, payments (Paystack/MoMo), communication |
+| **7 — Design System & Polish** | ⬜ Pending | Full design system, animations, responsive, a11y, all UI states |
+| **8 — Cross-Role Communication** | ⬜ Pending | Announcements, messaging, SMS/Email, notifications |
+| **9 — Production Hardening** | ⬜ Pending | Sentry, rate limits, backups, PWA, offline, performance, security |
+| **10 — Extended Features** | ⬜ Pending | Library, transport, inventory, behavior, AI insights |
 
 ---
 
 ## Key Conventions
 
-- **Never** call Supabase directly in components — always use `services/api/`
-- **Always** wrap service calls in TanStack Query hooks in `hooks/`
-- **Always** cache Supabase data in Dexie for offline fallback
-- All monetary values stored as `numeric` in GHS
-- All dates stored as ISO 8601 UTC, displayed in `en-GH` locale
-- Use `cn()` from `utils/cn.js` for all conditional class names
-- Delete actions must always show a confirmation dialog first
-- Super admin cross-school actions must run through backend Edge Functions with service-role credentials
-- School settings user management must handle only school roles (`admin`, `teacher`, `student`, `parent`), never `super_admin`
+- Never call the database directly in client components — use Drizzle in API route handlers / Server Components, wrapped in TanStack Query hooks on the client.
+- All monetary values stored as `numeric(12,2)` in GHS.
+- All dates stored as ISO 8601 UTC, displayed in `en-GH` locale.
+- Use `cn()` from `@/lib/utils` for conditional class names.
+- Delete actions must always show a confirmation dialog.
+- Empty states: icon + heading + description + CTA.
+- Loading states: skeleton loaders, never full-page spinners.
+- TypeScript strict mode everywhere.
+- Commit after each working task, not at phase end.
 
 ---
 
@@ -209,4 +172,4 @@ src/
 
 ---
 
-*EduNexus · v1.0.0 · Phase 3 Complete (Academics)*
+*EduNexus · Next.js 16 monorepo · Phase 2 (Super Admin Portal) Complete*

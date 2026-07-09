@@ -4,7 +4,7 @@
 
 **Product:** EduNexus — Multi-tenant K-12 School Management System
 **Target Market:** Ghana & West Africa (configurable for British/American curricula)
-**Status:** Rewrite from React 19 + Supabase (JS) → Next.js 16 + PostgreSQL (TypeScript)
+**Status:** Next.js 16 + PostgreSQL (TypeScript). Supersedes the original React 19 + Supabase (JS) codebase — the rewrite is complete and the app now ships role-based portals (Phase 2 Super Admin Portal done, Phase 3 next).
 **Design Doc:** `docs/superpowers/specs/2026-07-08-edunexus-rewrite-design.md`
 
 ## Key Contacts
@@ -35,6 +35,24 @@
 | PDF | jsPDF + jsPDF-AutoTable |
 | Deployment | Vercel (Next.js) + Railway (DB/Redis) |
 | Monorepo | Turborepo (pnpm workspaces) |
+
+---
+
+## Repository Structure (Monorepo)
+
+The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; the app lives in `apps/web`.
+
+| Path | Responsibility |
+|---|---|
+| `apps/web` | Next.js 16 app (App Router). All pages, `app/api/*` route handlers, `components/`, `hooks/`, `services/`, `lib/`. Imports shared packages via `@/...`. |
+| `packages/database` | Drizzle schema (`src/schema/*`), client, migrations, seed. Imported as `@edunexus/database`. |
+| `packages/shared` | Shared TypeScript types (`UserRole`, etc.), constants (roles, grades, Ghana), and utilities (payroll, grade, formatters). Imported as `@edunexus/shared`. |
+| root | `turbo.json`, pnpm workspace config, GitHub Actions CI (`lint`, `typecheck`, `test`), Docker/dev env. |
+
+**Import conventions:**
+- Within `apps/web`: use the `@/` alias (e.g. `@/components/ui`, `@/lib/api`).
+- Cross-package: `@edunexus/database` and `@edunexus/shared` (never reach into a package's `src` path directly).
+- DB access happens only in API route handlers / Server Components / server scripts — never in client components.
 
 ---
 
@@ -109,7 +127,7 @@
 
 ## Current Working Phase
 
-**Phase 2 — Super Admin Portal** is complete. Proceeding to Phase 3 (Admin Portal).
+**Phase 2 — Super Admin Portal** is implemented and is currently being verified task-by-task against its acceptance criteria. **Phase 3 — Admin (School) Portal** is next. See `ROADMAP.md` for the full phase map and `docs/superpowers/plans/` for task-level plans.
 
 ---
 
@@ -190,7 +208,8 @@ sudo apt install docker.io
 
 When starting a new session working on EduNexus:
 1. Read `AGENTS.md` (this file) for project context
-2. Read `docs/superpowers/specs/2026-07-08-edunexus-rewrite-design.md` for full spec
+2. Read `ROADMAP.md` for the phase map, and `docs/superpowers/specs/2026-07-08-edunexus-rewrite-design.md` for the full spec
 3. Check which phase is current
 4. Review the most recent git log for context on what was last worked on
 5. Read relevant files in the phase you're implementing before writing code
+6. Read `docs/superpowers/plans/` for the current phase's task-level plan and acceptance criteria
