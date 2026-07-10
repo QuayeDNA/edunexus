@@ -33,7 +33,7 @@ interface Grade {
   category: string;
 }
 
-export function ApplicationForm({ grades }: { grades: Grade[] }) {
+export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grade[]; schoolName?: string; schoolId?: string }) {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [serverError, setServerError] = useState('');
   const [documentUrls, setDocumentUrls] = useState<string[]>([]);
@@ -90,7 +90,10 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
     try {
       const res = await fetch('/api/applicants', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(schoolId ? { 'x-tenant-id': schoolId } : {}),
+        },
         body: JSON.stringify({ ...data, documentUrls }),
       });
 
@@ -125,6 +128,11 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
 
   return (
     <Card>
+      {schoolName && (
+        <CardHeader className="border-b pb-4">
+          <CardTitle className="text-2xl text-primary">{schoolName}</CardTitle>
+        </CardHeader>
+      )}
       <CardHeader>
         <CardTitle>Student Information</CardTitle>
       </CardHeader>

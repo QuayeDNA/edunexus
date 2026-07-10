@@ -7,6 +7,7 @@ import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { sendEmail } from '@/services/email';
 import { applicationConfirmationEmail } from '@/services/email/templates/application-confirmation';
+import { resolveTenant } from '@/lib/tenant/resolve';
 
 const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -24,8 +25,15 @@ const createApplicantSchema = z.object({
   documentUrls: z.array(z.string().url()).optional().default([]),
 });
 
+async function resolveSchoolId(request: NextRequest): Promise<string | null> {
+  const host = request.headers.get('host') ?? '';
+  const tenant = await resolveTenant(host);
+  if (tenant.schoolId) return tenant.schoolId;
+  return request.headers.get('x-tenant-id') ?? null;
+}
+
 export async function POST(request: NextRequest) {
-  const schoolId = request.headers.get('x-tenant-id');
+  const schoolId = await resolveSchoolId(request);
   if (!schoolId) {
     return apiError(400, 'Tenant not resolved');
   }
@@ -85,7 +93,7 @@ export async function GET(request: NextRequest) {
   const { error: authError } = await requireRole('admin', 'super_admin');
   if (authError) return authError;
 
-  const schoolId = request.headers.get('x-tenant-id');
+  const schoolId = await resolveSchoolId(request);
   if (!schoolId) return apiError(400, 'Tenant not resolved');
 
   const { searchParams } = new URL(request.url);

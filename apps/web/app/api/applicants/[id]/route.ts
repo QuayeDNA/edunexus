@@ -5,6 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
+import { resolveTenant } from '@/lib/tenant/resolve';
 
 const validTransitions: Record<string, string[]> = {
   submitted: ['under_review', 'rejected'],
@@ -17,12 +18,18 @@ const updateStatusSchema = z.object({
   adminNotes: z.string().optional(),
 });
 
+async function resolveSchoolId(request: NextRequest): Promise<string | null> {
+  const host = request.headers.get('host') ?? '';
+  const tenant = await resolveTenant(host);
+  return tenant.schoolId;
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { error: authError } = await requireRole('admin', 'super_admin');
   if (authError) return authError;
 
-  const schoolId = request.headers.get('x-tenant-id');
+  const schoolId = await resolveSchoolId(request);
   if (!schoolId) return apiError(400, 'Tenant not resolved');
 
   const [applicant] = await db.select().from(applicants).where(and(
@@ -39,7 +46,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { error: authError, user } = await requireRole('admin', 'super_admin');
   if (authError) return authError;
 
-  const schoolId = request.headers.get('x-tenant-id');
+  const schoolId = await resolveSchoolId(request);
   if (!schoolId) return apiError(400, 'Tenant not resolved');
 
   const [existing] = await db.select().from(applicants).where(and(
