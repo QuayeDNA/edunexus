@@ -156,9 +156,11 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 
 **Phase 2 — Super Admin Portal** is implemented and verified against its acceptance criteria. **Phase 3a — Admissions & Enrollment** is next (inserted ahead of the original Phase 3 — see Roadmap Version History above). See `ROADMAP.md` for the full phase map and `docs/superpowers/plans/` for task-level plans.
 
-Before starting Phase 3a work, confirm:
-- [ ] `ROADMAP.md §1` Layer 1 (Academic Structure: AcademicYear, Term, GradeLevel, Class, Subject) has at least a schema + seed script in place, since Enrollment depends on it — check `packages/database/src/schema` before assuming this exists beyond the Phase 1 seed.
-- [ ] Resend email service (from Phase 2) is reusable for applicant confirmation emails — don't rebuild it.
+Phase 2 confirmed complete — all 24 GitHub issues (#4–#27) closed. Super admin dashboard, school/user/plan/subscription CRUD, audit log viewer, billing schema, email service (Resend), payment infra (Paystack), and shared API layer all built and deployed.
+
+Before starting Phase 3a work, confirmed:
+- [x] `ROADMAP.md §1` Layer 1 (Academic Structure: AcademicYear, Term, GradeLevel, Class, Subject) exists in `packages/database/src/schema/` with seed data.
+- [x] Resend email service (from Phase 2) is reusable for applicant confirmation emails.
 
 ---
 

@@ -71,6 +71,8 @@ This changes how Phases 1–2 need to be closed and how 3a–5 need to be planne
 
 ## 3. Phase 2 — Super Admin Portal: Actual State vs Claimed
 
+> **Phase 2 Completion Note (2026-07-10):** Since this audit was written, all Phase 2 epics have been implemented. API routes, UI pages, billing schema, email service, payment provider, shared API layer, audit log viewer, and all CRUD operations are built and verified. The 24 corresponding GitHub issues (#4–#27) are closed. The analysis below reflects the state *at the time of the audit* — refer to the codebase for the current state if reading after this date.
+
 | Claimed | Actual state found in repo |
 |---|---|
 | shadcn/ui v4 Nova, 14+ core components | ❌ Only 7 basic components exist: `avatar`, `badge`, `button`, `card`, `input`, `label`, `skeleton`. No `dialog`, `table`, `select`, `tabs`, `dropdown-menu`, `sonner`/toast, `form` |
