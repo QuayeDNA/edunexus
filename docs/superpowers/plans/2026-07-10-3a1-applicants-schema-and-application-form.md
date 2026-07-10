@@ -1,6 +1,6 @@
 # [3a.1.1] Public Application Form — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implement applicant intake: `applicants` schema, public submission at `/apply`, admin review API, email confirmation, Cloudinary file upload stub.
 
@@ -43,7 +43,7 @@
 - Create: `packages/database/src/schema/applicants.ts`
 - Modify: `packages/database/src/schema/index.ts`
 
-- [ ] **Step 1: Create the schema file**
+- [x] **Step 1: Create the schema file**
 
 Write `packages/database/src/schema/applicants.ts`:
 
@@ -77,7 +77,7 @@ export const applicants = pgTable('applicants', {
 ]);
 ```
 
-- [ ] **Step 2: Export from index**
+- [x] **Step 2: Export from index**
 
 Add to `packages/database/src/schema/index.ts` (in alphabetical position):
 
@@ -85,14 +85,14 @@ Add to `packages/database/src/schema/index.ts` (in alphabetical position):
 export { applicants } from './applicants';
 ```
 
-- [ ] **Step 3: Run typecheck**
+- [x] **Step 3: Run typecheck**
 
 ```bash
 cd packages/database && pnpm build
 ```
 Expected: compiles without errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/database/src/schema/applicants.ts packages/database/src/schema/index.ts
@@ -106,7 +106,7 @@ git commit -m "feat: add applicants schema"
 **Files:**
 - Create: `apps/web/app/api/applicants/route.ts`
 
-- [ ] **Step 1: Create the route file**
+- [x] **Step 1: Create the route file**
 
 Write `apps/web/app/api/applicants/route.ts`:
 
@@ -217,14 +217,14 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-- [ ] **Step 2: Build to typecheck**
+- [x] **Step 2: Build to typecheck**
 
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
 Expected: compiles without type errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/app/api/applicants/route.ts
@@ -238,7 +238,7 @@ git commit -m "feat: add POST (public) and GET (admin) applicants API routes"
 **Files:**
 - Create: `apps/web/app/api/applicants/[id]/route.ts`
 
-- [ ] **Step 1: Create the route file**
+- [x] **Step 1: Create the route file**
 
 Write `apps/web/app/api/applicants/[id]/route.ts`:
 
@@ -327,14 +327,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 ```
 
-- [ ] **Step 2: Build to typecheck**
+- [x] **Step 2: Build to typecheck**
 
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
 Expected: compiles without type errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/app/api/applicants/\[id\]/route.ts
@@ -348,7 +348,7 @@ git commit -m "feat: add GET (detail) and PATCH (status change) applicants API r
 **Files:**
 - Create: `apps/web/services/email/templates/application-confirmation.ts`
 
-- [ ] **Step 1: Create the email template**
+- [x] **Step 1: Create the email template**
 
 Write `apps/web/services/email/templates/application-confirmation.ts`:
 
@@ -376,7 +376,7 @@ export function applicationConfirmationEmail({ guardianName, studentName }: Appl
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/web/services/email/templates/application-confirmation.ts
@@ -391,7 +391,7 @@ git commit -m "feat: add application confirmation email template"
 - Create: `apps/web/app/apply/page.tsx`
 - Create: `apps/web/components/apply/application-form.tsx`
 
-- [ ] **Step 1: Create the Server Component page**
+- [x] **Step 1: Create the Server Component page**
 
 Write `apps/web/app/apply/page.tsx`:
 
@@ -437,7 +437,7 @@ export default async function ApplyPage() {
 }
 ```
 
-- [ ] **Step 2: Create the client form component**
+- [x] **Step 2: Create the client form component**
 
 Write `apps/web/components/apply/application-form.tsx`:
 
@@ -702,14 +702,14 @@ export function ApplicationForm({ grades }: ApplicationFormProps) {
 }
 ```
 
-- [ ] **Step 3: Build to typecheck**
+- [x] **Step 3: Build to typecheck**
 
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
 Expected: compiles without type errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/app/apply/page.tsx apps/web/components/apply/application-form.tsx
@@ -720,21 +720,21 @@ git commit -m "feat: add public application form at /apply"
 
 ### Task 6: Full build verification
 
-- [ ] **Step 1: Run full build**
+- [x] **Step 1: Run full build**
 
 ```bash
 pnpm build
 ```
 Expected: all 3 packages compile, TypeScript passes, all routes listed (including the new `/apply` page and `/api/applicants` routes).
 
-- [ ] **Step 2: Commit any final fixes**
+- [x] **Step 2: Commit any final fixes**
 
 ```bash
 git add -A
 git commit -m "chore: fix build issues"
 ```
 
-- [ ] **Step 3: Push feature branch**
+- [x] **Step 3: Push feature branch**
 
 ```bash
 git push origin feature/3a.1.1-applicants-schema

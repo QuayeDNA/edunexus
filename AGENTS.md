@@ -133,7 +133,7 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 |---|---|---|---|
 | **1 — Foundation** | Next.js scaffold, Drizzle schema, proxy, Auth.js, Docker, CI | super_admin (platform) | ✅ Complete |
 | **2 — Super Admin Portal** | School CRUD, user lifecycle, billing schema, payment infra, email service, audit logs, shadcn/ui | super_admin | ✅ Complete |
-| **3a — Admissions & Enrollment** | Applicant intake, admissions review, Student/Guardian conversion, bulk import, transfer/withdrawal | admin | ⬜ Pending (next) |
+| **3a — Admissions & Enrollment** | Applicant intake, admissions review, Student/Guardian conversion, bulk import, transfer/withdrawal | admin | 🟡 [3a.1.1] done — [3a.1.2] next |
 | **3 — Admin Portal** | Academic structure, Students, Staff, Classes, Subjects, Timetable, Fee setup, Payroll, Reports | admin | ⬜ Pending |
 | **4 — Teacher Portal** | Attendance, Assessments, Grades, Report Cards, Lesson Plans, behavior logging | teacher | ⬜ Pending |
 | **5 — Student Portal** | View timetable, grades, report cards, attendance, fees | student | ⬜ Pending |
@@ -154,13 +154,15 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 
 ## Current Working Phase
 
-**Phase 2 — Super Admin Portal** is implemented and verified against its acceptance criteria. **Phase 3a — Admissions & Enrollment** is next (inserted ahead of the original Phase 3 — see Roadmap Version History above). See `ROADMAP.md` for the full phase map and `docs/superpowers/plans/` for task-level plans.
+**Phase 2 — Super Admin Portal** — ✅ Complete (24 issues #4–#27 closed)
 
-Phase 2 confirmed complete — all 24 GitHub issues (#4–#27) closed. Super admin dashboard, school/user/plan/subscription CRUD, audit log viewer, billing schema, email service (Resend), payment infra (Paystack), and shared API layer all built and deployed.
+**Phase 3a — Admissions & Enrollment** — 🟡 In Progress
+- ~~[3a.1.1] Public application form~~ ✅ Complete (PR #115, merged to `preview` Jul 10)
+- ⬜ [3a.1.2] Admissions review queue — next
+- ⬜ [3a.2.1] Accepted → Student conversion
+- ⬜ [3a.2.2] Direct student entry (bypass admissions)
 
-Before starting Phase 3a work, confirmed:
-- [x] `ROADMAP.md §1` Layer 1 (Academic Structure: AcademicYear, Term, GradeLevel, Class, Subject) exists in `packages/database/src/schema/` with seed data.
-- [x] Resend email service (from Phase 2) is reusable for applicant confirmation emails.
+Phase 1/2 prerequisites confirmed before Phase 3a work: `ROADMAP.md §1` Layer 1 (Academic Structure) exists in schema with seed data; Resend email service (Phase 2) reusable for applicant confirmations.
 
 ---
 

@@ -127,7 +127,7 @@ One paragraph — what and why.
 **Timeline:** 1–2 weeks
 
 ### Epic 3a.1 — Applicant intake
-- **[3a.1.1] Public application form** — Depends on: none — Roles: admin, applicant (unauthenticated)
+- ~~[3a.1.1] Public application form~~ ✅ **Complete** (PR #115, merged to `preview` Jul 10)
   - Tasks: public form route per school subdomain; file upload for documents (birth cert, prior report card); application status enum (`submitted`, `under_review`, `accepted`, `rejected`, `waitlisted`); email confirmation via Resend.
   - AC: Given a valid subdomain, when a guardian submits the form, then an `Applicant` row is created with status `submitted` and a confirmation email is sent within 1 minute.
 
