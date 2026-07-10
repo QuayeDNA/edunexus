@@ -4,12 +4,26 @@
 
 **Product:** EduNexus — Multi-tenant K-12 School Management System
 **Target Market:** Ghana & West Africa (configurable for British/American curricula)
-**Status:** Next.js 16 + PostgreSQL (TypeScript). Supersedes the original React 19 + Supabase (JS) codebase — the rewrite is complete and the app now ships role-based portals (Phase 2 Super Admin Portal done, Phase 3 next).
+**Status:** Next.js 16 + PostgreSQL (TypeScript). Supersedes the original React 19 + Supabase (JS) codebase — the rewrite is complete and the app now ships role-based portals (Phase 2 Super Admin Portal done, Phase 3a next).
+**Roadmap:** `ROADMAP.md` (v2, restructured Jul 2026 — see "Roadmap Version History" below)
 **Design Doc:** `docs/superpowers/specs/2026-07-08-edunexus-rewrite-design.md`
 
 ## Key Contacts
 
 - **Product decisions:** See design doc above
+
+---
+
+## Roadmap Version History
+
+- **v1 (role-based):** Original phase plan, organized purely by portal (Admin → Teacher → Student → Parent). Phases 1–2 were built against this version.
+- **v2 (current):** Same role-based delivery cadence, but with three corrections identified during a roadmap review:
+  1. **Admissions/enrollment was missing entirely** — you can't have students without an intake pipeline. Inserted as **Phase 3a**, before the original Phase 3.
+  2. **Ghana compliance was missing entirely** — WAEC/BECE candidate exports, GES report formats, statutory SSNIT/PAYE filing exports. Added as **Phase 9**, and it's likely the strongest differentiator against generic school SaaS, so don't deprioritize it.
+  3. **Platform operator (super_admin) work incorrectly stopped after Phase 2** in v1. In reality, every later phase adds something the operator needs to see, meter, or gate (new module to monitor, new payment flow to reconcile, new comms cost to cap). v2 tracks these explicitly in `ROADMAP.md §16` and tags them to the phase they attach to — **agents should pull the relevant §16 item into the current phase's task list, not defer it**.
+- Communication (now Phase 7) was also moved earlier than Design Polish (now Phase 8), because Parent Portal (Phase 6) depends on announcements/notifications existing — building comms after Parent Portal in v1 left dead UI stubs.
+
+**Always check `ROADMAP.md` for the current phase table before starting work — this file describes *how* to build, `ROADMAP.md` describes *what* and *in what order*.**
 
 ---
 
@@ -60,10 +74,16 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 
 ### Multi-Tenancy (MANDATORY)
 - Shared PostgreSQL database with `school_id` on every tenant-scoped table
-- Next.js middleware resolves tenant from subdomain → attaches `x-tenant-id` header
-- ALL API routes read `school_id` from middleware-set header, NEVER from client body
+- Next.js proxy resolves tenant from subdomain → attaches `x-tenant-id` header
+- ALL API routes read `school_id` from proxy-set header, NEVER from client body
 - Drizzle query layer uses a helper that auto-injects `WHERE school_id = ?`
 - Super admin routes bypass tenant scoping (separate route group)
+
+### Entity Build Order (guidance, not a gate)
+`ROADMAP.md §1` defines a dependency graph across 10 entity layers (Tenancy → Academic Structure → People/Admissions → Scheduling → Assessment → Finance → Communication → Portals → Extended Modules → Ghana Compliance → Hardening). Before implementing a new entity or feature:
+1. Check `ROADMAP.md §1` for what it depends on.
+2. Confirm the dependency is actually merged (check `docs/superpowers/plans/` and recent git log), not just planned in the roadmap.
+3. If a dependency is missing, raise it rather than stubbing around it — stubs around a missing entity (e.g. a fee invoice screen with no `Enrollment` record to attach to) are exactly the kind of rework this ordering exists to avoid.
 
 ### Data Layer (MANDATORY)
 - Never call the database directly inside React components
@@ -77,23 +97,24 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 - Credentials authorize function queries profiles DB directly (no fetch to API route)
 - Passwords hashed with `scrypt` (64-byte salt + hash), stored as `scrypt:{salt}:{hash}`
 - Session contains: `user.id`, `user.role`, `user.schoolId` (null for super_admin)
-- Proxy (Next.js 16 replaces `middleware.ts` with `proxy.ts`) validates: auth → role matches route → tenant matches domain
+- Proxy (`proxy.ts`, Next.js 16's replacement for `middleware.ts`) validates: auth → role matches route → tenant matches domain
 - API routes have a second layer of role validation via `requireRole()` guard
 - Super admin write operations (school CRUD, user lifecycle) use elevated privilege
 - `profiles.school_id` is nullable — super admins have no school association
 
-### Future Auth Improvements (Phase 2+)
+### Future Auth Improvements (Phase 3+)
 - Password reset flow (email-based)
 - Email verification on registration
 - Account lockout after N failed attempts
 - Session management (view/revoke active sessions)
 - Rate limiting on `/api/auth/*` endpoints
+- 2FA for `admin` and `super_admin` roles (see `ROADMAP.md §10.2`)
 - Consider SMS OTP (via Africa's Talking) for parent/student accounts — more natural for Ghana's mobile-first market than OAuth
 
 ### URL Structure
 - `console.edunexus.com` — Super admin portal + login
 - `{school-slug}.edunexus.com` — Per-school portal
-- Custom domain support — Phase 2
+- Custom domain support — done in Phase 2 (billing schema has `domain`/`customDomain` on `schools`)
 
 ### Code Conventions
 - TypeScript strict mode everywhere
@@ -106,28 +127,38 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 
 ---
 
-## Build Phases (Role-Based)
+## Build Phases (Role-Based, v2)
 
-| Phase | Description | Status |
-|---|---|---|
-| **1 — Foundation** | Next.js scaffold, Drizzle schema, proxy, Auth.js, Docker, CI | ✅ Complete |
-| **2 — Super Admin Portal** | School CRUD, user lifecycle, billing schema, payment infra, email service, audit logs, shadcn/ui | ✅ Complete |
-| **3 — Admin Portal** | Students, Staff, Classes, Subjects, Timetable, Fee setup, Payroll, Reports | ⬜ Pending |
-| **4 — Teacher Portal** | Attendance, Assessments, Grades, Report Cards, Lesson Plans | ⬜ Pending |
-| **5 — Student Portal** | View timetable, grades, report cards, attendance, fees | ⬜ Pending |
-| **6 — Parent Portal** | Children overview, payments (Paystack/MoMo), communication | ⬜ Pending |
-| **7 — Design System** | Full design system, animations, responsive, a11y, all UI states | ⬜ Pending |
-| **8 — Communication** | Announcements, messaging, SMS/Email, notifications | ⬜ Pending |
-| **9 — Production** | Sentry, rate limits, backups, PWA, offline, performance, security | ⬜ Pending |
-| **10 — Extended** | Library, Transport, Inventory, Behavior, AI insights | ⬜ Pending |
+| Phase | Description | Primary Role | Status |
+|---|---|---|---|
+| **1 — Foundation** | Next.js scaffold, Drizzle schema, proxy, Auth.js, Docker, CI | super_admin (platform) | ✅ Complete |
+| **2 — Super Admin Portal** | School CRUD, user lifecycle, billing schema, payment infra, email service, audit logs, shadcn/ui | super_admin | ✅ Complete |
+| **3a — Admissions & Enrollment** | Applicant intake, admissions review, Student/Guardian conversion, bulk import, transfer/withdrawal | admin | ⬜ Pending (next) |
+| **3 — Admin Portal** | Academic structure, Students, Staff, Classes, Subjects, Timetable, Fee setup, Payroll, Reports | admin | ⬜ Pending |
+| **4 — Teacher Portal** | Attendance, Assessments, Grades, Report Cards, Lesson Plans, behavior logging | teacher | ⬜ Pending |
+| **5 — Student Portal** | View timetable, grades, report cards, attendance, fees | student | ⬜ Pending |
+| **6 — Parent Portal** | Children overview, payments (Paystack/MoMo), payment history | parent | ⬜ Pending |
+| **7 — Communication** | Notifications, announcements, messaging, SMS/Email — moved before Design System (v1 had it after, leaving Phase 6 with dead stubs) | all roles | ⬜ Pending |
+| **8 — Design System** | Full design system, animations, responsive, a11y, all UI states | all roles | ⬜ Pending |
+| **9 — Ghana Compliance** | GES reporting exports, WAEC/BECE candidate registration, SSNIT/PAYE statutory filing, report card format compliance | admin (platform-assisted) | ⬜ Pending |
+| **10 — Production Hardening** | Sentry, rate limits + 2FA, backups, PWA/offline, performance, docs, load testing | super_admin (platform-wide) | ⬜ Pending |
+| **11 — Extended Modules** | Library, Transport, Hostel/Boarding, Inventory, Behavior gamification, Wellness, Alumni, AI insights | admin (varies by module) | ⬜ Pending |
 
-**Note:** Phases 2+ were restructured from feature-based to role-based in July 2026. See `docs/superpowers/specs/2026-07-09-edunexus-phase-restructure.md` for details.
+**Full breakdown of each phase into epics, issues, tasks, and acceptance criteria lives in `ROADMAP.md` — this table is a status summary only, do not duplicate detail here.**
+
+### Platform Operator (super_admin) work does not stop at Phase 2
+
+`ROADMAP.md §16` lists super_admin-only features that attach to *later* phases: cross-tenant dashboard and support impersonation (Phase 3), payment reconciliation and dunning automation (Phase 6), platform-wide announcements and comms cost monitoring (Phase 7), bulk compliance export (Phase 9), system health dashboard and data export/deletion tooling (Phase 10), module marketplace toggles (Phase 11). **When planning a phase, check §16 for the operator-facing item attached to it and schedule it in the same sprint** — these were the single biggest gap in v1 of the roadmap and should not silently drop again.
 
 ---
 
 ## Current Working Phase
 
-**Phase 2 — Super Admin Portal** is implemented and is currently being verified task-by-task against its acceptance criteria. **Phase 3 — Admin (School) Portal** is next. See `ROADMAP.md` for the full phase map and `docs/superpowers/plans/` for task-level plans.
+**Phase 2 — Super Admin Portal** is implemented and verified against its acceptance criteria. **Phase 3a — Admissions & Enrollment** is next (inserted ahead of the original Phase 3 — see Roadmap Version History above). See `ROADMAP.md` for the full phase map and `docs/superpowers/plans/` for task-level plans.
+
+Before starting Phase 3a work, confirm:
+- [ ] `ROADMAP.md §1` Layer 1 (Academic Structure: AcademicYear, Term, GradeLevel, Class, Subject) has at least a schema + seed script in place, since Enrollment depends on it — check `packages/database/src/schema` before assuming this exists beyond the Phase 1 seed.
+- [ ] Resend email service (from Phase 2) is reusable for applicant confirmation emails — don't rebuild it.
 
 ---
 
@@ -137,12 +168,13 @@ Phase 2 was implemented in one large batch — this introduced several type erro
 
 ### Small-Task Workflow (all phases going forward)
 
-1. **Write the plan first** — `docs/superpowers/plans/` with task-level granularity
+1. **Write the plan first** — `docs/superpowers/plans/` with task-level granularity, one entry per `ROADMAP.md` issue ID (e.g. `3a.1.1`, `3a.2.1`)
 2. **One task at a time** — implement, typecheck, test, then move on
 3. **Never batch-implement** across API + UI + schema in a single pass
 4. **Use shadcn/ui Nova components only** — no custom wrappers; prefer `Controller` + Nova primitives over `FormField`/`FormItem` pattern
 5. **Verify DB schema types** before writing routes (numeric → string, nullability, required fields)
 6. **Commit after each working task**, not at phase end
+7. **Check the issue's acceptance criteria in `ROADMAP.md` before marking a task done** — AC are written to be testable; if you can't demonstrate the Given/When/Then, the task isn't finished
 
 ---
 
@@ -159,7 +191,7 @@ pnpm dev           # http://localhost:3000
 # Login: admin@edunexus.com / Admin@123
 ```
 
-Redis/MinIO are optional — only needed for BullMQ queues & file uploads (Phase 3+).
+Redis/MinIO are optional — only needed for BullMQ queues & file uploads (Phase 3a+, e.g. applicant document upload).
 When you need them later, install Redis via WSL (`sudo apt install redis`) or use a free Redis Cloud tier.
 
 If using Docker in WSL (not Docker Desktop):
@@ -168,6 +200,8 @@ If using Docker in WSL (not Docker Desktop):
 sudo apt install docker.io
 # Then docker-compose up works without Docker Desktop overhead
 ```
+
+`docker compose up` as a fully working dev environment is still a Phase 1 exit criterion that hasn't been closed out — see `ROADMAP.md §11 [10.8]`. Don't assume it works; verify before relying on it in CI or onboarding docs.
 
 ---
 
@@ -178,19 +212,20 @@ sudo apt install docker.io
 - All tables have `created_at timestamptz default now()`
 - Composite indexes on `(school_id, ...)` for all query patterns
 - Soft delete via `deleted_at timestamptz` on major tables
-- Audit logging on all write operations
+- Audit logging on all write operations — every insert/update/delete on a tenant-scoped table must have a corresponding `audit_logs` row with `userId` and `schoolId` populated (this was a post-hoc fix in Phase 2; don't reintroduce the gap in new tables)
 
 ---
 
 ## Ghana-Specific Non-Negotiables
 
-- Ghana Academic Calendar (3 terms) is default
+- Ghana Academic Calendar (3 terms) is default; GES term-date presets should be selectable when creating an academic year (`ROADMAP.md §10 [9.5]`)
 - Ghana Basic Grading (Grade 1-6) with defined assessment weighting
 - SSNIT: Employee 5.5%, Employer 13%
 - PAYE: Ghana tax bands with annual calculation
 - Mobile Money: MTN, Vodafone, AirtelTigo with auto-network detection
-- Currency: GHS (₵)
+- Currency: GHS — store as `GHS` in receipts/printed output, not the `₵` glyph (thermal printer codepage issue, fixed in POS work — apply the same rule here defensively)
 - Locale: en-GH
+- WAEC/BECE candidate registration export format and GES statutory reporting are tracked in `ROADMAP.md §10` (Phase 9) — treat these as product requirements, not optional polish
 
 ---
 
@@ -201,15 +236,17 @@ sudo apt install docker.io
 - Component: Vitest + Testing Library (UI components)
 - E2E: Playwright (critical user journeys)
 - Tenant isolation: Dedicated test suite verifying cross-tenant data isolation
+- New for Phase 3a+: idempotency tests for any operation that can be retried or double-submitted (applicant→student conversion, bulk CSV import, payment webhooks) — see `ROADMAP.md` acceptance criteria for `[3a.2.1]`, `[3a.2.2]`, `[6.3]`
 
 ---
 
 ## Handoff Notes
 
 When starting a new session working on EduNexus:
-1. Read `AGENTS.md` (this file) for project context
-2. Read `ROADMAP.md` for the phase map, and `docs/superpowers/specs/2026-07-08-edunexus-rewrite-design.md` for the full spec
-3. Check which phase is current
+1. Read `AGENTS.md` (this file) for project context and conventions
+2. Read `ROADMAP.md` for the phase map, entity dependency graph (§1), role coverage matrix (§1a), and platform-operator backlog (§16)
+3. Check which phase is current (see "Current Working Phase" above, and confirm against `docs/superpowers/plans/`)
 4. Review the most recent git log for context on what was last worked on
 5. Read relevant files in the phase you're implementing before writing code
 6. Read `docs/superpowers/plans/` for the current phase's task-level plan and acceptance criteria
+7. Cross-check `ROADMAP.md §16` for any platform-operator item attached to the current phase — pull it into the same plan rather than deferring it
