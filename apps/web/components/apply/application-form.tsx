@@ -38,6 +38,7 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
   const [serverError, setServerError] = useState('');
   const [documentUrls, setDocumentUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -55,6 +56,7 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
     }
 
     setUploading(true);
+    setUploadError('');
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -67,9 +69,11 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
       const data = await res.json();
       if (data.secure_url) {
         setDocumentUrls(prev => [...prev, data.secure_url]);
+      } else {
+        setUploadError(data.error?.message || 'Upload failed. Please try again.');
       }
-    } catch (err) {
-      console.error('Upload failed:', err);
+    } catch {
+      setUploadError('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -234,6 +238,7 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
               disabled={uploading}
             />
             {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
+            {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
             {documentUrls.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {documentUrls.map((url) => (

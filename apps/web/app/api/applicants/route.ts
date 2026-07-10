@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { applicants, gradeLevels } from '@edunexus/database';
+import { applicants, gradeLevels, auditLogs } from '@edunexus/database';
 import { eq, and, desc, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { sendEmail } from '@/services/email';
 import { applicationConfirmationEmail } from '@/services/email/templates/application-confirmation';
+
+const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 
 const createApplicantSchema = z.object({
   firstName: z.string().min(1).max(100),
@@ -51,6 +53,17 @@ export async function POST(request: NextRequest) {
     previousSchool: parsed.data.previousSchool || null,
     documentUrls: parsed.data.documentUrls.length > 0 ? parsed.data.documentUrls : null,
   }).returning();
+
+  await db.insert(auditLogs).values({
+    schoolId,
+    userId: SYSTEM_USER_ID,
+    action: 'INSERT',
+    tableName: 'applicants',
+    recordId: applicant.id,
+    newData: { status: 'submitted', firstName: parsed.data.firstName, lastName: parsed.data.lastName },
+    ipAddress: request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? undefined,
+    userAgent: request.headers.get('user-agent') ?? undefined,
+  });
 
   try {
     await sendEmail({
