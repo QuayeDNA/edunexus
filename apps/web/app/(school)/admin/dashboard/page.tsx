@@ -3,7 +3,6 @@ import { db } from '@/lib/db';
 import { schools } from '@edunexus/database';
 import { eq } from 'drizzle-orm';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Users, Briefcase, GraduationCap, CalendarCheck, Plus, Upload, Send } from 'lucide-react';
 import Link from 'next/link';
 import { ApplicationUrlCard } from '@/components/admin/application-url-card';

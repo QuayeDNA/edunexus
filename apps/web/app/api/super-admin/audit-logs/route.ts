@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
-  const userId = searchParams.get('userId');
   const schoolId = searchParams.get('schoolId');
   const dateFrom = searchParams.get('dateFrom');
   const dateTo = searchParams.get('dateTo');
