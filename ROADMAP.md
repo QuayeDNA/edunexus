@@ -287,7 +287,7 @@ One paragraph — what and why.
 - **[10.5] Performance optimization** — React Compiler, image optimization, caching, DB indexing pass on all 43+ tables
 - **[10.6] Documentation** — admin manual, deploy guide, API reference
 - **[10.7] Load testing (k6)** — target: concurrent load simulating peak (report card release day, fee due date)
-- **[10.8] `docker compose up` dev environment** — carried over from Phase 1 exit criteria, still pending
+- **[10.8] `docker compose up` dev environment** — infra services containerized (PostgreSQL, Redis, MinIO, Mailpit); app runs via `pnpm dev`. Phase 1 exit criterion met.
 
 ---
 
