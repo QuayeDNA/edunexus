@@ -1,20 +1,47 @@
 import { requireRole } from '@/lib/auth/auth.guard';
+import { db } from '@/lib/db';
+import { schools } from '@edunexus/database';
+import { eq } from 'drizzle-orm';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Users, Briefcase, GraduationCap, CalendarCheck, Plus, Upload, Send } from 'lucide-react';
 import Link from 'next/link';
+import { ApplicationUrlCard } from '@/components/admin/application-url-card';
 
 export default async function AdminDashboard() {
-  await requireRole('admin');
+  const session = await requireRole('admin');
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+  let schoolSlug = '';
+  let schoolName = '';
+  if (session.user.schoolId) {
+    const [school] = await db.select({ slug: schools.slug, name: schools.name })
+      .from(schools)
+      .where(eq(schools.id, session.user.schoolId))
+      .limit(1);
+    if (school) {
+      schoolSlug = school.slug;
+      schoolName = school.name;
+    }
+  }
+
+  const isDev = baseUrl.includes('localhost');
+  const appHost = new URL(baseUrl).host;
+  const applyUrl = isDev
+    ? `${baseUrl}/apply?school=${schoolSlug}`
+    : `https://${schoolSlug}.${appHost}/apply`;
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-text-primary">Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          School overview and quick actions
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-text-primary">{schoolName}</h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            Admin Dashboard
+          </p>
+        </div>
       </div>
+
+      <ApplicationUrlCard url={applyUrl} schoolName={schoolName} />
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <Card>

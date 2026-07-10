@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { schools, academicYears, terms, gradeLevels, auditLogs } from '@edunexus/database/src/schema';
-import { desc, eq, like, and, sql, count } from 'drizzle-orm';
+import { desc, eq, like, and, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';

@@ -7,6 +7,7 @@ export { classes } from './classes';
 export { subjects } from './subjects';
 export { classSubjects } from './class-subjects';
 export { timetableSlots } from './timetable';
+export { applicants } from './applicants';
 export { assessmentTypes, assessments, assessmentScores, reportCards } from './assessments';
 export { attendance, staffAttendance } from './attendance';
 export { feeCategories, feeSchedules, studentFees, payments, expenses } from './fees';

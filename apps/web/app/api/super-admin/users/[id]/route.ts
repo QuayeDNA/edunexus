@@ -4,7 +4,7 @@ import { profiles, auditLogs } from '@edunexus/database/src/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NotFoundError, ForbiddenError, ValidationError } from '@/lib/api/errors';
 import { routeHandler } from '@/lib/api/handler';
 
