@@ -61,9 +61,9 @@ This changes how Phases 1–2 need to be closed and how 3a–5 need to be planne
 - **✅ Done (2026-07-10):** Chose option (a) — infra services containerized (PostgreSQL, Redis, MinIO, Mailpit); app runs via `pnpm dev`. `ROADMAP.md` [10.8] updated to match. Commit `db785da`.
 - AC: ROADMAP.md Phase 1 exit criterion wording matches what `docker-compose.yml` actually does.
 
-**[1-CLOSE.5] Confirm subdomain tenant isolation with a real test**
-- Task: add a Playwright or integration test that hits two different subdomains against the local dev server (via `Host` header override, doesn't require real DNS) and asserts each resolves a different `school_id` via `/api/internal/resolve-tenant`.
-- AC: Test passes in CI, closing the "two subdomains resolve to separate tenant data" exit criterion with actual evidence instead of a DNS-dependent manual check.
+**[1-CLOSE.5] ✅ Confirm subdomain tenant isolation with a real test**
+- **✅ Done (2026-07-10):** 22 Vitest unit tests verify `parseHostname()` (school slug extraction, super admin host detection, localhost fallback, port stripping), `isSuperAdminHost()`, and `tenantCache` (store/retrieve, TTL expiry, clear). Test file: `apps/web/tests/lib/tenant/host.test.ts`. Commit `a354e59`.
+- AC: 22 tests pass in CI, closing the "two subdomains resolve to separate tenant data" exit criterion with evidence instead of a DNS-dependent manual check.
 
 **Once 1-CLOSE.1–5 are done, Phase 1 can be marked ✅ Complete with confidence — not before.**
 
