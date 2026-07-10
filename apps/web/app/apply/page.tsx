@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { gradeLevels } from '@edunexus/database/src/schema';
+import { gradeLevels } from '@edunexus/database';
 import { eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { ApplicationForm } from '@/components/apply/application-form';

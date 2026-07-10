@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(100),
@@ -38,7 +39,7 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
   const [documentUrls, setDocumentUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
 
@@ -146,31 +147,43 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="gender">Gender *</Label>
-              <select
-                id="gender"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                {...register('gender')}
-              >
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.gender && <p className="text-sm text-destructive">{errors.gender.message}</p>}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="gradeLevelId">Applying for Grade *</Label>
-            <select
-              id="gradeLevelId"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              {...register('gradeLevelId')}
-            >
-              <option value="">Select grade</option>
-              {grades.map(g => (
-                <option key={g.id} value={g.id}>{g.name} ({g.code})</option>
-              ))}
-            </select>
+              <Label htmlFor="gradeLevelId">Applying for Grade *</Label>
+            <Controller
+              name="gradeLevelId"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select grade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {grades.map(g => (
+                      <SelectItem key={g.id} value={g.id}>{g.name} ({g.code})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
             {errors.gradeLevelId && <p className="text-sm text-destructive">{errors.gradeLevelId.message}</p>}
           </div>
 
@@ -228,9 +241,9 @@ export function ApplicationForm({ grades }: { grades: Grade[] }) {
                     <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline">
                       {url.split('/').pop()}
                     </a>
-                    <button type="button" onClick={() => removeDocument(url)} className="text-destructive hover:underline">
+                    <Button type="button" variant="destructive" size="sm" onClick={() => removeDocument(url)}>
                       Remove
-                    </button>
+                    </Button>
                   </li>
                 ))}
               </ul>

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { applicants, auditLogs } from '@edunexus/database/src/schema';
+import { applicants, auditLogs } from '@edunexus/database';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
