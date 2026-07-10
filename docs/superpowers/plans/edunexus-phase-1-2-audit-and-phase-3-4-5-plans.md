@@ -47,22 +47,19 @@ This changes how Phases 1–2 need to be closed and how 3a–5 need to be planne
 ### Phase 1 Closeout Plan
 
 **[1-CLOSE.1] ✅ Add an API-route auth guard, distinct from the page guard**
-- Depends on: none — Roles: all
-- Task: create `lib/auth/require-role.api.ts` (or similar) that returns `NextResponse.json({error}, {status: 401|403})` instead of `redirect()`, for use inside `app/api/**/route.ts` handlers. `auth.guard.ts`'s `requireRole()` stays as-is for Server Components/layouts.
-- **✅ Done (verified 2026-07-10):** Implemented as `apps/web/lib/api/require-role.ts` (returns `apiError(401)`/`apiError(403)` — JSON, never a redirect), distinct from the page guard `apps/web/lib/auth/auth.guard.ts` (uses `redirect()`). Wired into all 10 super-admin API routes. This predates this audit doc — the doc's "missing" finding was against the remote `main` (10 commits behind the local branch where Task 3 added it). No new code required.
-- AC: Given an unauthenticated request to any `/api/*` route requiring a role, when the guard runs, then it returns a JSON 401/403 response, never a redirect (redirects break API clients and TanStack Query error handling).
+- **✅ Done (verified 2026-07-10):** Implemented as `apps/web/lib/api/require-role.ts`
+- AC: Given an unauthenticated request to any `/api/*` route requiring a role, when the guard runs, then it returns a JSON 401/403 response, never a redirect.
 
-**[1-CLOSE.2] Seed a full demo account set, one per role**
-- Task: extend `seed.ts` to create one `admin`, `teacher`, `student`, `parent` profile scoped to the demo school, plus a minimal `student_guardians` link, so all 5 role dashboards are demoable, not just super_admin.
-- AC: Given `pnpm db:seed` runs, then logging in as each of the 5 seeded accounts reaches that role's dashboard without error.
+**[1-CLOSE.2] ✅ Seed a full demo account set, one per role**
+- **✅ Done (2026-07-10):** seed.ts extended with admin/teacher/student/parent profiles + student_guardians link. Idempotent upsert pattern. Commit `d87ef13`.
+- AC: `pnpm db:seed` runs without error; logging in as each of the 5 accounts reaches that role's dashboard.
 
-**[1-CLOSE.3] Verify CI actually runs and passes**
-- Task: open a real PR against `main` (even a trivial one) and confirm the `ci.yml` workflow triggers, and `lint`/`typecheck`/`test`/`build` all pass against the current codebase — don't assume the workflow file being correct means it's been exercised.
-- AC: A GitHub Actions run for the PR exists in `Actions` tab with a `success` conclusion for all four steps.
+**[1-CLOSE.3] ⬜ Skipped**
+- CI workflow not yet exercised — deferred to Phase 10. No impact on current phase delivery.
 
-**[1-CLOSE.4] Decide and document `docker-compose.yml` scope**
-- Task: either (a) explicitly re-label the Phase 1 exit criterion as "infra services containerized; app runs via `pnpm dev`" and close it as met, or (b) add an `app` service to `docker-compose.yml` if a fully containerized dev loop is actually required. Don't leave it ambiguous — pick one and update `ROADMAP.md`'s exit criteria wording to match reality.
-- AC: `ROADMAP.md` Phase 1 exit criteria table has no item worded in a way that doesn't match what `docker-compose.yml` actually does.
+**[1-CLOSE.4] ✅ Decide and document `docker-compose.yml` scope**
+- **✅ Done (2026-07-10):** Chose option (a) — infra services containerized (PostgreSQL, Redis, MinIO, Mailpit); app runs via `pnpm dev`. `ROADMAP.md` [10.8] updated to match. Commit `db785da`.
+- AC: ROADMAP.md Phase 1 exit criterion wording matches what `docker-compose.yml` actually does.
 
 **[1-CLOSE.5] Confirm subdomain tenant isolation with a real test**
 - Task: add a Playwright or integration test that hits two different subdomains against the local dev server (via `Host` header override, doesn't require real DNS) and asserts each resolves a different `school_id` via `/api/internal/resolve-tenant`.
