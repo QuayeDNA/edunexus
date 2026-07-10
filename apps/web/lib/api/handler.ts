@@ -13,9 +13,9 @@ type RouteHandler<P extends Record<string, string> = Record<string, string>> = (
 export function routeHandler<P extends Record<string, string> = Record<string, string>>(
   handler: RouteHandler<P>
 ) {
-  return async (req: NextRequest, ctx: { params: P }) => {
+  return async (req: NextRequest, ctx: { params: Promise<P> }) => {
     try {
-      return await handler(req, ctx);
+      return await handler(req, { params: await ctx.params });
     } catch (error) {
       return handleApiError(error);
     }

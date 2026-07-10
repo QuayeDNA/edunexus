@@ -16,7 +16,8 @@ const updatePlanSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { error: authError } = await requireRole('super_admin');
   if (authError) return authError;
 
@@ -26,7 +27,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
-  const [existing] = await db.select().from(schoolPlans).where(eq(schoolPlans.id, params.id)).limit(1);
+  const [existing] = await db.select().from(schoolPlans).where(eq(schoolPlans.id, id)).limit(1);
   if (!existing) return apiError(404, 'Plan not found');
 
   const updateData = { ...parsed.data, updatedAt: new Date() } as Record<string, unknown>;
@@ -34,7 +35,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   const [updated] = await db.update(schoolPlans)
     .set(updateData)
-    .where(eq(schoolPlans.id, params.id))
+    .where(eq(schoolPlans.id, id))
     .returning();
 
   return apiSuccess(updated);

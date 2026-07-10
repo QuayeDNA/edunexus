@@ -11,7 +11,8 @@ const updateSubscriptionSchema = z.object({
   status: z.enum(['active', 'past_due', 'cancelled', 'expired']).optional(),
 });
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { error: authError } = await requireRole('super_admin');
   if (authError) return authError;
 
@@ -21,12 +22,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
-  const [existing] = await db.select().from(schoolSubscriptions).where(eq(schoolSubscriptions.id, params.id)).limit(1);
+  const [existing] = await db.select().from(schoolSubscriptions).where(eq(schoolSubscriptions.id, id)).limit(1);
   if (!existing) return apiError(404, 'Subscription not found');
 
   const [updated] = await db.update(schoolSubscriptions)
     .set({ ...parsed.data, updatedAt: new Date() })
-    .where(eq(schoolSubscriptions.id, params.id))
+    .where(eq(schoolSubscriptions.id, id))
     .returning();
 
   return apiSuccess(updated);

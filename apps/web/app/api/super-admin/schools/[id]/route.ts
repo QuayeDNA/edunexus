@@ -15,17 +15,19 @@ const updateSchoolSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { error } = await requireRole('super_admin');
   if (error) return error;
 
-  const [school] = await db.select().from(schools).where(eq(schools.id, params.id)).limit(1);
+  const [school] = await db.select().from(schools).where(eq(schools.id, id)).limit(1);
   if (!school) return apiError(404, 'School not found');
 
   return apiSuccess(school);
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { error: authError, user } = await requireRole('super_admin');
   if (authError) return authError;
 
@@ -35,12 +37,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
-  const [existing] = await db.select().from(schools).where(eq(schools.id, params.id)).limit(1);
+  const [existing] = await db.select().from(schools).where(eq(schools.id, id)).limit(1);
   if (!existing) return apiError(404, 'School not found');
 
   const [updated] = await db.update(schools)
     .set({ ...parsed.data, updatedAt: new Date() })
-    .where(eq(schools.id, params.id))
+    .where(eq(schools.id, id))
     .returning();
 
   await db.insert(auditLogs).values({
@@ -48,7 +50,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     userId: user!.id,
     action: 'school.updated',
     tableName: 'schools',
-    recordId: params.id,
+    recordId: id,
     oldData: { isActive: existing.isActive },
     newData: parsed.data,
   });
@@ -56,23 +58,24 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   return apiSuccess(updated);
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { error: authError, user } = await requireRole('super_admin');
   if (authError) return authError;
 
-  const [existing] = await db.select().from(schools).where(eq(schools.id, params.id)).limit(1);
+  const [existing] = await db.select().from(schools).where(eq(schools.id, id)).limit(1);
   if (!existing) return apiError(404, 'School not found');
 
   await db.update(schools)
     .set({ deletedAt: new Date(), isActive: false, updatedAt: new Date() })
-    .where(eq(schools.id, params.id));
+    .where(eq(schools.id, id));
 
   await db.insert(auditLogs).values({
     schoolId: existing.id,
     userId: user!.id,
     action: 'school.deleted',
     tableName: 'schools',
-    recordId: params.id,
+    recordId: id,
     oldData: { name: existing.name, slug: existing.slug },
   });
 
