@@ -6,6 +6,11 @@ import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { resolveTenant } from '@/lib/tenant/resolve';
+import { sendEmail } from '@/services/email';
+import { applicationUnderReviewEmail } from '@/services/email/templates/application-under-review';
+import { applicationAcceptedEmail } from '@/services/email/templates/application-accepted';
+import { applicationRejectedEmail } from '@/services/email/templates/application-rejected';
+import { applicationWaitlistedEmail } from '@/services/email/templates/application-waitlisted';
 
 const validTransitions: Record<string, string[]> = {
   submitted: ['under_review', 'rejected'],
@@ -122,7 +127,69 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
   }
 
-  if (Object.keys(updateData).length > 1) {
+    const cooldownEnd = parsed.data.status === 'rejected'
+      ? new Date(existing.createdAt.getTime() + 180 * 24 * 60 * 60 * 1000)
+        .toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' })
+      : undefined;
+
+    const emailContent = (() => {
+      switch (parsed.data.status) {
+        case 'under_review':
+          return {
+            subject: 'Application Under Review — EduNexus',
+            html: applicationUnderReviewEmail({
+              guardianName: existing.guardianName ?? 'Parent/Guardian',
+              studentName: `${existing.firstName} ${existing.lastName}`,
+            }),
+          };
+        case 'accepted':
+          return {
+            subject: 'Congratulations — Application Accepted — EduNexus',
+            html: applicationAcceptedEmail({
+              guardianName: existing.guardianName ?? 'Parent/Guardian',
+              studentName: `${existing.firstName} ${existing.lastName}`,
+              schoolName: 'the school',
+            }),
+          };
+        case 'rejected':
+          return {
+            subject: 'Application Status Update — EduNexus',
+            html: applicationRejectedEmail({
+              guardianName: existing.guardianName ?? 'Parent/Guardian',
+              studentName: `${existing.firstName} ${existing.lastName}`,
+              cooldownDate: cooldownEnd!,
+            }),
+          };
+        case 'waitlisted':
+          return {
+            subject: 'Application Waitlisted — EduNexus',
+            html: applicationWaitlistedEmail({
+              guardianName: existing.guardianName ?? 'Parent/Guardian',
+              studentName: `${existing.firstName} ${existing.lastName}`,
+            }),
+          };
+        default:
+          return null;
+      }
+    })();
+
+    if (emailContent && existing.guardianEmail) {
+      sendEmail({
+        to: existing.guardianEmail,
+        subject: emailContent.subject,
+        html: emailContent.html,
+      }).catch(err => {
+        console.error(`[APPLICANT] Failed to send ${parsed.data.status} email for ${id}:`, err);
+      });
+    }
+
+  const nonAuditKeys = ['updatedAt', 'status'];
+  const changedFields = Object.keys(updateData).filter(k => !nonAuditKeys.includes(k));
+  if (changedFields.length > 0) {
+    const loggedData: Record<string, unknown> = {};
+    for (const key of changedFields) {
+      loggedData[key] = updateData[key];
+    }
     await db.insert(auditLogs).values({
       schoolId,
       userId: user!.id,
@@ -130,7 +197,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       tableName: 'applicants',
       recordId: id,
       oldData: {},
-      newData: updateData,
+      newData: loggedData,
     });
   }
 

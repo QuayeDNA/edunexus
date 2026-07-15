@@ -14,7 +14,11 @@ import { FileUpload, type PendingFile } from '@/components/shared/file-upload';
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(100),
   lastName: z.string().min(1, 'Last name is required').max(100),
-  dateOfBirth: z.string().min(1, 'Date of birth is required').regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD'),
+  dateOfBirth: z.string().min(1, 'Date of birth is required').regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD').refine(val => {
+    const [y, m, d] = val.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+  }, 'Not a real date'),
   gender: z.enum(['male', 'female'], { required_error: 'Gender is required' }),
   guardianName: z.string().min(1, 'Guardian name is required').max(200),
   guardianEmail: z.string().email('Valid email is required'),
@@ -200,7 +204,7 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
             <Controller name="dateOfBirth" control={control} render={({ field }) => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Date of Birth *</Label>
-                <Input id={field.name} placeholder="YYYY-MM-DD" {...field} />
+                <Input id={field.name} type="date" {...field} />
                 {errors.dateOfBirth && <p className="text-sm text-destructive">{errors.dateOfBirth.message}</p>}
               </div>
             )} />
@@ -286,14 +290,18 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="guardianOccupation">Occupation</Label>
-              <Input id="guardianOccupation" {...register('guardianOccupation')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="guardianEmployer">Employer</Label>
-              <Input id="guardianEmployer" {...register('guardianEmployer')} />
-            </div>
+            <Controller name="guardianOccupation" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Occupation</Label>
+                <Input id={field.name} placeholder="Optional" {...field} />
+              </div>
+            )} />
+            <Controller name="guardianEmployer" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Employer</Label>
+                <Input id={field.name} placeholder="Optional" {...field} />
+              </div>
+            )} />
           </div>
 
           <CardHeader className="px-0 pt-4">
@@ -317,6 +325,7 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
             {pendingFile && (
               <p className="text-xs text-muted-foreground">{pendingFile.name} ready to submit</p>
             )}
+          </div>
 
           <CardHeader className="px-0 pt-4">
             <CardTitle>Medical Information</CardTitle>
@@ -350,14 +359,18 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="doctorName">Doctor Name</Label>
-              <Input id="doctorName" {...register('doctorName')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="doctorPhone">Doctor Phone</Label>
-              <Input id="doctorPhone" {...register('doctorPhone')} />
-            </div>
+            <Controller name="doctorName" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Doctor Name</Label>
+                <Input id={field.name} placeholder="Optional" {...field} />
+              </div>
+            )} />
+            <Controller name="doctorPhone" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Doctor Phone</Label>
+                <Input id={field.name} placeholder="Optional" {...field} />
+              </div>
+            )} />
           </div>
 
           <CardHeader className="px-0 pt-4">
@@ -410,10 +423,9 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
               </ul>
             )}
           </div>
-          </div>
 
           <CardHeader className="px-0 pt-4">
-            <CardTitle>Medical Information</CardTitle>
+            <CardTitle>Siblings</CardTitle>
           </CardHeader>
 
           <div className="space-y-2">

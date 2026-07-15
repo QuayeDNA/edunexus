@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AcceptApplicantDialog } from './accept-applicant-dialog';
 
@@ -8,7 +9,6 @@ interface ActionsProps {
   applicantId: string;
   status: string;
   gradeLevelId: string;
-  onStatusChange: () => void;
 }
 
 const validActions: Record<string, string[]> = {
@@ -24,7 +24,8 @@ const actionLabels: Record<string, string> = {
   waitlisted: 'Waitlist',
 };
 
-export function ApplicantActions({ applicantId, status, gradeLevelId, onStatusChange }: ActionsProps) {
+export function ApplicantActions({ applicantId, status, gradeLevelId }: ActionsProps) {
+  const router = useRouter();
   const [acceptOpen, setAcceptOpen] = useState(false);
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -53,7 +54,7 @@ export function ApplicantActions({ applicantId, status, gradeLevelId, onStatusCh
         return;
       }
 
-      onStatusChange();
+      router.refresh();
     } finally {
       setSubmitting(null);
     }
@@ -82,7 +83,7 @@ export function ApplicantActions({ applicantId, status, gradeLevelId, onStatusCh
         onOpenChange={setAcceptOpen}
         applicantId={applicantId}
         gradeLevelId={gradeLevelId}
-        onSuccess={onStatusChange}
+        onSuccess={() => router.refresh()}
         onError={setError}
       />
     </>

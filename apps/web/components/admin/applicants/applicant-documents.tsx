@@ -33,7 +33,7 @@ export function ApplicantDocuments({ birthCertificateFileId, priorReportCardFile
         {docs.map(doc => (
           <li key={doc.id}>
             <a
-              href={`/api/media/${doc.id}`}
+              href={`/api/files/${doc.id}/download`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-primary hover:underline"

@@ -35,6 +35,7 @@ export const applicants = pgTable('applicants', {
   adminNotes: text('admin_notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
 }, (table) => [
   index('idx_applicants_school_id').on(table.schoolId),
   index('idx_applicants_status').on(table.status),

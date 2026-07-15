@@ -72,7 +72,6 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
         applicantId={applicant.id}
         status={applicant.status}
         gradeLevelId={applicant.gradeLevelId}
-        onStatusChange={() => {}}
       />
 
       <ApplicantDocuments
