@@ -15,6 +15,7 @@ export { payrollRuns, payslips } from './payroll';
 export { books, bookLoans } from './library';
 export { vehicles, routes, studentTransport } from './transport';
 export { inventoryItems, inventoryTransactions } from './inventory';
+export { mediaFiles } from './media-files';
 export { announcements, messages, notifications } from './messaging';
 export { behaviorRecords, wellnessCheckins, parentEngagements, lessonPlans } from './behavior';
 export { auditLogs } from './audit';
