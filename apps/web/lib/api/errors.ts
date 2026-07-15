@@ -54,6 +54,20 @@ export function handleApiError(error: unknown): NextResponse {
   if (error instanceof ZodError) {
     return apiError(422, 'Validation failed', error.flatten().fieldErrors as Record<string, string[]>);
   }
-  const message = error instanceof Error ? error.message : 'Internal server error';
-  return apiError(500, message);
+
+  if (error instanceof Error) {
+    const details: Record<string, unknown> = { message: error.message };
+    if ('params' in error) details.params = (error as any).params;
+    if ('cause' in error && error.cause instanceof Error) {
+      details.cause = { message: error.cause.message };
+      if ('code' in (error.cause as any)) details.code = (error.cause as any).code;
+      if ('detail' in (error.cause as any)) details.detail = (error.cause as any).detail;
+      if ('constraint' in (error.cause as any)) details.constraint = (error.cause as any).constraint;
+    }
+    console.error('[API Error]', JSON.stringify(details, null, 2));
+  } else {
+    console.error('[API Error]', error);
+  }
+
+  return apiError(500, 'Internal server error');
 }

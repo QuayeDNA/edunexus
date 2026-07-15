@@ -112,3 +112,19 @@ export {
   truncate,
   pluralize,
 } from './utils/formatters';
+
+export type {
+  EntityType,
+  MediaFile,
+  UploadResult,
+  StorageProvider,
+  FilePermission,
+} from './types/storage';
+
+export {
+  buildStoragePath,
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  STORAGE_PERMISSIONS,
+  checkFilePermission,
+} from './constants/storage';

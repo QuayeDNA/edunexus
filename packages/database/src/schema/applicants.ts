@@ -1,6 +1,7 @@
 import { pgTable, uuid, text, timestamp, varchar, date, index } from 'drizzle-orm/pg-core';
 import { schools } from './schools';
 import { gradeLevels } from './grade-levels';
+import { mediaFiles } from './media-files';
 
 export const applicants = pgTable('applicants', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -15,7 +16,7 @@ export const applicants = pgTable('applicants', {
   guardianAddress: text('guardian_address'),
   gradeLevelId: uuid('grade_level_id').notNull().references(() => gradeLevels.id),
   previousSchool: varchar('previous_school', { length: 255 }),
-  documentUrls: text('document_urls').array(),
+  birthCertificateFileId: uuid('birth_certificate_file_id').references(() => mediaFiles.id),
   status: varchar('status', { length: 20 }).default('submitted').notNull(),
   adminNotes: text('admin_notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

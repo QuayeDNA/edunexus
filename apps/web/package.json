@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@auth/core": "^0.37.0",
+    "@aws-sdk/client-s3": "^3.1086.0",
+    "@aws-sdk/s3-request-presigner": "^3.1086.0",
     "@base-ui/react": "^1.6.0",
     "@edunexus/database": "workspace:*",
     "@edunexus/shared": "workspace:*",
@@ -24,6 +26,7 @@
     "@tanstack/react-query": "^5.0.0",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.10.0",
     "clsx": "^2.1.0",
     "cmdk": "^1.1.1",
     "date-fns": "^4.0.0",
