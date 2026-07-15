@@ -191,7 +191,11 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
           <Controller name="gradeLevelId" control={control} render={({ field }) => (
             <div className="space-y-2">
               <Label htmlFor={field.name}>Applying for Grade *</Label>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  items={grades.map(g => ({ value: g.id, label: `${g.name} (${g.code})` }))}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select grade" />
                   </SelectTrigger>
