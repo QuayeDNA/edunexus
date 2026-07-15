@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { applicants } from '@edunexus/database';
+import { applicants, gradeLevels } from '@edunexus/database';
 import { eq, and } from 'drizzle-orm';
 import { requireRole } from '@/lib/auth/auth.guard';
 import { notFound } from 'next/navigation';
@@ -43,6 +43,11 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
 
   if (!applicant) notFound();
 
+  const [gradeLevel] = await db.select()
+    .from(gradeLevels)
+    .where(eq(gradeLevels.id, applicant.gradeLevelId))
+    .limit(1);
+
   return (
     <div className="space-y-8">
       <div>
@@ -85,6 +90,7 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
           ...applicant,
           createdAt: applicant.createdAt.toISOString(),
           emergencyContacts: applicant.emergencyContacts as Array<{name: string; phone: string; relationship: string}> | null,
+          gradeLevelName: gradeLevel ? `${gradeLevel.name} (${gradeLevel.code})` : null,
         }}
       />
 

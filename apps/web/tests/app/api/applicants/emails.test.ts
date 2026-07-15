@@ -6,10 +6,10 @@ const mockDb = {
   select: vi.fn().mockReturnThis(),
   from: vi.fn().mockReturnThis(),
   where: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockResolvedValue([]),
   update: vi.fn().mockReturnThis(),
   set: vi.fn().mockReturnThis(),
-  returning: vi.fn(),
+  returning: vi.fn().mockResolvedValue([]),
   insert: vi.fn().mockReturnThis(),
   values: vi.fn().mockReturnThis(),
 };

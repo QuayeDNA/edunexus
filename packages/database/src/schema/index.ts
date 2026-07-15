@@ -1,6 +1,7 @@
 export { schools, academicYears, terms } from './schools';
 export { profiles } from './profiles';
 export { students, guardians, studentGuardians } from './students';
+export { enrollments } from './enrollments';
 export { staff } from './staff';
 export { gradeLevels } from './grade-levels';
 export { classes } from './classes';

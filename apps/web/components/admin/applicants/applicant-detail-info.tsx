@@ -12,6 +12,7 @@ interface ApplicantDetail {
   lastName: string;
   dateOfBirth: string;
   gender: string;
+  gradeLevelName: string | null;
   guardianName: string;
   guardianEmail: string;
   guardianPhone: string | null;
@@ -51,6 +52,10 @@ export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Date of Birth</dt>
               <dd>{new Date(applicant.dateOfBirth).toLocaleDateString('en-GH')}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Applying Grade</dt>
+              <dd>{applicant.gradeLevelName ?? '—'}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Gender</dt>
