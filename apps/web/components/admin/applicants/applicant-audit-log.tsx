@@ -52,9 +52,9 @@ export function ApplicantAuditLog({ applicantId }: AuditLogProps) {
               <p className="text-xs text-muted-foreground">
                 {new Date(entry.createdAt).toLocaleString('en-GH')}
               </p>
-              {entry.newData?.status && (
+              {entry.newData && typeof (entry.newData as Record<string, unknown>).status === 'string' && (
                 <p className="text-xs text-muted-foreground">
-                  Status → {(entry.newData as Record<string, unknown>).status as string}
+                  Status → {String((entry.newData as Record<string, unknown>).status)}
                 </p>
               )}
             </div>

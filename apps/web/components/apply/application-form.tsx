@@ -410,9 +410,10 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
               </ul>
             )}
           </div>
+          </div>
 
           <CardHeader className="px-0 pt-4">
-            <CardTitle>Siblings</CardTitle>
+            <CardTitle>Medical Information</CardTitle>
           </CardHeader>
 
           <div className="space-y-2">

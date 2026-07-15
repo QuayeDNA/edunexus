@@ -94,7 +94,7 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Target Class</Label>
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+            <Select value={selectedClassId} onValueChange={(value) => setSelectedClassId(value as string)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a class" />
               </SelectTrigger>

@@ -84,6 +84,7 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
       <ApplicantDetailInfo
         applicant={{
           ...applicant,
+          createdAt: applicant.createdAt.toISOString(),
           emergencyContacts: applicant.emergencyContacts as Array<{name: string; phone: string; relationship: string}> | null,
         }}
       />

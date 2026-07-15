@@ -88,7 +88,7 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
 
       <div className="flex flex-wrap gap-3">
         <div className="w-48">
-          <Select value={gradeLevelId} onValueChange={setGradeLevelId}>
+          <Select value={gradeLevelId} onValueChange={(value) => setGradeLevelId(value as string)}>
             <SelectTrigger>
               <SelectValue placeholder="All grades" />
             </SelectTrigger>
