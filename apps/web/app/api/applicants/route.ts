@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { applicants, gradeLevels, auditLogs, mediaFiles } from '@edunexus/database';
-import { eq, and, desc, count } from 'drizzle-orm';
+import { eq, and, desc, count, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
@@ -23,6 +23,22 @@ const createApplicantSchema = z.object({
   gradeLevelId: z.string().uuid(),
   previousSchool: z.string().max(255).optional().or(z.literal('')),
   birthCertificateFileId: z.string().uuid().optional().nullable(),
+  priorReportCardFileId: z.string().uuid().optional().nullable(),
+  photoFileId: z.string().uuid().optional().nullable(),
+  guardianOccupation: z.string().max(100).optional().or(z.literal('')),
+  guardianEmployer: z.string().max(200).optional().or(z.literal('')),
+  medicalAllergies: z.string().optional().or(z.literal('')),
+  medicalConditions: z.string().optional().or(z.literal('')),
+  medicalMedications: z.string().optional().or(z.literal('')),
+  doctorName: z.string().max(200).optional().or(z.literal('')),
+  doctorPhone: z.string().max(20).optional().or(z.literal('')),
+  emergencyContacts: z.array(z.object({
+    name: z.string().min(1).max(200),
+    phone: z.string().min(1).max(20),
+    relationship: z.string().min(1).max(50),
+  })).optional().default([]),
+  siblingsEnrolled: z.boolean().optional(),
+  siblingDetails: z.string().optional().or(z.literal('')),
 });
 
 async function resolveSchoolId(request: NextRequest): Promise<string | null> {
@@ -58,13 +74,28 @@ export async function POST(request: NextRequest) {
     dateOfBirth: parsed.data.dateOfBirth,
     guardianPhone: parsed.data.guardianPhone || null,
     guardianAddress: parsed.data.guardianAddress || null,
+    guardianOccupation: parsed.data.guardianOccupation || null,
+    guardianEmployer: parsed.data.guardianEmployer || null,
     previousSchool: parsed.data.previousSchool || null,
+    medicalAllergies: parsed.data.medicalAllergies || null,
+    medicalConditions: parsed.data.medicalConditions || null,
+    medicalMedications: parsed.data.medicalMedications || null,
+    doctorName: parsed.data.doctorName || null,
+    doctorPhone: parsed.data.doctorPhone || null,
+    emergencyContacts: parsed.data.emergencyContacts.length > 0 ? parsed.data.emergencyContacts : null,
+    siblingsEnrolled: parsed.data.siblingsEnrolled ?? false,
+    siblingDetails: parsed.data.siblingDetails || null,
   }).returning();
 
-  if (parsed.data.birthCertificateFileId) {
-    await db.update(mediaFiles).set({ entityId: applicant.id }).where(
-      eq(mediaFiles.id, parsed.data.birthCertificateFileId),
-    );
+  const fileIds = [
+    parsed.data.birthCertificateFileId,
+    parsed.data.priorReportCardFileId,
+    parsed.data.photoFileId,
+  ].filter(Boolean) as string[];
+
+  if (fileIds.length > 0) {
+    await db.update(mediaFiles).set({ entityId: applicant.id })
+      .where(inArray(mediaFiles.id, fileIds));
   }
 
   await db.insert(auditLogs).values({
