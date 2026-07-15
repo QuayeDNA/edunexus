@@ -1,11 +1,17 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { applicants, classes, auditLogs } from '@edunexus/database';
+import {
+  applicants, classes, auditLogs,
+  students, guardians, studentGuardians, enrollments,
+  profiles, academicYears, schools,
+} from '@edunexus/database';
 import { eq, and, count } from 'drizzle-orm';
 import { z } from 'zod';
+import { scryptSync, randomBytes } from 'crypto';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { resolveTenant } from '@/lib/tenant/resolve';
+import { generateStudentId } from '@/services/student-id';
 
 const acceptSchema = z.object({
   targetClassId: z.string().uuid(),
@@ -13,6 +19,21 @@ const acceptSchema = z.object({
   sendEmail: z.boolean().default(false),
   override: z.boolean().default(false),
 });
+
+function hashPassword(password: string): string {
+  const salt = randomBytes(32).toString('hex');
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return `scrypt:${salt}:${hash}`;
+}
+
+function generateTempPassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pwd = '';
+  for (let i = 0; i < 10; i++) {
+    pwd += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return pwd;
+}
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -56,8 +77,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .where(and(
       eq(applicants.targetClassId, parsed.data.targetClassId),
       eq(applicants.status, 'accepted'),
-    ));
-  const acceptedCount = Number(acceptedResult.count);
+    ))
+    .limit(1);
+  const acceptedCount = Number(acceptedResult?.count ?? 0);
   const capacity = targetClass.capacity ?? 999;
   const available = capacity - acceptedCount;
 
@@ -65,30 +87,193 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return apiError(409, `Class '${targetClass.name}' is at capacity (${acceptedCount}/${capacity}). Please select a different class or enable override to confirm.`);
   }
 
-  const [updated] = await db.update(applicants)
-    .set({
-      status: 'accepted',
-      targetClassId: parsed.data.targetClassId,
-      adminNotes: parsed.data.adminNotes !== undefined ? parsed.data.adminNotes : existing.adminNotes,
-      updatedAt: new Date(),
-    })
-    .where(eq(applicants.id, id))
-    .returning();
+  const [school] = await db.select().from(schools).where(eq(schools.id, schoolId)).limit(1);
+
+  const [currentYear] = await db
+    .select().from(academicYears)
+    .where(and(
+      eq(academicYears.schoolId, schoolId),
+      eq(academicYears.isCurrent, true),
+    ))
+    .limit(1);
+  if (!currentYear) return apiError(422, 'No current academic year set for this school');
+
+  const studentPassword = generateTempPassword();
+  const studentPasswordHash = hashPassword(studentPassword);
+
+  const parentPassword = generateTempPassword();
+  const parentPasswordHash = hashPassword(parentPassword);
+
+  let conversionResult: {
+    student: typeof students.$inferSelect;
+    enrollment: typeof enrollments.$inferSelect;
+    guardian: typeof guardians.$inferSelect;
+    studentProfile: typeof profiles.$inferSelect | null;
+    parentProfile: typeof profiles.$inferSelect | null;
+  };
+
+  try {
+    const txResult = await db.transaction(async (tx) => {
+      const studentIdNumber = await generateStudentId(tx, schoolId, school?.code ?? 'SCH');
+
+      const [student] = await tx.insert(students).values({
+        schoolId,
+        studentIdNumber,
+        firstName: existing.firstName,
+        lastName: existing.lastName,
+        gender: existing.gender,
+        dateOfBirth: existing.dateOfBirth,
+        enrollmentDate: new Date().toISOString().split('T')[0],
+        status: 'active',
+      }).returning();
+
+      const [enrollment] = await tx.insert(enrollments).values({
+        schoolId,
+        studentId: student.id,
+        classId: targetClass.id,
+        academicYearId: currentYear.id,
+        status: 'active',
+        enrollmentDate: new Date().toISOString().split('T')[0],
+      }).returning();
+
+      const guardianNameParts = (existing.guardianName ?? '').trim().split(/\s+/);
+      const guardianFirstName = guardianNameParts[0] || 'Guardian';
+      const guardianLastName = guardianNameParts.length > 1 ? guardianNameParts.slice(1).join(' ') : '';
+
+      const [guardian] = await tx.insert(guardians).values({
+        schoolId,
+        firstName: guardianFirstName,
+        lastName: guardianLastName,
+        relationship: 'Parent',
+        phone: existing.guardianPhone ?? '',
+        email: existing.guardianEmail,
+        address: existing.guardianAddress,
+        occupation: existing.guardianOccupation,
+        isPrimary: true,
+      }).returning();
+
+      await tx.insert(studentGuardians).values({
+        studentId: student.id,
+        guardianId: guardian.id,
+        relationship: 'Parent',
+        isEmergency: false,
+      });
+
+      const [existingStudentProfile] = await tx
+        .select()
+        .from(profiles)
+        .where(and(
+          eq(profiles.schoolId, schoolId),
+          eq(profiles.email, `${student.studentIdNumber.toLowerCase()}@edunexus.com`),
+        ))
+        .limit(1);
+
+      let studentProfile: typeof profiles.$inferSelect | null = null;
+      if (!existingStudentProfile) {
+        const pwdHash = studentPasswordHash;
+        [studentProfile] = await tx.insert(profiles).values({
+          schoolId,
+          email: `${student.studentIdNumber.toLowerCase()}@edunexus.com`,
+          passwordHash: pwdHash,
+          role: 'student',
+          firstName: existing.firstName,
+          lastName: existing.lastName,
+          phone: null,
+          isActive: true,
+        }).returning();
+      }
+
+      const [existingParentProfile] = await tx
+        .select()
+        .from(profiles)
+        .where(and(
+          eq(profiles.schoolId, schoolId),
+          eq(profiles.email, existing.guardianEmail),
+        ))
+        .limit(1);
+
+      let parentProfile: typeof profiles.$inferSelect | null = null;
+      if (!existingParentProfile) {
+        [parentProfile] = await tx.insert(profiles).values({
+          schoolId,
+          email: existing.guardianEmail,
+          passwordHash: parentPasswordHash,
+          role: 'parent',
+          firstName: guardianFirstName,
+          lastName: guardianLastName,
+          phone: existing.guardianPhone,
+          isActive: true,
+        }).returning();
+      }
+
+      const [updatedApplicant] = await tx.update(applicants)
+        .set({
+          status: 'accepted',
+          targetClassId: parsed.data.targetClassId,
+          adminNotes: parsed.data.adminNotes !== undefined ? parsed.data.adminNotes : existing.adminNotes,
+          updatedAt: new Date(),
+        })
+        .where(eq(applicants.id, id))
+        .returning();
+
+      if (!updatedApplicant) throw new Error('Failed to update applicant');
+
+      return {
+        student,
+        enrollment,
+        guardian,
+        studentProfile,
+        parentProfile,
+      };
+    });
+
+    conversionResult = txResult;
+  } catch {
+    return apiError(500, 'Conversion failed — no records were created');
+  }
 
   await db.insert(auditLogs).values({
     schoolId,
     userId: user!.id,
-    action: 'applicant.accepted',
+    action: 'applicant.converted',
     tableName: 'applicants',
     recordId: id,
     oldData: { status: existing.status },
-    newData: { status: 'accepted', targetClassId: parsed.data.targetClassId },
+    newData: {
+      status: 'accepted',
+      studentId: conversionResult.student.id,
+      enrollmentId: conversionResult.enrollment.id,
+      guardianId: conversionResult.guardian.id,
+    },
   });
 
-  if (parsed.data.sendEmail) {
-    // Email dispatch placeholder — will use sendEmail() from services
-    // once template is created (future task)
-  }
-
-  return apiSuccess(updated);
+  return apiSuccess({
+    applicant: { id, status: 'accepted', targetClassId: parsed.data.targetClassId },
+    student: {
+      id: conversionResult.student.id,
+      studentIdNumber: conversionResult.student.studentIdNumber,
+      firstName: conversionResult.student.firstName,
+      lastName: conversionResult.student.lastName,
+    },
+    enrollment: {
+      id: conversionResult.enrollment.id,
+      classId: conversionResult.enrollment.classId,
+      academicYearId: conversionResult.enrollment.academicYearId,
+    },
+    guardian: {
+      id: conversionResult.guardian.id,
+      name: `${conversionResult.guardian.firstName} ${conversionResult.guardian.lastName}`,
+      email: conversionResult.guardian.email,
+    },
+    credentials: {
+      student: {
+        email: conversionResult.studentProfile?.email ?? null,
+        password: studentPassword,
+      },
+      parent: {
+        email: conversionResult.parentProfile?.email ?? null,
+        password: parentPassword,
+      },
+    },
+  });
 }

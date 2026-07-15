@@ -38,6 +38,18 @@ export interface Guardian {
   updated_at: string;
 }
 
+export interface Enrollment {
+  id: string;
+  school_id: string;
+  student_id: string;
+  class_id: string;
+  academic_year_id: string;
+  status: 'active' | 'transferred_out' | 'withdrawn' | 'graduated';
+  enrollment_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface StudentGuardian {
   id: string;
   student_id: string;
