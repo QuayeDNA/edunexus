@@ -16,6 +16,7 @@ interface FileUploadProps {
   entityId: string;
   accept?: string;
   maxFiles?: number;
+  uploadUrl?: string;
   onUploadComplete?: (files: UploadedFile[]) => void;
 }
 
@@ -24,6 +25,7 @@ export function FileUpload({
   entityId,
   accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx',
   maxFiles = 5,
+  uploadUrl = '/api/files/upload',
   onUploadComplete,
 }: FileUploadProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -49,7 +51,7 @@ export function FileUpload({
           formData.append('entityType', entityType);
           formData.append('entityId', entityId);
 
-          const res = await fetch('/api/files/upload', {
+          const res = await fetch(uploadUrl, {
             method: 'POST',
             body: formData,
           });

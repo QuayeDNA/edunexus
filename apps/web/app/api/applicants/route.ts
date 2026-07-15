@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { applicants, gradeLevels, auditLogs } from '@edunexus/database';
+import { applicants, gradeLevels, auditLogs, mediaFiles } from '@edunexus/database';
 import { eq, and, desc, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
@@ -22,7 +22,7 @@ const createApplicantSchema = z.object({
   guardianAddress: z.string().optional().or(z.literal('')),
   gradeLevelId: z.string().uuid(),
   previousSchool: z.string().max(255).optional().or(z.literal('')),
-  documentUrls: z.array(z.string().url()).optional().default([]),
+  birthCertificateFileId: z.string().uuid().optional().nullable(),
 });
 
 async function resolveSchoolId(request: NextRequest): Promise<string | null> {
@@ -59,8 +59,13 @@ export async function POST(request: NextRequest) {
     guardianPhone: parsed.data.guardianPhone || null,
     guardianAddress: parsed.data.guardianAddress || null,
     previousSchool: parsed.data.previousSchool || null,
-    documentUrls: parsed.data.documentUrls.length > 0 ? parsed.data.documentUrls : null,
   }).returning();
+
+  if (parsed.data.birthCertificateFileId) {
+    await db.update(mediaFiles).set({ entityId: applicant.id }).where(
+      eq(mediaFiles.id, parsed.data.birthCertificateFileId),
+    );
+  }
 
   await db.insert(auditLogs).values({
     schoolId,

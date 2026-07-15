@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileUpload } from '@/components/shared/file-upload';
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(100),
@@ -36,52 +37,11 @@ interface Grade {
 export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grade[]; schoolName?: string; schoolId?: string }) {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [serverError, setServerError] = useState('');
-  const [documentUrls, setDocumentUrls] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
+  const [birthCertificateFileId, setBirthCertificateFileId] = useState<string | null>(null);
 
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName || !uploadPreset) {
-      console.warn('Cloudinary not configured');
-      return;
-    }
-
-    setUploading(true);
-    setUploadError('');
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', uploadPreset);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.secure_url) {
-        setDocumentUrls(prev => [...prev, data.secure_url]);
-      } else {
-        setUploadError(data.error?.message || 'Upload failed. Please try again.');
-      }
-    } catch {
-      setUploadError('Upload failed. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const removeDocument = (url: string) => {
-    setDocumentUrls(prev => prev.filter(u => u !== url));
-  };
 
   const onSubmit = async (data: FormValues) => {
     setSubmitState('submitting');
@@ -94,7 +54,10 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
           'Content-Type': 'application/json',
           ...(schoolId ? { 'x-tenant-id': schoolId } : {}),
         },
-        body: JSON.stringify({ ...data, documentUrls }),
+        body: JSON.stringify({
+          ...data,
+          birthCertificateFileId,
+        }),
       });
 
       const json = await res.json();
@@ -237,29 +200,21 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
           </CardHeader>
 
           <div className="space-y-2">
-            <Label htmlFor="documents">Upload documents (birth certificate, report card)</Label>
-            <Input
-              id="documents"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFileUpload}
-              disabled={uploading}
+            <Label>Upload birth certificate (PDF)</Label>
+            <FileUpload
+              entityType="applicant"
+              entityId="__pending__"
+              accept=".pdf"
+              maxFiles={1}
+              uploadUrl="/api/public/upload"
+              onUploadComplete={(files) => {
+                if (files.length > 0) {
+                  setBirthCertificateFileId(files[0].id);
+                }
+              }}
             />
-            {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
-            {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
-            {documentUrls.length > 0 && (
-              <ul className="mt-2 space-y-1">
-                {documentUrls.map((url) => (
-                  <li key={url} className="flex items-center justify-between rounded-md bg-muted px-3 py-1 text-sm">
-                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline">
-                      {url.split('/').pop()}
-                    </a>
-                    <Button type="button" variant="destructive" size="sm" onClick={() => removeDocument(url)}>
-                      Remove
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+            {birthCertificateFileId && (
+              <p className="text-xs text-muted-foreground">Birth certificate uploaded</p>
             )}
           </div>
 
