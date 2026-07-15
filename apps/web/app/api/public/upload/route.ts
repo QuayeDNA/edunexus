@@ -12,6 +12,8 @@ import {
   buildStoragePath,
 } from '@edunexus/shared';
 
+import { randomUUID } from 'crypto';
+
 const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
@@ -59,8 +61,9 @@ export async function POST(request: NextRequest) {
       throw new FileTooLargeError(file.size, MAX_FILE_SIZE);
     }
 
+    const tempEntityId = randomUUID();
     const buffer = Buffer.from(await file.arrayBuffer());
-    const storagePath = buildStoragePath(schoolId, 'applicant', '__pending__', file.name);
+    const storagePath = buildStoragePath(schoolId, 'applicant', tempEntityId, file.name);
     const provider = createStorageProvider();
     const result = await provider.upload(buffer, storagePath, file.type);
 
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest) {
       .values({
         schoolId,
         entityType: 'applicant',
-        entityId: '__pending__',
+        entityId: tempEntityId,
         fileName: file.name,
         mimeType: file.type,
         size: file.size,

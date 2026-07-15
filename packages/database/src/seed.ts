@@ -156,6 +156,25 @@ async function main() {
     return row[0].id;
   }
 
+  const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
+
+  const systemProfileId = await db.select({ id: profiles.id }).from(profiles).where(eq(profiles.id, SYSTEM_USER_ID)).then((r) => r[0]?.id ?? null);
+  if (!systemProfileId) {
+    await db.insert(profiles).values({
+      id: SYSTEM_USER_ID,
+      schoolId: null,
+      email: 'system@edunexus.com',
+      passwordHash: hashPassword('system'),
+      role: 'super_admin',
+      firstName: 'System',
+      lastName: 'User',
+      isActive: true,
+    });
+    console.log('   Created system profile (system@edunexus.com)');
+  } else {
+    console.log('   Skipped system profile — already exists');
+  }
+
   console.log('Creating superadmin profile...');
   await upsertProfile('admin@edunexus.com', 'super_admin', 'Super', 'Admin', null);
 

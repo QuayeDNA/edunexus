@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileUpload } from '@/components/shared/file-upload';
+import { FileUpload, type PendingFile } from '@/components/shared/file-upload';
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(100),
@@ -37,17 +37,62 @@ interface Grade {
 export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grade[]; schoolName?: string; schoolId?: string }) {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [serverError, setServerError] = useState('');
-  const [birthCertificateFileId, setBirthCertificateFileId] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
+  const { handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      dateOfBirth: '',
+      guardianName: '',
+      guardianEmail: '',
+      guardianPhone: '',
+      guardianAddress: '',
+      gradeLevelId: '',
+      previousSchool: '',
+    },
   });
+
+  async function uploadFile(file: File): Promise<string | null> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('entityType', 'applicant');
+
+    const headers: Record<string, string> = {};
+    if (schoolId) headers['x-tenant-id'] = schoolId;
+
+    const res = await fetch('/api/public/upload', {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.error ?? 'File upload failed');
+    }
+
+    const json = await res.json();
+    return json.data?.id ?? null;
+  }
 
   const onSubmit = async (data: FormValues) => {
     setSubmitState('submitting');
     setServerError('');
 
     try {
+      let birthCertificateFileId: string | null = null;
+
+      if (pendingFile) {
+        birthCertificateFileId = await uploadFile(pendingFile.file);
+        if (!birthCertificateFileId) {
+          setServerError('File upload failed');
+          setSubmitState('error');
+          return;
+        }
+      }
+
       const res = await fetch('/api/applicants', {
         method: 'POST',
         headers: {
@@ -102,51 +147,50 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name *</Label>
-              <Input id="firstName" {...register('firstName')} />
-              {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name *</Label>
-              <Input id="lastName" {...register('lastName')} />
-              {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
-            </div>
+            <Controller name="firstName" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>First Name *</Label>
+                <Input id={field.name} {...field} />
+                {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
+              </div>
+            )} />
+            <Controller name="lastName" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Last Name *</Label>
+                <Input id={field.name} {...field} />
+                {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
+              </div>
+            )} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth *</Label>
-              <Input id="dateOfBirth" placeholder="YYYY-MM-DD" {...register('dateOfBirth')} />
-              {errors.dateOfBirth && <p className="text-sm text-destructive">{errors.dateOfBirth.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="gender">Gender *</Label>
-              <Controller
-                name="gender"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.gender && <p className="text-sm text-destructive">{errors.gender.message}</p>}
-            </div>
+            <Controller name="dateOfBirth" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Date of Birth *</Label>
+                <Input id={field.name} placeholder="YYYY-MM-DD" {...field} />
+                {errors.dateOfBirth && <p className="text-sm text-destructive">{errors.dateOfBirth.message}</p>}
+              </div>
+            )} />
+            <Controller name="gender" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Gender *</Label>
+                <Select onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.gender && <p className="text-sm text-destructive">{errors.gender.message}</p>}
+              </div>
+            )} />
           </div>
 
-          <div className="space-y-2">
-              <Label htmlFor="gradeLevelId">Applying for Grade *</Label>
-            <Controller
-              name="gradeLevelId"
-              control={control}
-              render={({ field }) => (
+          <Controller name="gradeLevelId" control={control} render={({ field }) => (
+            <div className="space-y-2">
+              <Label htmlFor={field.name}>Applying for Grade *</Label>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select grade" />
@@ -157,42 +201,51 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
                     ))}
                   </SelectContent>
                 </Select>
-              )}
-            />
-            {errors.gradeLevelId && <p className="text-sm text-destructive">{errors.gradeLevelId.message}</p>}
-          </div>
+              {errors.gradeLevelId && <p className="text-sm text-destructive">{errors.gradeLevelId.message}</p>}
+            </div>
+          )} />
 
-          <div className="space-y-2">
-            <Label htmlFor="previousSchool">Previous School</Label>
-            <Input id="previousSchool" placeholder="Optional" {...register('previousSchool')} />
-          </div>
+          <Controller name="previousSchool" control={control} render={({ field }) => (
+            <div className="space-y-2">
+              <Label htmlFor={field.name}>Previous School</Label>
+              <Input id={field.name} placeholder="Optional" {...field} />
+            </div>
+          )} />
 
           <CardHeader className="px-0 pt-4">
             <CardTitle>Guardian Information</CardTitle>
           </CardHeader>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="guardianName">Full Name *</Label>
-              <Input id="guardianName" {...register('guardianName')} />
-              {errors.guardianName && <p className="text-sm text-destructive">{errors.guardianName.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="guardianEmail">Email *</Label>
-              <Input id="guardianEmail" type="email" {...register('guardianEmail')} />
-              {errors.guardianEmail && <p className="text-sm text-destructive">{errors.guardianEmail.message}</p>}
-            </div>
+            <Controller name="guardianName" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Full Name *</Label>
+                <Input id={field.name} {...field} />
+                {errors.guardianName && <p className="text-sm text-destructive">{errors.guardianName.message}</p>}
+              </div>
+            )} />
+            <Controller name="guardianEmail" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Email *</Label>
+                <Input id={field.name} type="email" {...field} />
+                {errors.guardianEmail && <p className="text-sm text-destructive">{errors.guardianEmail.message}</p>}
+              </div>
+            )} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="guardianPhone">Phone</Label>
-              <Input id="guardianPhone" placeholder="Optional" {...register('guardianPhone')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="guardianAddress">Address</Label>
-              <Input id="guardianAddress" placeholder="Optional" {...register('guardianAddress')} />
-            </div>
+            <Controller name="guardianPhone" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Phone</Label>
+                <Input id={field.name} placeholder="Optional" {...field} />
+              </div>
+            )} />
+            <Controller name="guardianAddress" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Address</Label>
+                <Input id={field.name} placeholder="Optional" {...field} />
+              </div>
+            )} />
           </div>
 
           <CardHeader className="px-0 pt-4">
@@ -207,14 +260,14 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
               accept=".pdf"
               maxFiles={1}
               uploadUrl="/api/public/upload"
-              onUploadComplete={(files) => {
-                if (files.length > 0) {
-                  setBirthCertificateFileId(files[0].id);
-                }
+              tenantId={schoolId}
+              autoUpload={false}
+              onFilesPending={(files) => {
+                setPendingFile(files[0] ?? null);
               }}
             />
-            {birthCertificateFileId && (
-              <p className="text-xs text-muted-foreground">Birth certificate uploaded</p>
+            {pendingFile && (
+              <p className="text-xs text-muted-foreground">{pendingFile.name} ready to submit</p>
             )}
           </div>
 
