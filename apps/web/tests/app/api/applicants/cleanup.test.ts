@@ -28,8 +28,7 @@ describe('POST /api/applicants/cleanup', () => {
     ]);
 
     const { POST } = await import('@/app/api/applicants/cleanup/route');
-    const req = new Request('http://localhost:3000/api/applicants/cleanup', { method: 'POST' });
-    const res = await POST(req as any);
+    const res = await POST();
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -42,8 +41,7 @@ describe('POST /api/applicants/cleanup', () => {
     mockDb.limit.mockResolvedValueOnce([]);
 
     const { POST } = await import('@/app/api/applicants/cleanup/route');
-    const req = new Request('http://localhost:3000/api/applicants/cleanup', { method: 'POST' });
-    const res = await POST(req as any);
+    const res = await POST();
 
     expect(res.status).toBe(200);
     const body = await res.json();

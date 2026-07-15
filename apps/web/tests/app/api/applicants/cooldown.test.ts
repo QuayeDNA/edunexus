@@ -5,8 +5,25 @@ const mockAnonymize = vi.fn().mockResolvedValue(undefined);
 
 let mockQueryResult: any[] = [];
 
-function createQueryBuilder() {
-  const q = vi.fn(() => Promise.resolve(mockQueryResult));
+interface MockDb {
+  (): Promise<any[]>;
+  mockImplementation: (fn: () => Promise<any[]>) => void;
+  then: (resolve: (value: unknown) => void) => void;
+  catch: () => void;
+  select: ReturnType<typeof vi.fn>;
+  from: ReturnType<typeof vi.fn>;
+  where: ReturnType<typeof vi.fn>;
+  orderBy: ReturnType<typeof vi.fn>;
+  limit: ReturnType<typeof vi.fn>;
+  insert: ReturnType<typeof vi.fn>;
+  values: ReturnType<typeof vi.fn>;
+  returning: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  set: ReturnType<typeof vi.fn>;
+}
+
+function createQueryBuilder(): MockDb {
+  const q = vi.fn(() => Promise.resolve(mockQueryResult)) as unknown as MockDb;
   q.then = (resolve: (value: unknown) => void) => resolve(mockQueryResult);
   q.catch = () => {};
   q.select = vi.fn().mockReturnValue(q);
@@ -44,12 +61,12 @@ vi.mock('@/lib/tenant/resolve', () => ({
   resolveTenant: vi.fn().mockResolvedValue({ schoolId: 'school-1' }),
 }));
 
-function makeRequest(body: any): Request {
+function makeRequest(body: any) {
   return new Request('http://localhost:3000/api/applicants', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
     body: JSON.stringify(body),
-  });
+  }) as any;
 }
 
 beforeEach(() => {

@@ -2,7 +2,7 @@ import { db } from '@/lib/db/client';
 import { applicants } from '@edunexus/database';
 import { eq, and, lt, isNull } from 'drizzle-orm';
 import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { anonymizeApplicant } from '@/services/anonymize';
 
 export async function POST() {

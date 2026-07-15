@@ -37,12 +37,12 @@ vi.mock('@/services/email/templates/application-waitlisted', () => ({
   applicationWaitlistedEmail: vi.fn(() => '<p>Waitlisted</p>'),
 }));
 
-function makeRequest(method: string, path: string, body?: any): Request {
+function makeRequest(method: string, path: string, body?: any) {
   return new Request(`http://localhost:3000${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
     body: body ? JSON.stringify(body) : undefined,
-  });
+  }) as any;
 }
 
 function makeApplicantRow(overrides = {}) {
