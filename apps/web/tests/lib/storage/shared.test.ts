@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildStoragePath, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, checkFilePermission, STORAGE_PERMISSIONS } from '@edunexus/shared';
+import { buildStoragePath, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, checkFilePermission } from '@edunexus/shared';
 
 describe('buildStoragePath', () => {
   it('returns path with schoolId/entityType/entityId/uuid-filename format', () => {
