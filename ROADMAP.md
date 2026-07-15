@@ -128,22 +128,19 @@ One paragraph — what and why.
 
 ### Epic 3a.1 — Applicant intake
 - ~~[3a.1.1] Public application form~~ ✅ **Complete** (PR #115, merged to `preview` Jul 10)
-  - Tasks: public form route per school subdomain; ~~✓ file upload for birth certificate~~ (PR #118); application status enum (`submitted`, `under_review`, `accepted`, `rejected`, `waitlisted`); email confirmation via Resend.
+  - Tasks: public form route per school subdomain; file upload for birth certificate (PR #118); application status enum; email confirmation via Resend.
   - AC: Given a valid subdomain, when a guardian submits the form, then an `Applicant` row is created with status `submitted` and a confirmation email is sent within 1 minute.
+  - ⚡ **Open sub-issue:** [Cloudinary credentials setup](https://github.com/QuayeDNA/edunexus/issues/116) — needed for production file storage (dev uses local provider)
 
-- **[3a.1.3] Enhanced applicant data collection** *(post-MVP improvement)*
-  - Birth certificate upload ⚡ **done** (PR #118, Jul 15)
-  - Prior report card upload (separate `FileUpload` field)
-  - Guardian occupation & employer field
-  - Medical info (allergies, conditions, medications, doctor contact)
-  - Siblings already enrolled (checkbox + auto-link)
-  - Emergency contacts (name, phone, relationship — multi-entry)
-  - Applicant photo upload (for student ID pre-generation)
-  - Data dependency: these fields are consumed by the [3a.2.1] conversion flow, so implement before or concurrently with it.
+- ~~[3a.1.2+3a.1.3] Admissions review queue & enhanced data collection~~ ✅ **Complete** (commit `e44f026`, Jul 15)
+  - **Depends on:** 3a.1.1
+  - **Tasks:** list/filter applicants by status/grade level; detail view with documents; accept/reject/waitlist with capacity check against `Class` max size; enhanced form fields (guardian occupation/employer, medical info, siblings, emergency contacts, applicant photo upload).
+  - **AC:** Given a class is at capacity, when an admin tries to accept an applicant into it, then the system warns and requires override confirmation.
 
-- **[3a.1.2] Admissions review queue (admin)** — Depends on: 3a.1.1
-  - Tasks: list/filter applicants by status/grade level; detail view with documents; accept/reject/waitlist action; capacity check against `Class` max size.
-  - AC: Given a class is at capacity, when an admin tries to accept an applicant into it, then the system warns and requires override confirmation.
+- ~~[3a.1.4] Status notifications, cooldown & anonymization~~ ✅ **Complete** (commit `e44f026`, same session)
+  - **Depends on:** 3a.1.2
+  - **Tasks:** email notifications on status changes (4 templates: under_review, accepted, rejected, waitlisted); 6-month re-application cooldown for rejected applicants (409 on POST if within window, auto-anonymize old record if expired); data anonymization service (clears all personal fields, keeps stats); cleanup endpoint (`POST /api/applicants/cleanup`, batch-anonymizes 100 at a time).
+  - **AC:** Given a rejected applicant re-applies within 6 months, then the POST returns 409 with cooldown expiry date. Given a rejected applicant re-applies after 6 months, then the old record is anonymized and the new application proceeds normally. Given a POST to `/api/applicants/cleanup`, then all rejected records older than 6 months are anonymized (up to 100 per call).
 
 ### Epic 3a.2 — Student & Guardian conversion
 - **[3a.2.1] Accepted → Student conversion** — Depends on: 3a.1.2, Layer 1 (Class/Year must exist)

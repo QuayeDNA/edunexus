@@ -158,8 +158,9 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 
 **Phase 3a — Admissions & Enrollment** — 🟡 In Progress
 - ~~[3a.1.1] Public application form~~ ✅ Complete (PR #115, merged to `preview` Jul 10)
-- ⬜ [3a.1.2] Admissions review queue — next
-- ⬜ [3a.2.1] Accepted → Student conversion
+- ~~[3a.1.2+3a.1.3] Admissions review queue & enhanced data collection~~ ✅ Complete (commit `e44f026`, Jul 15)
+- ~~[3a.1.4] Status notifications, cooldown & anonymization~~ ✅ Complete (commit `e44f026`, Jul 15)
+- ⬜ [3a.2.1] Accepted → Student conversion — next
 - ⬜ [3a.2.2] Direct student entry (bypass admissions)
 
 Phase 1/2 prerequisites confirmed before Phase 3a work: `ROADMAP.md §1` Layer 1 (Academic Structure) exists in schema with seed data; Resend email service (Phase 2) reusable for applicant confirmations.
