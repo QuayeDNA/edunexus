@@ -10,3 +10,4 @@ coverage/
 .temp/
 .superpowers/
 *.tsbuildinfo
+.edunexus/
