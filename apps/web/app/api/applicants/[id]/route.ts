@@ -13,9 +13,28 @@ const validTransitions: Record<string, string[]> = {
   waitlisted: ['accepted', 'rejected'],
 };
 
-const updateStatusSchema = z.object({
-  status: z.enum(['under_review', 'accepted', 'rejected', 'waitlisted']),
+const updateApplicantSchema = z.object({
+  status: z.enum(['under_review', 'accepted', 'rejected', 'waitlisted']).optional(),
   adminNotes: z.string().optional(),
+  guardianName: z.string().min(1).max(200).optional(),
+  guardianEmail: z.string().email().optional(),
+  guardianPhone: z.string().max(20).optional(),
+  guardianAddress: z.string().optional(),
+  guardianOccupation: z.string().max(100).optional(),
+  guardianEmployer: z.string().max(200).optional(),
+  previousSchool: z.string().max(255).optional(),
+  medicalAllergies: z.string().optional(),
+  medicalConditions: z.string().optional(),
+  medicalMedications: z.string().optional(),
+  doctorName: z.string().max(200).optional(),
+  doctorPhone: z.string().max(20).optional(),
+  emergencyContacts: z.array(z.object({
+    name: z.string().min(1).max(200),
+    phone: z.string().min(1).max(20),
+    relationship: z.string().min(1).max(50),
+  })).optional(),
+  siblingsEnrolled: z.boolean().optional(),
+  siblingDetails: z.string().optional(),
 });
 
 async function resolveSchoolId(request: NextRequest): Promise<string | null> {
@@ -56,34 +75,64 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!existing) return apiError(404, 'Applicant not found');
 
   const body = await request.json();
-  const parsed = updateStatusSchema.safeParse(body);
+  const parsed = updateApplicantSchema.safeParse(body);
   if (!parsed.success) {
     return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
-  const allowed = validTransitions[existing.status];
-  if (!allowed || !allowed.includes(parsed.data.status)) {
-    return apiError(422, `Cannot transition from '${existing.status}' to '${parsed.data.status}'`);
+  const updateData: Record<string, unknown> = { updatedAt: new Date() };
+
+  if (parsed.data.status) {
+    const allowed = validTransitions[existing.status];
+    if (!allowed || !allowed.includes(parsed.data.status)) {
+      return apiError(422, `Cannot transition from '${existing.status}' to '${parsed.data.status}'`);
+    }
+    updateData.status = parsed.data.status;
+  }
+
+  const editableFields = [
+    'adminNotes', 'guardianName', 'guardianEmail', 'guardianPhone',
+    'guardianAddress', 'guardianOccupation', 'guardianEmployer',
+    'previousSchool', 'medicalAllergies', 'medicalConditions',
+    'medicalMedications', 'doctorName', 'doctorPhone',
+    'emergencyContacts', 'siblingsEnrolled', 'siblingDetails',
+  ] as const;
+
+  for (const field of editableFields) {
+    if (field in parsed.data && parsed.data[field as keyof typeof parsed.data] !== undefined) {
+      const val = parsed.data[field as keyof typeof parsed.data];
+      updateData[field] = val ?? null;
+    }
   }
 
   const [updated] = await db.update(applicants)
-    .set({
-      status: parsed.data.status,
-      adminNotes: parsed.data.adminNotes !== undefined ? parsed.data.adminNotes : existing.adminNotes,
-      updatedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(applicants.id, id))
     .returning();
 
-  await db.insert(auditLogs).values({
-    schoolId,
-    userId: user!.id,
-    action: 'applicant.status_changed',
-    tableName: 'applicants',
-    recordId: id,
-    oldData: { status: existing.status },
-    newData: { status: parsed.data.status },
-  });
+  if (parsed.data.status && parsed.data.status !== existing.status) {
+    await db.insert(auditLogs).values({
+      schoolId,
+      userId: user!.id,
+      action: 'applicant.status_changed',
+      tableName: 'applicants',
+      recordId: id,
+      oldData: { status: existing.status },
+      newData: { status: parsed.data.status },
+    });
+  }
+
+  if (Object.keys(updateData).length > 1) {
+    await db.insert(auditLogs).values({
+      schoolId,
+      userId: user!.id,
+      action: 'applicant.updated',
+      tableName: 'applicants',
+      recordId: id,
+      oldData: {},
+      newData: updateData,
+    });
+  }
 
   return apiSuccess(updated);
 }
