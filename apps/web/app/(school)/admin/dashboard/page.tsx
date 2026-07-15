@@ -130,6 +130,20 @@ export default async function AdminDashboard() {
             </Card>
           </Link>
 
+          <Link href="/admin/applicants">
+            <Card className="cursor-pointer transition-shadow hover:shadow-md">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="rounded-xl bg-brand-50 p-3">
+                  <GraduationCap className="h-5 w-5 text-brand-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-medium">Review Applications</CardTitle>
+                  <CardDescription>Process admission applications</CardDescription>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href="/admin/staff">
             <Card className="cursor-pointer transition-shadow hover:shadow-md">
               <CardContent className="flex items-center gap-4 p-6">

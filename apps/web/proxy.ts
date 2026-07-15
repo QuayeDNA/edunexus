@@ -18,38 +18,53 @@ export const config = {
 
 const SUPER_ADMIN_PREFIX = '/super-admin';
 
+function isDevLocalhost(hostname: string): boolean {
+  if (process.env.NODE_ENV !== 'development') return false;
+  const host = hostname?.replace(/:\d+$/, '').toLowerCase() ?? '';
+  return host === 'localhost' || host === '127.0.0.1';
+}
+
+async function fetchTenantByHost(hostname: string): Promise<TenantInfo> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/internal/resolve-tenant?hostname=${encodeURIComponent(hostname)}`, {
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) {
+      const tenant: TenantInfo = await res.json();
+      if (tenant.schoolId) return tenant;
+    }
+  } catch (error) {
+    console.error('[Middleware] Tenant fetch failed:', error);
+  }
+  return { schoolId: null, slug: null, name: null, isSuperAdmin: false };
+}
+
 async function fetchTenant(hostname: string): Promise<TenantInfo> {
   const { slug } = parseHostname(hostname);
 
   if (isSuperAdminHost(hostname)) {
+    if (isDevLocalhost(hostname)) {
+      return fetchTenantByHost(hostname);
+    }
     return { schoolId: null, slug: null, name: null, isSuperAdmin: true };
   }
 
   if (!slug) {
+    if (isDevLocalhost(hostname)) {
+      return fetchTenantByHost(hostname);
+    }
     return { schoolId: null, slug: null, name: null, isSuperAdmin: false };
   }
 
   const cached = tenantCache.get<TenantInfo>(slug);
   if (cached) return cached;
 
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/internal/resolve-tenant?hostname=${encodeURIComponent(hostname)}`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (res.ok) {
-      const tenant: TenantInfo = await res.json();
-      if (tenant.slug) {
-        tenantCache.set(slug, tenant);
-      }
-      return tenant;
-    }
-  } catch (error) {
-    console.error('[Middleware] Tenant fetch failed:', error);
+  const tenant = await fetchTenantByHost(hostname);
+  if (tenant.slug) {
+    tenantCache.set(slug, tenant);
   }
-
-  return { schoolId: null, slug: null, name: null, isSuperAdmin: false };
+  return tenant;
 }
 
 function getRouteRole(pathname: string): UserRole | null {

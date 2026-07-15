@@ -13,5 +13,10 @@ export default defineConfig({
     environment: 'node',
     include: ['./tests/**/*.test.ts'],
     exclude: ['node_modules'],
+    server: {
+      deps: {
+        inline: ['next-auth'],
+      },
+    },
   },
 });
