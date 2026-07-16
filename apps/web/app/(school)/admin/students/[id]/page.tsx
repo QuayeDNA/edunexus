@@ -12,6 +12,7 @@ import { StudentDetailInfo } from '@/components/admin/students/student-detail-in
 import { StudentGuardians } from '@/components/admin/students/student-guardians';
 import { StudentEnrollments } from '@/components/admin/students/student-enrollments';
 import { StudentAuditLog } from '@/components/admin/students/student-audit-log';
+import { StudentLifecycleActions } from '@/components/admin/students/student-lifecycle-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,23 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
     .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
     .where(eq(studentGuardians.studentId, id));
 
+  const activeEnrollment = enrollmentRows.find(e => e.status === 'active') ?? null;
+
+  const [classList, yearList] = await Promise.all([
+    session.user.schoolId
+      ? db.select({ id: classes.id, name: classes.name })
+          .from(classes)
+          .where(eq(classes.schoolId, session.user.schoolId))
+          .orderBy(classes.name)
+      : Promise.resolve([]),
+    session.user.schoolId
+      ? db.select({ id: academicYears.id, name: academicYears.name })
+          .from(academicYears)
+          .where(eq(academicYears.schoolId, session.user.schoolId))
+          .orderBy(academicYears.name)
+      : Promise.resolve([]),
+  ]);
+
   return (
     <div className="space-y-8">
       <div>
@@ -77,6 +95,13 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
           <Pencil className="mr-2 h-4 w-4" /> Edit Profile
         </Link>
       </div>
+      <StudentLifecycleActions
+        studentId={id}
+        activeEnrollmentId={activeEnrollment?.id ?? null}
+        studentStatus={student.status}
+        classes={classList}
+        academicYears={yearList}
+      />
       <StudentDetailInfo student={student} />
       <StudentGuardians guardians={guardianRows} />
       <StudentEnrollments enrollments={enrollmentRows} />
