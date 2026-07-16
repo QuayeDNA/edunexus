@@ -11,7 +11,7 @@ interface UpdateEnrollmentStatusParams {
   targetSchoolName?: string;
 }
 
-interface EnrollmentLifecycleResult {
+export interface EnrollmentLifecycleResult {
   id: string;
   status: string;
   endDate: string | null;
