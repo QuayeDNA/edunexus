@@ -152,9 +152,11 @@ One paragraph — what and why.
   - AC: Given a CSV with 200 rows where 5 have invalid data, when imported, then 195 succeed, 5 are reported with row-level error messages, and nothing partially commits per invalid row.
 
 ### Epic 3a.3 — Lifecycle events
-- **[3a.3.1] Transfer / Withdrawal / Re-admission**
+- 🟡 **[3a.3.1] Transfer / Withdrawal / Re-admission** *(API complete — UI pending, see [3.2.1])*
   - Tasks: status field on `Enrollment` (`active`, `transferred_out`, `withdrawn`, `graduated`); transfer certificate generation (PDF); re-admission flow reuses existing `Student` record.
   - AC: Given a withdrawn student, when re-admitted next year, then historical records (grades, attendance) remain linked to the same `Student` id.
+  - ✅ API endpoints + service + tests (commit `604ae0c`, branch `52-3a3-1-transfer-withdrawal`)
+  - ⬜ Admin UI — deferred to [3.2.1] Student list/detail/edit
 
 - **[3a.3.2] Parent/student transfer request & admin approval workflow** *(deferred — depends on Phase 6/7)*
   - Tasks: parent/student submits transfer request via portal; admin approval queue; approved request triggers same backend flow as [3a.3.1]; notification sent on status change.
