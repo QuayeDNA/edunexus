@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { classes, academicYears, schools, students, enrollments, gradeLevels, studentGuardians, guardians } from '@edunexus/database';
-import { eq, and, or, desc, count, ilike, sql } from 'drizzle-orm';
+import { eq, and, or, count, ilike, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search')?.trim() || '';
-  const classId = searchParams.get('classId');
   const status = searchParams.get('status');
   const gradeLevelId = searchParams.get('gradeLevelId');
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));

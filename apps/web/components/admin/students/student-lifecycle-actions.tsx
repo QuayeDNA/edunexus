@@ -26,7 +26,7 @@ export function StudentLifecycleActions({ studentId, activeEnrollmentId, student
   const [submitting, setSubmitting] = useState(false);
 
   const [withdrawOpen, setWithdrawOpen] = useState(false);
-  const [withdrawReason, setWithdrawReason] = useState('');
+  const [withdrawReason] = useState('');
 
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferReason, setTransferReason] = useState('');
