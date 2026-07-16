@@ -143,11 +143,11 @@ One paragraph — what and why.
   - **AC:** Given a rejected applicant re-applies within 6 months, then the POST returns 409 with cooldown expiry date. Given a rejected applicant re-applies after 6 months, then the old record is anonymized and the new application proceeds normally. Given a POST to `/api/applicants/cleanup`, then all rejected records older than 6 months are anonymized (up to 100 per call).
 
 ### Epic 3a.2 — Student & Guardian conversion
-- **[3a.2.1] Accepted → Student conversion** — Depends on: 3a.1.2, Layer 1 (Class/Year must exist)
+- ~~[3a.2.1] Accepted → Student conversion~~ ✅ **Complete** (PR #121, merged to `preview` Jul 15)
   - Tasks: convert `Applicant` to `Student` + `Enrollment` in one transaction; generate student ID number (school-configurable format); create or link `Guardian` record(s), support multiple guardians per student and multiple students per guardian.
   - AC: Given an applicant is accepted, when the admin confirms conversion, then a `Student`, `Enrollment`, and at least one `Guardian` link exist, and the operation is atomic (no partial state on failure).
 
-- **[3a.2.2] Direct student entry (bypass admissions)** — Depends on: 3a.2.1
+- ~~[3a.2.2] Direct student entry (bypass admissions)~~ ✅ **Complete** (10 commits on `51-3a2-2-direct-student-entry`, Jul 15)
   - Tasks: manual "add existing student" flow for schools onboarding mid-year; bulk CSV import with column mapping and validation report.
   - AC: Given a CSV with 200 rows where 5 have invalid data, when imported, then 195 succeed, 5 are reported with row-level error messages, and nothing partially commits per invalid row.
 
