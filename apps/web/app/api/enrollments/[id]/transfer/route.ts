@@ -4,8 +4,9 @@ import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { updateEnrollmentStatus } from '@/services/enrollment-lifecycle';
 import { generateTransferCertificate } from '@/services/transfer-certificate';
+import { createStorageProvider } from '@/services/storage';
 import { db } from '@/lib/db';
-import { enrollments, students, schools } from '@edunexus/database';
+import { enrollments, students, schools, classes } from '@edunexus/database';
 import { eq } from 'drizzle-orm';
 import { resolveTenant } from '@/lib/tenant/resolve';
 
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const result = await updateEnrollmentStatus({
       enrollmentId: id,
+      schoolId,
       newStatus: 'transferred_out',
       reason: parsed.data.reason,
       targetSchoolName: parsed.data.targetSchoolName,
@@ -52,20 +54,32 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .where(eq(schools.id, schoolId))
       .limit(1);
 
+    const [classRecord] = await db.select({ name: classes.name })
+      .from(classes)
+      .where(eq(classes.id, enrollment.classId))
+      .limit(1);
+
     const pdfBuffer = await generateTransferCertificate({
       studentName: `${student.firstName} ${student.lastName}`,
       studentIdNumber: student.studentIdNumber,
       dateOfBirth: student.dateOfBirth,
-      lastClass: enrollment.classId,
+      lastClass: classRecord?.name ?? enrollment.classId,
       reason: parsed.data.reason,
       targetSchool: parsed.data.targetSchoolName,
       transferDate: new Date().toISOString().split('T')[0],
       schoolName: school?.name ?? 'School',
     });
 
+    const storage = createStorageProvider();
+    const uploadResult = await storage.upload(
+      pdfBuffer,
+      `transfer-certificates/${enrollment.id}.pdf`,
+      'application/pdf',
+    );
+
     return apiSuccess({
       ...result,
-      certificateSize: pdfBuffer.length,
+      transferCertificateUrl: uploadResult.url,
     });
   } catch (err: any) {
     if (err.message === 'Enrollment not found') return apiError(404, err.message);

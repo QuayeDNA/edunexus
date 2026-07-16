@@ -12,7 +12,7 @@ const schema = z.object({
   academicYearId: z.string().uuid('Valid academic year ID is required'),
 });
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error: authError } = await requireRole('admin', 'super_admin');
   if (authError) return authError;
 
@@ -21,13 +21,15 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const schoolId = tenant.schoolId;
   if (!schoolId) return apiError(400, 'Tenant not resolved');
 
+  const { id } = await params;
+
   const body = await request.json().catch(() => ({}));
   const parsed = schema.safeParse(body);
   if (!parsed.success) return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as any);
 
   const [student] = await db.select()
     .from(students)
-    .where(and(eq(students.id, params.id), eq(students.schoolId, schoolId)))
+    .where(and(eq(students.id, id), eq(students.schoolId, schoolId)))
     .limit(1);
 
   if (!student) return apiError(404, 'Student not found');
@@ -46,21 +48,25 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     .limit(1);
   if (!academicYear) return apiError(404, 'Academic year not found');
 
-  const [enrollment] = await db.insert(enrollments).values({
-    schoolId,
-    studentId: student.id,
-    classId: targetClass.id,
-    academicYearId: academicYear.id,
-    status: 'active',
-    enrollmentDate: new Date().toISOString().split('T')[0],
-  }).returning();
+  const result = await db.transaction(async (tx) => {
+    const [enrollment] = await tx.insert(enrollments).values({
+      schoolId,
+      studentId: student.id,
+      classId: targetClass.id,
+      academicYearId: academicYear.id,
+      status: 'active',
+      enrollmentDate: new Date().toISOString().split('T')[0],
+    }).returning();
 
-  await db.update(students)
-    .set({ status: 'active', updatedAt: new Date() })
-    .where(eq(students.id, student.id));
+    await tx.update(students)
+      .set({ status: 'active', updatedAt: new Date() })
+      .where(eq(students.id, student.id));
 
-  return apiSuccess({
-    enrollment: { id: enrollment.id, status: enrollment.status, classId: enrollment.classId, academicYearId: enrollment.academicYearId },
-    student: { id: student.id, status: 'active' },
+    return {
+      enrollment: { id: enrollment.id, status: enrollment.status, classId: enrollment.classId, academicYearId: enrollment.academicYearId },
+      student: { id: student.id, status: 'active' },
+    };
   });
+
+  return apiSuccess(result);
 }

@@ -6,6 +6,7 @@ export type EnrollmentStatus = 'active' | 'withdrawn' | 'transferred_out' | 'gra
 
 interface UpdateEnrollmentStatusParams {
   enrollmentId: string;
+  schoolId: string;
   newStatus: EnrollmentStatus;
   reason?: string;
   targetSchoolName?: string;
@@ -34,6 +35,7 @@ export async function updateEnrollmentStatus(params: UpdateEnrollmentStatusParam
       .limit(1);
 
     if (!enrollment) throw new Error('Enrollment not found');
+    if (enrollment.schoolId !== params.schoolId) throw new Error('Enrollment not found');
 
     const allowedTransitions = VALID_TRANSITIONS[enrollment.status as EnrollmentStatus] ?? [];
     if (!allowedTransitions.includes(params.newStatus as EnrollmentStatus)) {

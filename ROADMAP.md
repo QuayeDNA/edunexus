@@ -156,6 +156,11 @@ One paragraph — what and why.
   - Tasks: status field on `Enrollment` (`active`, `transferred_out`, `withdrawn`, `graduated`); transfer certificate generation (PDF); re-admission flow reuses existing `Student` record.
   - AC: Given a withdrawn student, when re-admitted next year, then historical records (grades, attendance) remain linked to the same `Student` id.
 
+- **[3a.3.2] Parent/student transfer request & admin approval workflow** *(deferred — depends on Phase 6/7)*
+  - Tasks: parent/student submits transfer request via portal; admin approval queue; approved request triggers same backend flow as [3a.3.1]; notification sent on status change.
+  - AC: Given a parent submits a transfer request, when the admin approves it, then the enrollment status updates to `transferred_out` and the parent receives a notification.
+  - ⚡ **GitHub:** [#123](https://github.com/QuayeDNA/edunexus/issues/123)
+
 ---
 
 ## 4. Phase 3 — Admin (School) Portal *(restructured in entity order)*

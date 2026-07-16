@@ -25,7 +25,7 @@ describe('updateEnrollmentStatus', () => {
     tx.returning.mockResolvedValue([{ id: 'e1', status: 'withdrawn', endDate: '2026-07-15', transferReason: 'Family relocation', transferSchoolName: null }]);
     mockDb.transaction.mockImplementation(async (cb: any) => cb(tx));
 
-    const result = await updateEnrollmentStatus({ enrollmentId: 'e1', newStatus: 'withdrawn', reason: 'Family relocation' });
+    const result = await updateEnrollmentStatus({ enrollmentId: 'e1', schoolId: 'sch1', newStatus: 'withdrawn', reason: 'Family relocation' });
 
     expect(result.status).toBe('withdrawn');
     expect(result.endDate).toBe('2026-07-15');
@@ -35,7 +35,7 @@ describe('updateEnrollmentStatus', () => {
     tx.limit.mockResolvedValueOnce([{ id: 'e1', status: 'graduated', studentId: 's1', schoolId: 'sch1' }]);
     mockDb.transaction.mockImplementation(async (cb: any) => cb(tx));
 
-    await expect(updateEnrollmentStatus({ enrollmentId: 'e1', newStatus: 'withdrawn' }))
+    await expect(updateEnrollmentStatus({ enrollmentId: 'e1', schoolId: 'sch1', newStatus: 'withdrawn' }))
       .rejects.toThrow('Cannot transition enrollment from graduated to withdrawn');
   });
 
@@ -43,7 +43,15 @@ describe('updateEnrollmentStatus', () => {
     tx.limit.mockResolvedValueOnce([]);
     mockDb.transaction.mockImplementation(async (cb: any) => cb(tx));
 
-    await expect(updateEnrollmentStatus({ enrollmentId: 'nonexistent', newStatus: 'withdrawn' }))
+    await expect(updateEnrollmentStatus({ enrollmentId: 'nonexistent', schoolId: 'sch1', newStatus: 'withdrawn' }))
+      .rejects.toThrow('Enrollment not found');
+  });
+
+  it('throws 404 if schoolId does not match', async () => {
+    tx.limit.mockResolvedValueOnce([{ id: 'e1', status: 'active', studentId: 's1', schoolId: 'sch1' }]);
+    mockDb.transaction.mockImplementation(async (cb: any) => cb(tx));
+
+    await expect(updateEnrollmentStatus({ enrollmentId: 'e1', schoolId: 'other-school', newStatus: 'withdrawn' }))
       .rejects.toThrow('Enrollment not found');
   });
 
@@ -54,7 +62,7 @@ describe('updateEnrollmentStatus', () => {
     tx.returning.mockResolvedValue([{ id: 'e1', status: 'withdrawn', endDate: '2026-07-15', transferReason: 'Family relocation', transferSchoolName: null }]);
     mockDb.transaction.mockImplementation(async (cb: any) => cb(tx));
 
-    await updateEnrollmentStatus({ enrollmentId: 'e1', newStatus: 'withdrawn', reason: 'Family relocation' });
+    await updateEnrollmentStatus({ enrollmentId: 'e1', schoolId: 'sch1', newStatus: 'withdrawn', reason: 'Family relocation' });
 
     expect(tx.update).toHaveBeenCalledTimes(2);
   });
@@ -66,7 +74,7 @@ describe('updateEnrollmentStatus', () => {
     tx.returning.mockResolvedValue([{ id: 'e1', status: 'transferred_out', endDate: '2026-07-15', transferReason: 'Moving', transferSchoolName: 'New School' }]);
     mockDb.transaction.mockImplementation(async (cb: any) => cb(tx));
 
-    await updateEnrollmentStatus({ enrollmentId: 'e1', newStatus: 'transferred_out', reason: 'Moving', targetSchoolName: 'New School' });
+    await updateEnrollmentStatus({ enrollmentId: 'e1', schoolId: 'sch1', newStatus: 'transferred_out', reason: 'Moving', targetSchoolName: 'New School' });
 
     expect(tx.update).toHaveBeenCalledTimes(1);
   });
