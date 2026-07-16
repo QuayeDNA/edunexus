@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/applicants', label: 'Applicants', icon: ClipboardList },
-  { href: '/admin/students/new', label: 'Students', icon: Users },
+  { href: '/admin/students', label: 'Students', icon: Users },
   { href: '/admin/staff', label: 'Staff', icon: Briefcase },
   { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
   { href: '/admin/academics', label: 'Academics', icon: BookOpen },
