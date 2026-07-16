@@ -92,7 +92,8 @@ export function StudentTable({ classes, gradeLevels }: StudentTableProps) {
       )}
       <div className="flex flex-wrap gap-3">
         <div className="w-48">
-          <Select value={classId} onValueChange={v => setClassId(v as string)}>
+          <Select value={classId} onValueChange={v => setClassId(v as string)}
+            items={classes.map(c => ({ value: c.id, label: c.name }))}>
             <SelectTrigger><SelectValue placeholder="All Classes" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="">All Classes</SelectItem>
@@ -101,7 +102,8 @@ export function StudentTable({ classes, gradeLevels }: StudentTableProps) {
           </Select>
         </div>
         <div className="w-48">
-          <Select value={gradeLevelId} onValueChange={v => setGradeLevelId(v as string)}>
+          <Select value={gradeLevelId} onValueChange={v => setGradeLevelId(v as string)}
+            items={gradeLevels.map(g => ({ value: g.id, label: g.name }))}>
             <SelectTrigger><SelectValue placeholder="All Grades" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="">All Grades</SelectItem>
