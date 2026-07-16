@@ -14,6 +14,9 @@ export const enrollments = pgTable('enrollments', {
   academicYearId: uuid('academic_year_id').notNull().references(() => academicYears.id),
   status: varchar('status', { length: 20 }).default('active').notNull(),
   enrollmentDate: date('enrollment_date').notNull(),
+  endDate: date('end_date'),
+  transferReason: varchar('transfer_reason', { length: 255 }),
+  transferSchoolName: varchar('transfer_school_name', { length: 200 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [

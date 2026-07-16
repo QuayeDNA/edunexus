@@ -163,6 +163,8 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 - ~~[3a.2.1] Accepted → Student conversion~~ ✅ Complete (PR #121, merged to `preview` Jul 15)
 - ~~[3a.2.2] Direct student entry (manual form + CSV import)~~ ✅ Complete (10 commits on `51-3a2-2-direct-student-entry`, Jul 15)
 - ([3a.2.3] Bulk import via CSV — covered by [3a.2.2] CSV import above)
+- ~~[3a.3.1] Transfer/Withdrawal/Graduate/Re-admit lifecycle~~ ✅ Complete (PR #124, merged to `preview` Jul 16)
+- ~~[3.2.1] Student list/detail/edit + lifecycle UI~~ ✅ Complete (PR #124, merged to `preview` Jul 16)
 
 **Phase 3 — Admin Portal** — ⬜ Next
 
