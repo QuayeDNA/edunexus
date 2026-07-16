@@ -152,11 +152,9 @@ One paragraph — what and why.
   - AC: Given a CSV with 200 rows where 5 have invalid data, when imported, then 195 succeed, 5 are reported with row-level error messages, and nothing partially commits per invalid row.
 
 ### Epic 3a.3 — Lifecycle events
-- 🟡 **[3a.3.1] Transfer / Withdrawal / Re-admission** *(API complete — UI pending, see [3.2.1])*
+- ~~[3a.3.1] Transfer / Withdrawal / Re-admission~~ ✅ **Complete** (PR pending, branch `52-3a3-1-transfer-withdrawal`)
   - Tasks: status field on `Enrollment` (`active`, `transferred_out`, `withdrawn`, `graduated`); transfer certificate generation (PDF); re-admission flow reuses existing `Student` record.
   - AC: Given a withdrawn student, when re-admitted next year, then historical records (grades, attendance) remain linked to the same `Student` id.
-  - ✅ API endpoints + service + tests (commit `604ae0c`, branch `52-3a3-1-transfer-withdrawal`)
-  - ⬜ Admin UI — deferred to [3.2.1] Student list/detail/edit
 
 - **[3a.3.2] Parent/student transfer request & admin approval workflow** *(deferred — depends on Phase 6/7)*
   - Tasks: parent/student submits transfer request via portal; admin approval queue; approved request triggers same backend flow as [3a.3.1]; notification sent on status change.
@@ -178,7 +176,8 @@ One paragraph — what and why.
 - **[3.1.4] Class-Subject-Teacher assignment matrix** — bulk assign, conflict warning if teacher already booked
 
 ### Epic 3.2 — Students (Layer 2, list/detail beyond admissions)
-- **[3.2.1] Student list/detail/edit** — filters by class, status, guardian
+- ~~[3.2.1] Student list/detail/edit~~ ✅ **Complete** (PR pending, branch `52-3a3-1-transfer-withdrawal`)
+  - Tasks: list page with stats bar + filters, detail page with info/enrollments/guardians/audit log, edit profile form, lifecycle actions (withdraw/transfer/graduate/re-admit) on detail page
 - **[3.2.2] Promotion & graduation workflow** — Depends on: Layer 4 grades/attendance thresholds
   - Tasks: end-of-year batch promotion tool with rule preview (e.g. min attendance %, pass mark); graduation marks `Enrollment.status = graduated` and issues certificate.
   - AC: Given promotion rules are configured, when admin runs "promote all," then a preview list shows who passes/fails rules before committing, and committing is reversible for 24h via an audit-logged undo.
