@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { AlertTriangle, CheckCircle, Upload, FileText, Download } from 'lucide-react';
+import { CheckCircle, Upload, Download } from 'lucide-react';
 
 type Step = 'upload' | 'mapping' | 'validation' | 'results';
 

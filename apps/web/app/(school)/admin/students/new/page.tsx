@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
-import { classes, academicYears, gradeLevels } from '@edunexus/database';
-import { eq, and } from 'drizzle-orm';
+import { classes, gradeLevels } from '@edunexus/database';
+import { eq } from 'drizzle-orm';
 import { requireRole } from '@/lib/auth/auth.guard';
 import { CreateStudentForm } from '@/components/admin/students/create-student-form';
 
