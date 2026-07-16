@@ -335,7 +335,7 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
             <Label htmlFor="medicalAllergies">Allergies</Label>
             <textarea
               id="medicalAllergies"
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="flex min-h-15 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('medicalAllergies')}
             />
           </div>
@@ -344,7 +344,7 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
             <Label htmlFor="medicalConditions">Medical Conditions</Label>
             <textarea
               id="medicalConditions"
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="flex min-h-15 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('medicalConditions')}
             />
           </div>
@@ -353,7 +353,7 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
             <Label htmlFor="medicalMedications">Current Medications</Label>
             <textarea
               id="medicalMedications"
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="flex min-h-15 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               {...register('medicalMedications')}
             />
           </div>
@@ -442,7 +442,7 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
               <Label htmlFor="siblingDetails">Sibling Details</Label>
               <textarea
                 id="siblingDetails"
-                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex min-h-15 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 placeholder="Names and classes of siblings"
                 {...register('siblingDetails')}
               />

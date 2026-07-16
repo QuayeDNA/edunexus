@@ -116,7 +116,7 @@ export default async function AdminDashboard() {
       <div>
         <h2 className="mb-4 text-lg font-semibold text-text-primary">Quick Actions</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link href="/admin/students">
+          <Link href="/admin/students/new">
             <Card className="cursor-pointer transition-shadow hover:shadow-md">
               <CardContent className="flex items-center gap-4 p-6">
                 <div className="rounded-xl bg-brand-50 p-3">
@@ -144,15 +144,15 @@ export default async function AdminDashboard() {
             </Card>
           </Link>
 
-          <Link href="/admin/staff">
+          <Link href="/admin/students/import">
             <Card className="cursor-pointer transition-shadow hover:shadow-md">
               <CardContent className="flex items-center gap-4 p-6">
                 <div className="rounded-xl bg-accent-50 p-3">
                   <Upload className="h-5 w-5 text-accent-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-medium">Import Data</CardTitle>
-                  <CardDescription>Bulk upload students/staff</CardDescription>
+                  <CardTitle className="text-sm font-medium">Import Students</CardTitle>
+                  <CardDescription>Bulk upload via CSV</CardDescription>
                 </div>
               </CardContent>
             </Card>
