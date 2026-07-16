@@ -54,10 +54,12 @@ Build the student management module for the admin portal: a list page with searc
 {
   "total": 150,
   "activeCount": 142,
+  "byClass": [{ "className": "JHS 1A", "count": 30 }, ...],
   "byStatus": [{ "status": "active", "count": 142 }, ...]
 }
 ```
 
+- `byClass` returns classes with at least one enrollment in the current academic year, sorted by count descending, max 8 with overflow indicator.
 - School-scoped.
 
 ### 2.3 `GET /api/students/[id]` — Student detail
@@ -167,10 +169,10 @@ Build the student management module for the admin portal: a list page with searc
 │ </PageHeader>                                        │
 ├─────────────────────────────────────────────────────┤
 │ <StudentStatsBar> — clickable StatCards               │
-│   - Total enrolled (click → clears status filter)    │
-│   - Active (click → status=active)                   │
-│   - Withdrawn (click → status=withdrawn)             │
-│   - Transferred (click → status=transferred_out)     │
+│   Row 1: [Total: 150] [Active: 142] [Withdrawn: 5]  │
+│          [Transferred: 3]                            │
+│   Row 2: Classes: [JHS 1A: 30] [JHS 1B: 28]         │
+│          [JHS 2A: 25] [+3 more]                     │
 ├─────────────────────────────────────────────────────┤
 │ Filter bar:                                          │
 │   <Select> Class (placeholder: "All Classes") </Select>│
