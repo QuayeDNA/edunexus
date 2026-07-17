@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { StudentStatsBar } from './student-stats-bar';
+import { EmptyState } from '@/components/empty-state';
+import { fetchStudents, fetchStudentStats } from '@/lib/api/students';
+import type { ClassOption, GradeOption } from '@/types/students';
+import { Users } from 'lucide-react';
 
 const statusBadge: Record<string, string> = {
   active: 'bg-green-100 text-green-800',
@@ -20,68 +25,46 @@ const statusLabel: Record<string, string> = {
   transferred_out: 'Transferred', graduated: 'Graduated',
 };
 
-interface ClassOption { id: string; name: string; code: string | null; gradeLevelId: string }
-interface GradeOption { id: string; name: string; code: string }
 interface StudentTableProps { classes: ClassOption[]; gradeLevels: GradeOption[] }
-interface StudentRow {
-  id: string; firstName: string; lastName: string; otherNames: string | null;
-  studentIdNumber: string; gender: string; status: string;
-  enrollmentDate: string; className: string | null;
-  gradeLevelName: string | null; guardianName: string | null;
-}
-interface StatsData {
-  total: number; activeCount: number;
-  byStatus: Array<{ status: string; count: number }>;
-  byClass: Array<{ className: string; count: number }>;
-}
 
 export function StudentTable({ classes, gradeLevels }: StudentTableProps) {
-  const [students, setStudents] = useState<StudentRow[]>([]);
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
   const [classId, setClassId] = useState<string>('');
   const [gradeLevelId, setGradeLevelId] = useState<string>('');
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [committedSearch, setCommittedSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (status) params.set('status', status);
-      if (classId) params.set('classId', classId);
-      if (gradeLevelId) params.set('gradeLevelId', gradeLevelId);
-      if (search) params.set('search', search);
-      params.set('page', String(page));
-      params.set('pageSize', '20');
+  const queryKey = ['students', { status, classId, gradeLevelId, search: committedSearch, page }] as const;
+  const studentsQuery = useQuery({
+    queryKey,
+    queryFn: () => fetchStudents({ status, classId, gradeLevelId, search: committedSearch, page }),
+  });
 
-      const [studentsRes, statsRes] = await Promise.all([
-        fetch(`/api/students?${params}`),
-        fetch('/api/students/stats'),
-      ]);
-      if (studentsRes.ok) {
-        const d = await studentsRes.json();
-        setStudents(d.data ?? []);
-        setTotalPages(d.meta?.totalPages ?? 1);
-        setTotal(d.meta?.total ?? 0);
-      }
-      if (statsRes.ok) {
-        const d = await statsRes.json();
-        setStats(d.data);
-      }
-    } finally { setLoading(false); }
-  }, [status, classId, gradeLevelId, search, page]);
+  const statsQuery = useQuery({
+    queryKey: ['students-stats'],
+    queryFn: () => fetchStudentStats(),
+  });
 
-  useEffect(() => { fetchData(); }, [status, classId, gradeLevelId, page]);
-  useEffect(() => { setPage(1); }, [status, classId, gradeLevelId]);
+  const students = studentsQuery.data?.data ?? [];
+  const stats = statsQuery.data?.data ?? null;
+  const totalPages = studentsQuery.data?.meta?.totalPages ?? 1;
+  const total = studentsQuery.data?.meta?.total ?? 0;
+  const loading = studentsQuery.isLoading;
+
+  useEffect(() => { setPage(1); }, [status, classId, gradeLevelId, committedSearch]);
 
   const handleClassFilter = (className: string | null) => {
     if (!className) { setClassId(''); return; }
     const found = classes.find(c => c.name === className);
     setClassId(found?.id ?? '');
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setCommittedSearch(searchInput);
+      setPage(1);
+    }
   };
 
   return (
@@ -112,11 +95,11 @@ export function StudentTable({ classes, gradeLevels }: StudentTableProps) {
           </Select>
         </div>
         <div className="flex-1 min-w-[200px]">
-          <Input placeholder="Search by name or ID..." value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') fetchData(); }} />
+          <Input placeholder="Search by name or ID..." value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={handleSearchKeyDown} />
         </div>
-        <Button variant="outline" onClick={fetchData}>Refresh</Button>
+        <Button variant="outline" onClick={() => { setCommittedSearch(searchInput); statsQuery.refetch(); }}>Refresh</Button>
       </div>
 
       {loading ? (
@@ -126,9 +109,12 @@ export function StudentTable({ classes, gradeLevels }: StudentTableProps) {
           ))}
         </div>
       ) : students.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center">
-          <p className="text-muted-foreground">No students found</p>
-        </div>
+        <EmptyState
+          icon={Users}
+          heading="No students found"
+          description="Students are added through admissions or by creating a new student record."
+          action={{ label: 'Add Student', href: '/admin/students/new' }}
+        />
       ) : (
         <>
           <div className="rounded-lg border">

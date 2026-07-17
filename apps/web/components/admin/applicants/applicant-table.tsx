@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ApplicantStatsBar } from './applicant-stats-bar';
-import type { ApplicantStats, ApplicantListItem } from '@/types/applicant';
+import { EmptyState } from '@/components/empty-state';
+import { fetchApplicants, fetchApplicantStats } from '@/lib/api/applicants';
+import { ClipboardList } from 'lucide-react';
 
 const statusBadge: Record<string, string> = {
   submitted: 'bg-yellow-100 text-yellow-800',
@@ -31,54 +34,30 @@ interface ApplicantTableProps {
 }
 
 export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
-  const [applicants, setApplicants] = useState<ApplicantListItem[]>([]);
-  const [stats, setStats] = useState<ApplicantStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
   const [gradeLevelId, setGradeLevelId] = useState<string>('');
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [committedSearch, setCommittedSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (status) params.set('status', status);
-      if (gradeLevelId) params.set('gradeLevelId', gradeLevelId);
-      if (search) params.set('search', search);
-      params.set('page', String(page));
-      params.set('pageSize', '20');
+  const queryKey = ['applicants', { status, gradeLevelId, search: committedSearch, page }] as const;
+  const applicantsQuery = useQuery({
+    queryKey,
+    queryFn: () => fetchApplicants({ status, gradeLevelId, search: committedSearch, page }),
+  });
 
-      const [applicantsRes, statsRes] = await Promise.all([
-        fetch(`/api/applicants?${params}`),
-        fetch('/api/applicants/stats'),
-      ]);
+  const statsQuery = useQuery({
+    queryKey: ['applicants-stats'],
+    queryFn: () => fetchApplicantStats(),
+  });
 
-      if (applicantsRes.ok) {
-        const data = await applicantsRes.json();
-        setApplicants(data.data ?? []);
-        setTotalPages(data.pagination?.totalPages ?? 1);
-        setTotal(data.pagination?.total ?? 0);
-      }
+  const applicants = applicantsQuery.data?.data ?? [];
+  const stats = statsQuery.data?.data ?? null;
+  const totalPages = applicantsQuery.data?.pagination?.totalPages ?? 1;
+  const total = applicantsQuery.data?.pagination?.total ?? 0;
+  const loading = applicantsQuery.isLoading;
 
-      if (statsRes.ok) {
-        const data = await statsRes.json();
-        setStats(data.data);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [status, gradeLevelId, page]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [status, gradeLevelId]);
+  useEffect(() => { setPage(1); }, [status, gradeLevelId, committedSearch]);
 
   return (
     <div className="space-y-6">
@@ -88,7 +67,8 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
 
       <div className="flex flex-wrap gap-3">
         <div className="w-48">
-          <Select value={gradeLevelId} onValueChange={(value) => setGradeLevelId(value as string)}>
+          <Select value={gradeLevelId} onValueChange={(value) => setGradeLevelId(value as string)}
+            items={gradeLevels.map(g => ({ value: g.id, label: g.name }))}>
             <SelectTrigger>
               <SelectValue placeholder="All grades" />
             </SelectTrigger>
@@ -103,12 +83,12 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
         <div className="flex-1 min-w-[200px]">
           <Input
             placeholder="Search by name or guardian..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') fetchData(); }}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { setCommittedSearch(searchInput); setPage(1); } }}
           />
         </div>
-        <Button variant="outline" onClick={fetchData}>Refresh</Button>
+        <Button variant="outline" onClick={() => { setCommittedSearch(searchInput); statsQuery.refetch(); }}>Refresh</Button>
       </div>
 
       {loading ? (
@@ -118,9 +98,11 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
           ))}
         </div>
       ) : applicants.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center">
-          <p className="text-muted-foreground">No applicants found</p>
-        </div>
+        <EmptyState
+          icon={ClipboardList}
+          heading="No applicants found"
+          description="Applicants appear here when they submit the public application form or are added manually."
+        />
       ) : (
         <>
           <div className="rounded-lg border">

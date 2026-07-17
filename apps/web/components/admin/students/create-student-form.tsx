@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { createStudent } from '@/lib/api/students';
 import type { ClassOption, GradeOption } from '@/types/students';
 import { CheckCircle } from 'lucide-react';
 
@@ -32,7 +34,6 @@ interface Props {
 }
 
 export function CreateStudentForm({ classes, grades }: Props) {
-  const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
   const [result, setResult] = useState<{
     student: { studentIdNumber: string; firstName: string; lastName: string };
@@ -52,27 +53,13 @@ export function CreateStudentForm({ classes, grades }: Props) {
     ? classes.filter(c => c.gradeLevelId === selectedGradeId)
     : classes;
 
-  const onSubmit = async (data: FormValues) => {
-    setSubmitting(true);
-    setServerError('');
-    try {
-      const res = await fetch('/api/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setServerError(json.error ?? json.details?.message ?? 'Failed to create student');
-        return;
-      }
-      setResult(json.data);
-    } catch {
-      setServerError('Network error. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const createMutation = useMutation({
+    mutationFn: (data: FormValues) => createStudent(data),
+    onSuccess: (data) => { setResult(data); setServerError(''); },
+    onError: (err) => { setServerError(err.message); },
+  });
+
+  const onSubmit = (data: FormValues) => { setServerError(''); createMutation.mutate(data); };
 
   if (result) {
     return (
@@ -194,8 +181,8 @@ export function CreateStudentForm({ classes, grades }: Props) {
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{serverError}</div>
           )}
 
-          <Button type="submit" className="w-full" disabled={submitting}>
-            {submitting ? 'Creating...' : 'Create Student'}
+          <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+            {createMutation.isPending ? 'Creating...' : 'Create Student'}
           </Button>
         </form>
       </CardContent>

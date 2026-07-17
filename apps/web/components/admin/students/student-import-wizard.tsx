@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { previewImport, validateImport, executeImport } from '@/lib/api/students';
+import type { ValidationData, ImportData, ValidationRow } from '@/types/students';
 import { CheckCircle, Upload, Download } from 'lucide-react';
 
 type Step = 'upload' | 'mapping' | 'validation' | 'results';
@@ -19,76 +22,68 @@ export function StudentImportWizard() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [sampleRows, setSampleRows] = useState<Record<string, string>[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
-  const [validationResult, setValidationResult] = useState<any>(null);
-  const [importResult, setImportResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [validationResult, setValidationResult] = useState<ValidationData | null>(null);
+  const [importResult, setImportResult] = useState<ImportData | null>(null);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const previewMutation = useMutation({
+    mutationFn: async (text: string) => {
+      const data = await previewImport(text);
+      setCsvText(text);
+      setHeaders(data.headers);
+      setSampleRows(data.sampleRows);
+      setMapping(Object.fromEntries(
+        data.headers.map((h: string) => [h, data.suggestedMapping[h] ?? ''])
+      ));
+      setStep('mapping');
+    },
+    onError: (err) => { setError(err.message); },
+  });
+
+  const validateMutation = useMutation({
+    mutationFn: async () => {
+      const data = await validateImport(csvText, mapping);
+      setValidationResult(data);
+      setStep('validation');
+    },
+    onError: (err) => { setError(err.message); },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      const data = await executeImport(csvText, mapping);
+      setImportResult(data);
+      setStep('results');
+    },
+    onError: (err) => { setError(err.message); },
+  });
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setError('');
-    setLoading(true);
     try {
       const text = await file.text();
-      setCsvText(text);
-      const res = await fetch('/api/students/import/preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ csv: text }),
-      });
-      const json = await res.json();
-      if (!res.ok) { setError(json.error ?? 'Preview failed'); return; }
-      setHeaders(json.data.headers);
-      setSampleRows(json.data.sampleRows);
-      setMapping(Object.fromEntries(
-        json.data.headers.map((h: string) => [h, json.data.suggestedMapping[h] ?? ''])
-      ));
-      setStep('mapping');
+      previewMutation.mutate(text);
     } catch { setError('Failed to read file'); }
-    finally { setLoading(false); }
   };
 
-  const handleValidate = async () => {
-    setLoading(true);
+  const handleValidate = () => {
     setError('');
-    try {
-      const res = await fetch('/api/students/import/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ csv: csvText, mapping }),
-      });
-      const json = await res.json();
-      if (!res.ok) { setError(json.error ?? 'Validation failed'); return; }
-      setValidationResult(json.data);
-      setStep('validation');
-    } catch { setError('Validation request failed'); }
-    finally { setLoading(false); }
+    validateMutation.mutate();
   };
 
-  const handleImport = async () => {
-    setLoading(true);
+  const handleImport = () => {
     setError('');
-    try {
-      const res = await fetch('/api/students/import/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ csv: csvText, mapping }),
-      });
-      const json = await res.json();
-      if (!res.ok) { setError(json.error ?? 'Import failed'); return; }
-      setImportResult(json.data);
-      setStep('results');
-    } catch { setError('Import request failed'); }
-    finally { setLoading(false); }
+    importMutation.mutate();
   };
 
   const downloadErrorReport = () => {
     if (!validationResult) return;
-    const errors = validationResult.rows.filter((r: any) => !r.valid);
+    const errors = validationResult.rows.filter((r: ValidationRow) => !r.valid);
     const csvRows = [['Row', 'Name', 'Errors'].join(',')];
-    errors.forEach((r: any) => {
+    errors.forEach((r: ValidationRow) => {
       const errorStr = r.errors ? Object.values(r.errors).flat().join('; ') : '';
       csvRows.push([r.rowNumber, r.firstName, `"${errorStr}"`].join(','));
     });
@@ -109,8 +104,8 @@ export function StudentImportWizard() {
             <p className="text-xs text-muted-foreground mt-1">Headers: firstName, lastName, gender, dateOfBirth, classCode, guardianName, guardianPhone</p>
           </div>
           <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFile} className="hidden" />
-          <Button onClick={() => fileInputRef.current?.click()} disabled={loading}>
-            {loading ? 'Reading...' : 'Select CSV File'}
+          <Button onClick={() => fileInputRef.current?.click()} disabled={previewMutation.isPending}>
+            {previewMutation.isPending ? 'Reading...' : 'Select CSV File'}
           </Button>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
@@ -129,7 +124,7 @@ export function StudentImportWizard() {
           {headers.map(header => (
             <div key={header} className="flex items-center gap-3">
               <Label className="w-40 shrink-0 text-sm font-mono">{header}</Label>
-              <Select value={mapping[header] ?? ''} onValueChange={(v) => setMapping(p => ({ ...p, [header]: v } as Record<string, string>))}
+              <Select value={mapping[header] ?? ''} onValueChange={(v) => setMapping(p => ({ ...p, [header]: (v as string) ?? '' }))}
                 items={KNOWN_FIELDS.map(f => ({ value: f, label: f.replace(/([A-Z])/g, ' $1').trim() }))}>
                 <SelectTrigger className="flex-1"><SelectValue placeholder="Skip column" /></SelectTrigger>
                 <SelectContent>
@@ -155,7 +150,7 @@ export function StudentImportWizard() {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setStep('upload')}>Back</Button>
-            <Button onClick={handleValidate} disabled={loading}>{loading ? 'Validating...' : 'Validate'}</Button>
+            <Button onClick={handleValidate} disabled={validateMutation.isPending}>{validateMutation.isPending ? 'Validating...' : 'Validate'}</Button>
           </div>
         </CardContent>
       </Card>
@@ -177,7 +172,7 @@ export function StudentImportWizard() {
               <p className="text-sm text-red-600">Invalid</p>
             </div>
           </div>
-          {validationResult?.invalid > 0 && (
+          {(validationResult?.invalid ?? 0) > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-red-700">Rows with errors</p>
@@ -188,10 +183,10 @@ export function StudentImportWizard() {
               <div className="max-h-60 overflow-y-auto text-sm border rounded-md">
                 <table className="w-full">
                   <thead><tr className="bg-muted"><th className="p-2 text-left">Row</th><th className="p-2 text-left">Name</th><th className="p-2 text-left">Errors</th></tr></thead>
-                  <tbody>{validationResult?.rows.filter((r: any) => !r.valid).map((r: any) => (
+                  <tbody>{validationResult?.rows.filter((r: ValidationRow) => !r.valid).map(r => (
                     <tr key={r.rowNumber} className="border-t">
                       <td className="p-2">{r.rowNumber}</td>
-                      <td className="p-2">{r.firstName}</td>
+                      <td className="p-2">{r.firstName ?? ''}</td>
                       <td className="p-2 text-red-600">{r.errors ? Object.values(r.errors).flat().join('; ') : ''}</td>
                     </tr>
                   ))}</tbody>
@@ -202,8 +197,8 @@ export function StudentImportWizard() {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setStep('mapping')}>Back</Button>
-            <Button onClick={handleImport} disabled={loading || (validationResult?.valid ?? 0) === 0}>
-              {loading ? 'Importing...' : `Import ${validationResult?.valid ?? 0} Valid Students`}
+            <Button onClick={handleImport} disabled={importMutation.isPending || (validationResult?.valid ?? 0) === 0}>
+              {importMutation.isPending ? 'Importing...' : `Import ${validationResult?.valid ?? 0} Valid Students`}
             </Button>
           </div>
         </CardContent>
@@ -221,14 +216,14 @@ export function StudentImportWizard() {
             <p className="text-2xl font-bold text-green-700">{importResult?.imported ?? 0}</p>
             <p className="text-sm text-green-600">Imported</p>
           </div>
-          {importResult?.failed > 0 && (
+          {(importResult?.failed ?? 0) > 0 && (
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
               <p className="text-2xl font-bold text-red-700">{importResult?.failed ?? 0}</p>
               <p className="text-sm text-red-600">Failed</p>
             </div>
           )}
         </div>
-        {importResult?.failed > 0 && (
+        {(importResult?.failed ?? 0) > 0 && (
           <Button variant="outline" onClick={downloadErrorReport}>
             <Download className="h-4 w-4 mr-1" /> Download Error Report
           </Button>

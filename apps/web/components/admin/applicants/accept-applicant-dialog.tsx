@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,14 +13,10 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fetchClassesByGradeLevel } from '@/lib/api/classes';
+import { acceptApplicant, CapacityExceededError } from '@/lib/api/applicants';
+import type { ConversionResult } from '@/types/applicant';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
-
-interface ClassOption {
-  id: string;
-  name: string;
-  code: string;
-  capacity: number | null;
-}
 
 interface AcceptDialogProps {
   open: boolean;
@@ -30,67 +27,36 @@ interface AcceptDialogProps {
   onError: (msg: string) => void;
 }
 
-interface ConversionResult {
-  applicant: { id: string; status: string; targetClassId: string };
-  student: { id: string; studentIdNumber: string; firstName: string; lastName: string };
-  enrollment: { id: string; classId: string; academicYearId: string };
-  guardian: { id: string; name: string; email: string };
-  credentials: {
-    student: { email: string | null; password: string };
-    parent: { email: string | null; password: string };
-  };
-}
-
 export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLevelId, onSuccess, onError }: AcceptDialogProps) {
-  const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [capacityWarning, setCapacityWarning] = useState<string | null>(null);
   const [override, setOverride] = useState(false);
   const [result, setResult] = useState<ConversionResult | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      fetch(`/api/classes?gradeLevelId=${gradeLevelId}`)
-        .then(res => res.ok ? res.json() : { data: [] })
-        .then(data => setClasses(data.data ?? []));
-      setSelectedClassId('');
-      setCapacityWarning(null);
-      setOverride(false);
-      setResult(null);
-    }
-  }, [open, gradeLevelId]);
+  const classesQuery = useQuery({
+    queryKey: ['classes', gradeLevelId],
+    queryFn: () => fetchClassesByGradeLevel(gradeLevelId),
+    enabled: open,
+  });
 
-  const handleAccept = async () => {
+  const acceptMutation = useMutation({
+    mutationFn: () => acceptApplicant(applicantId, selectedClassId, override),
+    onMutate: () => { setCapacityWarning(null); },
+    onSuccess: (data) => { setResult(data); },
+    onError: (err) => {
+      if (err instanceof CapacityExceededError) {
+        setCapacityWarning(err.message);
+      } else {
+        onError(err.message);
+      }
+    },
+  });
+
+  const classes = classesQuery.data ?? [];
+
+  const handleAccept = () => {
     if (!selectedClassId) return;
-    setSubmitting(true);
-
-    try {
-      const res = await fetch(`/api/applicants/${applicantId}/accept`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetClassId: selectedClassId,
-          override,
-        }),
-      });
-
-      const body = await res.json();
-
-      if (res.status === 409) {
-        setCapacityWarning(body.error);
-        return;
-      }
-
-      if (!res.ok) {
-        onError(body.error ?? 'Failed to accept applicant');
-        return;
-      }
-
-      setResult(body.data);
-    } finally {
-      setSubmitting(false);
-    }
+    acceptMutation.mutate();
   };
 
   const handleClose = () => {
@@ -154,8 +120,8 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
 
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button onClick={handleAccept} disabled={!selectedClassId || submitting}>
-                {submitting ? 'Converting...' : 'Accept & Convert'}
+              <Button onClick={handleAccept} disabled={!selectedClassId || acceptMutation.isPending}>
+                {acceptMutation.isPending ? 'Converting...' : 'Accept & Convert'}
               </Button>
             </DialogFooter>
           </>

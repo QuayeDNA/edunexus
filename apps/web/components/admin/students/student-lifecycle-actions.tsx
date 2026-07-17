@@ -1,17 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { withdrawEnrollment, transferEnrollment, graduateEnrollment, readmitStudent } from '@/lib/api/enrollments';
 import { toast } from 'sonner';
+import type { ClassOption, AcademicYearOption } from '@/types/students';
 import { LogOut, Send, GraduationCap, RotateCcw, Loader2 } from 'lucide-react';
-
-interface ClassOption { id: string; name: string }
-interface AcademicYearOption { id: string; name: string }
 
 interface Props {
   studentId: string;
@@ -23,7 +24,6 @@ interface Props {
 
 export function StudentLifecycleActions({ studentId, activeEnrollmentId, studentStatus, classes, academicYears }: Props) {
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
 
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawReason] = useState('');
@@ -38,83 +38,69 @@ export function StudentLifecycleActions({ studentId, activeEnrollmentId, student
   const [readmitClassId, setReadmitClassId] = useState('');
   const [readmitYearId, setReadmitYearId] = useState('');
 
-  const handleWithdraw = async () => {
+  const withdrawMutation = useMutation({
+    mutationFn: () => withdrawEnrollment(activeEnrollmentId!, withdrawReason.trim()),
+    onSuccess: () => { toast.success('Student withdrawn'); setWithdrawOpen(false); router.refresh(); },
+    onError: (err) => { toast.error(err.message); },
+  });
+
+  const transferMutation = useMutation({
+    mutationFn: () => transferEnrollment(activeEnrollmentId!, transferReason.trim(), targetSchool.trim()),
+    onSuccess: () => { toast.success('Student transferred'); setTransferOpen(false); router.refresh(); },
+    onError: (err) => { toast.error(err.message); },
+  });
+
+  const graduateMutation = useMutation({
+    mutationFn: () => graduateEnrollment(activeEnrollmentId!),
+    onSuccess: () => { toast.success('Student graduated'); setGraduateOpen(false); router.refresh(); },
+    onError: (err) => { toast.error(err.message); },
+  });
+
+  const readmitMutation = useMutation({
+    mutationFn: () => readmitStudent(studentId, readmitClassId, readmitYearId),
+    onSuccess: () => { toast.success('Student re-admitted'); setReadmitOpen(false); router.refresh(); },
+    onError: (err) => { toast.error(err.message); },
+  });
+
+  const handleWithdraw = () => {
     if (!activeEnrollmentId || !withdrawReason.trim()) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/enrollments/${activeEnrollmentId}/withdraw`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: withdrawReason.trim() }),
-      });
-      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Failed'); return; }
-      toast.success('Student withdrawn');
-      setWithdrawOpen(false);
-      router.refresh();
-    } finally { setSubmitting(false); }
+    withdrawMutation.mutate();
   };
 
-  const handleTransfer = async () => {
+  const handleTransfer = () => {
     if (!activeEnrollmentId || !transferReason.trim() || !targetSchool.trim()) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/enrollments/${activeEnrollmentId}/transfer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: transferReason.trim(), targetSchoolName: targetSchool.trim() }),
-      });
-      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Failed'); return; }
-      toast.success('Student transferred');
-      setTransferOpen(false);
-      router.refresh();
-    } finally { setSubmitting(false); }
+    transferMutation.mutate();
   };
 
-  const handleGraduate = async () => {
+  const handleGraduate = () => {
     if (!activeEnrollmentId) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/enrollments/${activeEnrollmentId}/graduate`, { method: 'POST' });
-      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Failed'); return; }
-      toast.success('Student graduated');
-      setGraduateOpen(false);
-      router.refresh();
-    } finally { setSubmitting(false); }
+    graduateMutation.mutate();
   };
 
-  const handleReadmit = async () => {
+  const handleReadmit = () => {
     if (!readmitClassId || !readmitYearId) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/students/${studentId}/re-admit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classId: readmitClassId, academicYearId: readmitYearId }),
-      });
-      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Failed'); return; }
-      toast.success('Student re-admitted');
-      setReadmitOpen(false);
-      router.refresh();
-    } finally { setSubmitting(false); }
+    readmitMutation.mutate();
   };
+
+  const anyPending = withdrawMutation.isPending || transferMutation.isPending || graduateMutation.isPending || readmitMutation.isPending;
 
   return (
     <div className="flex flex-wrap gap-2">
       {studentStatus === 'active' && activeEnrollmentId && (
         <>
-          <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)} disabled={submitting}>
+          <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)} disabled={anyPending}>
             <LogOut className="mr-1.5 h-4 w-4" /> Withdraw
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setTransferOpen(true)} disabled={submitting}>
+          <Button variant="outline" size="sm" onClick={() => setTransferOpen(true)} disabled={anyPending}>
             <Send className="mr-1.5 h-4 w-4" /> Transfer
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setGraduateOpen(true)} disabled={submitting}>
+          <Button variant="outline" size="sm" onClick={() => setGraduateOpen(true)} disabled={anyPending}>
             <GraduationCap className="mr-1.5 h-4 w-4" /> Graduate
           </Button>
         </>
       )}
       {(studentStatus === 'withdrawn' || studentStatus === 'transferred_out') && (
-        <Button variant="outline" size="sm" onClick={() => setReadmitOpen(true)} disabled={submitting}>
+        <Button variant="outline" size="sm" onClick={() => setReadmitOpen(true)} disabled={anyPending}>
           <RotateCcw className="mr-1.5 h-4 w-4" /> Re-admit
         </Button>
       )}
@@ -126,7 +112,7 @@ export function StudentLifecycleActions({ studentId, activeEnrollmentId, student
         onConfirm={handleWithdraw}
         title="Withdraw Student"
         description="This will mark the student as withdrawn. Provide a reason for the withdrawal."
-        confirmLabel={submitting ? 'Processing...' : 'Confirm Withdrawal'}
+        confirmLabel={withdrawMutation.isPending ? 'Processing...' : 'Confirm Withdrawal'}
         destructive
       />
 
@@ -139,7 +125,7 @@ export function StudentLifecycleActions({ studentId, activeEnrollmentId, student
         targetSchool={targetSchool}
         onTargetSchoolChange={setTargetSchool}
         onConfirm={handleTransfer}
-        submitting={submitting}
+        submitting={transferMutation.isPending}
       />
 
       {/* Graduate dialog */}
@@ -149,7 +135,7 @@ export function StudentLifecycleActions({ studentId, activeEnrollmentId, student
         onConfirm={handleGraduate}
         title="Graduate Student"
         description="This will mark the student's current enrollment as graduated. This action can be reversed."
-        confirmLabel={submitting ? 'Processing...' : 'Confirm Graduation'}
+        confirmLabel={graduateMutation.isPending ? 'Processing...' : 'Confirm Graduation'}
       />
 
       {/* Re-admit dialog */}
@@ -163,7 +149,7 @@ export function StudentLifecycleActions({ studentId, activeEnrollmentId, student
         selectedYearId={readmitYearId}
         onYearChange={setReadmitYearId}
         onConfirm={handleReadmit}
-        submitting={submitting}
+        submitting={readmitMutation.isPending}
       />
     </div>
   );
@@ -181,12 +167,13 @@ function TransferDialog({
   onConfirm: () => void; submitting: boolean;
 }) {
   return (
-    <div className={`fixed inset-0 z-50 ${open ? '' : 'hidden'}`}>
-      <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
-        <h2 className="text-lg font-semibold">Transfer Student</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Transfer the student to another school.</p>
-        <div className="mt-4 space-y-3">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Transfer Student</DialogTitle>
+          <DialogDescription>Transfer the student to another school.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
           <div className="space-y-1">
             <Label>Target School Name</Label>
             <Input value={targetSchool} onChange={e => onTargetSchoolChange(e.target.value)} placeholder="e.g. St. Mary's Senior High" />
@@ -196,15 +183,15 @@ function TransferDialog({
             <Input value={reason} onChange={e => onReasonChange(e.target.value)} placeholder="e.g. Family relocation" />
           </div>
         </div>
-        <div className="mt-6 flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={onConfirm} disabled={submitting || !reason.trim() || !targetSchool.trim()}>
             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {submitting ? 'Processing...' : 'Confirm Transfer'}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -221,12 +208,13 @@ function ReadmitDialog({
   onConfirm: () => void; submitting: boolean;
 }) {
   return (
-    <div className={`fixed inset-0 z-50 ${open ? '' : 'hidden'}`}>
-      <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
-        <h2 className="text-lg font-semibold">Re-admit Student</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Re-enroll the student in a new class and academic year.</p>
-        <div className="mt-4 space-y-3">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Re-admit Student</DialogTitle>
+          <DialogDescription>Re-enroll the student in a new class and academic year.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
           <div className="space-y-1">
             <Label>Academic Year</Label>
             <Select value={selectedYearId} onValueChange={v => onYearChange(v as string)}
@@ -248,14 +236,14 @@ function ReadmitDialog({
             </Select>
           </div>
         </div>
-        <div className="mt-6 flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={onConfirm} disabled={submitting || !selectedClassId || !selectedYearId}>
             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {submitting ? 'Processing...' : 'Confirm Re-admission'}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
