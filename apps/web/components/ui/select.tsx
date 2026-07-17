@@ -13,10 +13,24 @@ function Select({
 }: React.ComponentProps<typeof SelectPrimitive.Root> & {
   getLabel?: (value: any) => string;
 }) {
+  const defaultGetLabel = React.useCallback(
+    (value: unknown) => {
+      if (items && Array.isArray(items) && typeof value === 'string') {
+        const match = items.find(
+          (i): i is { label: React.ReactNode; value: string } =>
+            typeof i === 'object' && i !== null && 'value' in i && i.value === value,
+        );
+        if (match && match.label != null) return String(match.label);
+      }
+      return String(value ?? '');
+    },
+    [items],
+  );
+
   return (
     <SelectPrimitive.Root
-      itemToStringLabel={getLabel}
-      items={items}
+      itemToStringLabel={getLabel ?? defaultGetLabel}
+      {...(items ? { items } : {})}
       {...props}
     />
   );

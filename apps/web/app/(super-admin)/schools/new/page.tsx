@@ -120,7 +120,11 @@ export default function NewSchoolPage() {
           <Controller control={form.control} name="curriculum" render={({ field, fieldState }) => (
             <div className="space-y-2">
               <Label>Curriculum</Label>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select value={field.value} onValueChange={field.onChange} items={[
+                { value: 'ghana_basic', label: 'Ghana Basic' },
+                { value: 'british', label: 'British' },
+                { value: 'american', label: 'American' },
+              ]}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ghana_basic">Ghana Basic</SelectItem>
@@ -134,7 +138,11 @@ export default function NewSchoolPage() {
           <Controller control={form.control} name="calendar" render={({ field, fieldState }) => (
             <div className="space-y-2">
               <Label>Calendar</Label>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select value={field.value} onValueChange={field.onChange} items={[
+                { value: 'ghana_3_terms', label: 'Ghana (3 Terms)' },
+                { value: 'british_3_terms', label: 'British (3 Terms)' },
+                { value: 'american_semester', label: 'American (Semester)' },
+              ]}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ghana_3_terms">Ghana (3 Terms)</SelectItem>

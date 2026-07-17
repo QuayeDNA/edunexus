@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import type { ClassOption, GradeOption } from '@/types/students';
 import { CheckCircle } from 'lucide-react';
 
 const formSchema = z.object({
@@ -24,14 +25,6 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-interface ClassOption {
-  id: string; name: string; code: string | null; gradeLevelId: string;
-}
-
-interface GradeOption {
-  id: string; name: string; code: string;
-}
 
 interface Props {
   classes: ClassOption[];
@@ -49,7 +42,7 @@ export function CreateStudentForm({ classes, grades }: Props) {
   const { handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: '', lastName: '', gender: undefined as any, dateOfBirth: '', classId: '', guardianName: '', guardianPhone: '',
+      firstName: '', lastName: '', dateOfBirth: '', classId: '', guardianName: '', guardianPhone: '',
     },
   });
 
@@ -129,7 +122,10 @@ export function CreateStudentForm({ classes, grades }: Props) {
             <Controller name="gender" control={control} render={({ field }) => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Gender *</Label>
-                <Select onValueChange={field.onChange}>
+                <Select onValueChange={field.onChange} items={[
+                  { value: 'male', label: 'Male' },
+                  { value: 'female', label: 'Female' },
+                ]}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="Select gender" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="male">Male</SelectItem>

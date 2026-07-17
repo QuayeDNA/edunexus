@@ -73,7 +73,8 @@ Follow `ROADMAP.md §1` dependency graph. Before building a new entity:
 
 ### Component Conventions
 - **Nova components only** — no custom wrappers. Prefer `Controller` + Nova primitives over `FormField`/`FormItem`.
-- **Select with UUID values** — always pass `items` prop: `items={list.map(i => ({ value: i.id, label: i.name }))}`. Without it the trigger shows the raw UUID.
+- **Select requires `items` prop on every usage** — Base UI's `<SelectValue>` renders raw values unless `items` (or `getLabel`) is provided. Always pass `items={list.map(i => ({ value: i.id, label: i.name }))}` or an inline array of `{ value, label }` objects. Requires BOTH `<SelectItem>` children (for the popup) AND the `items` prop (for the trigger label).
+- **Select with react-hook-form** — use `value={field.value}` not `defaultValue={field.value}`. The latter triggers controlled/uncontrolled warnings when `field.value` initialises asynchronously.
 - **Buttons as links** — use `buttonVariants()` + `<Link>`, never `<Button asChild>`.
 - **Modals** — use Nova `Dialog` component, never custom `fixed inset-0` markup.
 - Delete actions must show confirmation dialog.

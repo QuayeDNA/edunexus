@@ -70,7 +70,8 @@ export default function NewUserPage() {
         <Controller control={form.control} name="schoolId" render={({ field, fieldState }) => (
           <div className="space-y-2">
             <Label>School</Label>
-            <Select onValueChange={field.onChange}>
+            <Select onValueChange={field.onChange}
+              items={(schoolsData || []).map((s: { id: string; name: string }) => ({ value: s.id, label: s.name }))}>
               <SelectTrigger><SelectValue placeholder="Select a school" /></SelectTrigger>
               <SelectContent>
                 {(schoolsData || []).map((s: { id: string; name: string }) => (
@@ -95,7 +96,12 @@ export default function NewUserPage() {
         <Controller control={form.control} name="role" render={({ field, fieldState }) => (
           <div className="space-y-2">
             <Label>Role</Label>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select value={field.value} onValueChange={field.onChange} items={[
+              { value: 'admin', label: 'Administrator' },
+              { value: 'teacher', label: 'Teacher' },
+              { value: 'student', label: 'Student' },
+              { value: 'parent', label: 'Parent' },
+            ]}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Administrator</SelectItem>

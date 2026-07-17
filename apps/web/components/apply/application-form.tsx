@@ -211,7 +211,10 @@ export function ApplicationForm({ grades, schoolName, schoolId }: { grades: Grad
             <Controller name="gender" control={control} render={({ field }) => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Gender *</Label>
-                <Select onValueChange={field.onChange}>
+                <Select onValueChange={field.onChange} items={[
+                  { value: 'male', label: 'Male' },
+                  { value: 'female', label: 'Female' },
+                ]}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>

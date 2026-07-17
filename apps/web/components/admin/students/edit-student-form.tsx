@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import type { StudentProfileData } from '@/types/students';
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'Required').max(100),
@@ -32,15 +33,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-interface StudentData {
-  id: string; firstName: string; lastName: string; otherNames: string | null;
-  gender: string; dateOfBirth: string; placeOfBirth: string | null;
-  nationality: string | null; religion: string | null; address: string | null;
-  phone: string | null; email: string | null; bloodGroup: string | null;
-  medicalNotes: string | null;
-}
-
-export function EditStudentForm({ student }: { student: StudentData }) {
+export function EditStudentForm({ student }: { student: StudentProfileData }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -109,7 +102,10 @@ export function EditStudentForm({ student }: { student: StudentData }) {
         </Field>
         <Field label="Gender" error={errors.gender?.message}>
           <Controller name="gender" control={control} render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select value={field.value} onValueChange={field.onChange} items={[
+              { value: 'male', label: 'Male' },
+              { value: 'female', label: 'Female' },
+            ]}>
               <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="male">Male</SelectItem>
@@ -138,7 +134,8 @@ export function EditStudentForm({ student }: { student: StudentData }) {
         </Field>
         <Field label="Blood Group">
           <Controller name="bloodGroup" control={control} render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select value={field.value} onValueChange={field.onChange}
+              items={BLOOD_GROUPS.map(bg => ({ value: bg, label: bg }))}>
               <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
                 {BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}

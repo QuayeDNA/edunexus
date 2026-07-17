@@ -68,7 +68,10 @@ export default function NewPlanPage() {
             <div className="space-y-2"><Label htmlFor={field.name}>Price (GHS)</Label><Input id={field.name} {...field} type="number" step="0.01" />{fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}</div>
           )} />
           <Controller control={form.control} name="billingCycle" render={({ field, fieldState }) => (
-            <div className="space-y-2"><Label>Billing</Label><Select onValueChange={field.onChange} defaultValue={field.value}>
+            <div className="space-y-2"><Label>Billing</Label><Select value={field.value} onValueChange={field.onChange} items={[
+              { value: 'monthly', label: 'Monthly' },
+              { value: 'annual', label: 'Annual' },
+            ]}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem></SelectContent>
             </Select>{fieldState.error?.message && <p className="text-sm text-destructive">{fieldState.error.message}</p>}</div>
