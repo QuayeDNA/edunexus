@@ -1,13 +1,6 @@
 'use client';
 
-interface StudentDetail {
-  id: string; firstName: string; lastName: string; otherNames: string | null;
-  studentIdNumber: string; gender: string; dateOfBirth: string;
-  placeOfBirth: string | null; nationality: string | null; religion: string | null;
-  address: string | null; phone: string | null; email: string | null;
-  bloodGroup: string | null; medicalNotes: string | null;
-  enrollmentDate: string; status: string;
-}
+import type { StudentDetail } from '@/types/students';
 
 export function StudentDetailInfo({ student }: { student: StudentDetail }) {
   return (

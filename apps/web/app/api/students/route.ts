@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { classes, academicYears, schools, students, enrollments, gradeLevels, studentGuardians, guardians } from '@edunexus/database';
-import { eq, and, or, count, ilike, sql } from 'drizzle-orm';
+import { eq, and, or, count, ilike, sql, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
   const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get('pageSize') || '20', 10)));
 
-  const conditions: any[] = [eq(students.schoolId, schoolId)];
+  const conditions: (SQL | undefined)[] = [eq(students.schoolId, schoolId)];
   if (search) {
     conditions.push(or(
       ilike(students.firstName, `%${search}%`),

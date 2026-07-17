@@ -1,12 +1,14 @@
 import { Inbox } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import type { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
   icon?: LucideIcon;
   heading: string;
   description?: string;
-  action?: { label: string; onClick: () => void };
+  action?: { label: string; href: string };
 }
 
 export function EmptyState({ icon: Icon = Inbox, heading, description, action }: EmptyStateProps) {
@@ -20,9 +22,9 @@ export function EmptyState({ icon: Icon = Inbox, heading, description, action }:
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
       )}
       {action && (
-        <Button className="mt-4" onClick={action.onClick}>
+        <Link href={action.href} className={cn(buttonVariants(), 'mt-4')}>
           {action.label}
-        </Button>
+        </Link>
       )}
     </div>
   );

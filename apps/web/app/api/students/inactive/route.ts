@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { students, enrollments } from '@edunexus/database';
-import { eq, inArray, and, or, ilike } from 'drizzle-orm';
+import { eq, inArray, and, or, ilike, type SQL } from 'drizzle-orm';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { resolveTenant } from '@/lib/tenant/resolve';
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     ? [statusFilter]
     : [...INACTIVE_STATUSES];
 
-  const conditions: any[] = [
+  const conditions: (SQL | undefined)[] = [
     eq(students.schoolId, schoolId),
     inArray(students.status, statuses),
   ];

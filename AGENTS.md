@@ -87,14 +87,7 @@ Follow `ROADMAP.md §1` dependency graph. Before building a new entity:
 
 **Refactor Sprint** — `epic-refactor-sprint-1`
 
-Before starting [3.1.1], we're doing a cleanup checkpoint:
-1. **Docs** — AGENTS.md, ROADMAP.md, plans/ and specs/ audit
-2. **Imports** — Fix all `@edunexus/database/src/schema` → `@edunexus/database` (10 files)
-3. **Data fetching** — Migrate admin components from raw `fetch()` to TanStack Query
-4. **Pattern consistency** — Adopt `routeHandler`/`handleApiError` + `AppError` throws across all routes
-5. **TypeScript** — Reduce `as any` casts
-6. **Dead code** — Remove unused exports, adopt `tenantQuery` helper
-7. **UI consistency** — Replace custom modal markup with Nova Dialog, add missing `items` props
+✅ All planned tasks complete. Ready for [3.1.1] Academic Years & Terms CRUD.
 
 ---
 
@@ -105,6 +98,32 @@ Before starting [3.1.1], we're doing a cleanup checkpoint:
 - `cn()` from `@/lib/utils` for conditional classes.
 - Monetary values: `numeric` in GHS. Store as "GHS" in output, not `₵` (thermal printer issue).
 - Dates: ISO 8601 UTC, display in `en-GH` locale.
+
+### Clean Code
+
+**Types & Interfaces**
+- Extract all interfaces and types to dedicated `types/*.ts` files — never define inline interface types inside components or route handlers.
+- Use `import type { ... }` for type-only imports (compiler hint, also documents intent).
+- Prefer `interface` over `type` for object shapes; use `type` for unions, intersections, and utility types.
+
+**API Routes**
+- Wrap every route handler with `routeHandler()` from `@/lib/api/handler` — this centralises error handling via `handleApiError()`.
+- Throw typed errors (`NotFoundError`, `ValidationError`, `ConflictError`, `ForbiddenError`, or `AppError`) instead of `return apiError(...)`. `routeHandler` catches and serialises them.
+- Auth guard early-return (`if (error) return error`) is the one exception — `requireRole` returns `{ error, user }`, do NOT throw for auth failures.
+- Validation: `throw parsed.error` (ZodError) in routeHandler-wrapped handlers — ZodError is handled by `handleApiError`.
+- Services: throw typed `AppError` subclasses so handlers don't need try/catch logic. The `routeHandler` wrapper catches everything.
+- Remove dead imports when refactoring error handling (e.g., remove `apiError` and `handleApiError` imports after wrapping with `routeHandler`).
+
+**Components**
+- No inline interface types — import from `@/types/{entity}` instead.
+- One clear responsibility per component file. If a file exceeds ~250 lines or has multiple unrelated responsibilities, split it.
+- Use `useQuery` / `useMutation` from TanStack Query for all server state — never raw `fetch()` + `useState`/`useEffect`.
+
+**TypeScript Quality**
+- Never use `as any` in production code. If a type is genuinely unavoidable, document why in a comment.
+- Type Drizzle condition arrays as `(SQL | undefined)[]`, never `any[]`.
+- Replace `catch (err: any)` with `catch (error)` and use `instanceof` checks or `handleApiError()`.
+- Avoid `as Record<string, unknown>` for spread objects — prefer explicit interfaces or `satisfies`.
 
 ### SQL
 - `id uuid primary key default gen_random_uuid()`

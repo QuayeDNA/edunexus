@@ -1,42 +1,8 @@
 'use client';
 
-interface EmergencyContact {
-  name: string;
-  phone: string;
-  relationship: string;
-}
+import type { ApplicantDetail } from '@/types/applicant';
 
-interface ApplicantDetail {
-  id: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  gender: string;
-  gradeLevelName: string | null;
-  guardianName: string;
-  guardianEmail: string;
-  guardianPhone: string | null;
-  guardianAddress: string | null;
-  guardianOccupation: string | null;
-  guardianEmployer: string | null;
-  previousSchool: string | null;
-  medicalAllergies: string | null;
-  medicalConditions: string | null;
-  medicalMedications: string | null;
-  doctorName: string | null;
-  doctorPhone: string | null;
-  emergencyContacts: EmergencyContact[] | null;
-  siblingsEnrolled: boolean | null;
-  siblingDetails: string | null;
-  status: string;
-  createdAt: string;
-}
-
-interface DetailInfoProps {
-  applicant: ApplicantDetail;
-}
-
-export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
+export function ApplicantDetailInfo({ applicant }: { applicant: ApplicantDetail }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="space-y-6">

@@ -1,21 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-interface AuditEntry {
-  id: string;
-  action: string;
-  oldData: Record<string, unknown>;
-  newData: Record<string, unknown>;
-  createdAt: string;
-}
+import type { ApplicantAuditEntry } from '@/types/applicant';
 
 interface AuditLogProps {
   applicantId: string;
 }
 
 export function ApplicantAuditLog({ applicantId }: AuditLogProps) {
-  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [entries, setEntries] = useState<ApplicantAuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

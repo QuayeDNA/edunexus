@@ -1,10 +1,6 @@
 'use client';
 
-interface GuardianRow {
-  id: string; firstName: string; lastName: string;
-  relationship: string; phone: string | null;
-  email: string | null; occupation: string | null; isPrimary: boolean;
-}
+import type { GuardianRow } from '@/types/students';
 
 export function StudentGuardians({ guardians }: { guardians: GuardianRow[] }) {
   return (

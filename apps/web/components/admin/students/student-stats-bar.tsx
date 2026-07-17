@@ -1,14 +1,8 @@
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
+import type { StatsData } from '@/types/students';
 
-interface ClassStat { className: string; count: number }
-interface StatsData {
-  total: number;
-  activeCount: number;
-  byStatus: Array<{ status: string; count: number }>;
-  byClass: ClassStat[];
-}
 interface StudentStatsBarProps {
   stats: StatsData;
   activeStatus: string | null;

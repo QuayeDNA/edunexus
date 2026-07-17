@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface AuditEntry {
-  id: string; action: string; tableName: string;
-  createdAt: string; userId: string | null;
-}
+import type { AuditEntry } from '@/types/students';
 
 export function StudentAuditLog({ studentId }: { studentId: string }) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);

@@ -58,7 +58,7 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
 
   const [classList, yearList] = await Promise.all([
     session.user.schoolId
-      ? db.select({ id: classes.id, name: classes.name })
+      ? db.select({ id: classes.id, name: classes.name, code: classes.code, gradeLevelId: classes.gradeLevelId })
           .from(classes)
           .where(eq(classes.schoolId, session.user.schoolId))
           .orderBy(classes.name)

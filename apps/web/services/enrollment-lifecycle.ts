@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { enrollments, students } from '@edunexus/database';
 import { eq, and } from 'drizzle-orm';
+import { NotFoundError, AppError } from '@/lib/api/errors';
 
 export type EnrollmentStatus = 'active' | 'withdrawn' | 'transferred_out' | 'graduated';
 
@@ -34,12 +35,12 @@ export async function updateEnrollmentStatus(params: UpdateEnrollmentStatusParam
       .where(eq(enrollments.id, params.enrollmentId))
       .limit(1);
 
-    if (!enrollment) throw new Error('Enrollment not found');
-    if (enrollment.schoolId !== params.schoolId) throw new Error('Enrollment not found');
+    if (!enrollment) throw new NotFoundError('Enrollment');
+    if (enrollment.schoolId !== params.schoolId) throw new NotFoundError('Enrollment');
 
     const allowedTransitions = VALID_TRANSITIONS[enrollment.status as EnrollmentStatus] ?? [];
     if (!allowedTransitions.includes(params.newStatus as EnrollmentStatus)) {
-      throw new Error(`Cannot transition enrollment from ${enrollment.status} to ${params.newStatus}`);
+      throw new AppError(`Cannot transition enrollment from ${enrollment.status} to ${params.newStatus}`, 422);
     }
 
     const now = new Date().toISOString().split('T')[0];

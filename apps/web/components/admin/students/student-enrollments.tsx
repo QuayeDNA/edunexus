@@ -1,11 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-
-interface EnrollmentRow {
-  id: string; className: string | null; academicYearName: string | null;
-  status: string; enrollmentDate: string; endDate: string | null;
-}
+import type { EnrollmentRow } from '@/types/students';
 
 const statusBadge: Record<string, string> = {
   active: 'bg-green-100 text-green-800',
