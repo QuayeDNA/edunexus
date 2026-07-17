@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { auditLogs } from '@edunexus/database/src/schema';
+import { auditLogs } from '@edunexus/database';
 import { desc, eq, and, gte, lte, count } from 'drizzle-orm';
+import { routeHandler } from '@/lib/api/handler';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess } from '@/lib/api/response';
 
-export async function GET(request: NextRequest) {
+export const GET = routeHandler(async (request: NextRequest) => {
   const { error } = await requireRole('super_admin');
   if (error) return error;
 
@@ -42,4 +43,4 @@ export async function GET(request: NextRequest) {
     total: Number(total.count),
     totalPages: Math.ceil(Number(total.count) / pageSize),
   });
-}
+});

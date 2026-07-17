@@ -1,10 +1,12 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { schoolPlans } from '@edunexus/database/src/schema';
+import { schoolPlans } from '@edunexus/database';
 import { desc } from 'drizzle-orm';
 import { z } from 'zod';
+import { routeHandler } from '@/lib/api/handler';
+import { ValidationError } from '@/lib/api/errors';
 import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 
 const createPlanSchema = z.object({
   name: z.string().min(2).max(255),
@@ -17,24 +19,24 @@ const createPlanSchema = z.object({
   features: z.array(z.string()).default([]),
 });
 
-export async function GET() {
+export const GET = routeHandler(async () => {
   const { error } = await requireRole('super_admin');
   if (error) return error;
 
   const plans = await db.select().from(schoolPlans).orderBy(desc(schoolPlans.createdAt));
   return apiSuccess(plans);
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = routeHandler(async (request: NextRequest) => {
   const { error: authError } = await requireRole('super_admin');
   if (authError) return authError;
 
   const body = await request.json();
   const parsed = createPlanSchema.safeParse(body);
   if (!parsed.success) {
-    return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    throw new ValidationError(parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
   const [plan] = await db.insert(schoolPlans).values({ ...parsed.data, price: String(parsed.data.price) }).returning();
   return apiSuccess(plan);
-}
+});

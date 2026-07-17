@@ -1,10 +1,12 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { schools, academicYears, terms, gradeLevels, auditLogs } from '@edunexus/database/src/schema';
+import { schools, academicYears, terms, gradeLevels, auditLogs } from '@edunexus/database';
 import { desc, eq, like, and, count } from 'drizzle-orm';
 import { z } from 'zod';
+import { routeHandler } from '@/lib/api/handler';
+import { ValidationError, ConflictError } from '@/lib/api/errors';
 import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 
 const createSchoolSchema = z.object({
   name: z.string().min(2).max(255),
@@ -18,7 +20,7 @@ const createSchoolSchema = z.object({
   calendar: z.string().max(50).default('ghana_3_terms'),
 });
 
-export async function GET(request: NextRequest) {
+export const GET = routeHandler(async (request: NextRequest) => {
   const { error } = await requireRole('super_admin');
   if (error) return error;
 
@@ -53,23 +55,23 @@ export async function GET(request: NextRequest) {
     total: Number(total.count),
     totalPages: Math.ceil(Number(total.count) / pageSize),
   });
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = routeHandler(async (request: NextRequest) => {
   const { error: authError, user } = await requireRole('super_admin');
   if (authError) return authError;
 
   const body = await request.json();
   const parsed = createSchoolSchema.safeParse(body);
   if (!parsed.success) {
-    return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    throw new ValidationError(parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
   const { name, slug, code, email, phone, address, region, curriculum, calendar } = parsed.data;
 
   const [existingSlug] = await db.select().from(schools).where(eq(schools.slug, slug)).limit(1);
   if (existingSlug) {
-    return apiError(409, 'A school with this slug already exists');
+    throw new ConflictError('A school with this slug already exists');
   }
 
   const [school] = await db.insert(schools).values({
@@ -122,4 +124,4 @@ export async function POST(request: NextRequest) {
   });
 
   return apiSuccess(school);
-}
+});

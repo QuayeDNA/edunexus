@@ -1,11 +1,13 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { profiles, schools, auditLogs } from '@edunexus/database/src/schema';
+import { profiles, schools, auditLogs } from '@edunexus/database';
 import { desc, eq, like, and, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { scryptSync, randomBytes } from 'crypto';
+import { routeHandler } from '@/lib/api/handler';
+import { NotFoundError, ValidationError, ConflictError } from '@/lib/api/errors';
 import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { sendEmail } from '@/services/email';
 import { welcomeAdminEmail } from '@/services/email/templates/welcome-admin';
 
@@ -24,7 +26,7 @@ function hashPassword(password: string): string {
   return `scrypt:${salt}:${hash}`;
 }
 
-export async function GET(request: NextRequest) {
+export const GET = routeHandler(async (request: NextRequest) => {
   const { error } = await requireRole('super_admin');
   if (error) return error;
 
@@ -72,16 +74,16 @@ export async function GET(request: NextRequest) {
     total: Number(total.count),
     totalPages: Math.ceil(Number(total.count) / pageSize),
   });
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = routeHandler(async (request: NextRequest) => {
   const { error: authError, user: adminUser } = await requireRole('super_admin');
   if (authError) return authError;
 
   const body = await request.json();
   const parsed = createUserSchema.safeParse(body);
   if (!parsed.success) {
-    return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    throw new ValidationError(parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
   const { schoolId, email, firstName, lastName, phone, role } = parsed.data;
@@ -92,11 +94,11 @@ export async function POST(request: NextRequest) {
     .where(and(eq(profiles.email, email), eq(profiles.schoolId, schoolId)))
     .limit(1);
   if (existing) {
-    return apiError(409, 'A user with this email already exists in this school');
+    throw new ConflictError('A user with this email already exists in this school');
   }
 
   const [school] = await db.select().from(schools).where(eq(schools.id, schoolId)).limit(1);
-  if (!school) return apiError(404, 'School not found');
+  if (!school) throw new NotFoundError('School');
 
   const tempPassword = randomBytes(8).toString('hex');
   const passwordHash = hashPassword(tempPassword);
@@ -140,4 +142,4 @@ export async function POST(request: NextRequest) {
     lastName: user.lastName,
     role: user.role,
   });
-}
+});
