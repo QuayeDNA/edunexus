@@ -1,4 +1,5 @@
-export type EnrollmentStatus = 'active' | 'withdrawn' | 'transferred_out' | 'graduated';
+export type EnrollmentStatus =
+  "active" | "withdrawn" | "transferred_out" | "graduated";
 
 export interface ClassOption {
   id: string;
@@ -109,7 +110,7 @@ export interface StudentEditFormValues {
   firstName: string;
   lastName: string;
   otherNames: string;
-  gender: 'male' | 'female';
+  gender: "male" | "female";
   dateOfBirth: string;
   placeOfBirth: string;
   nationality: string;

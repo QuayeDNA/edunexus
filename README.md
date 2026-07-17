@@ -22,13 +22,13 @@ cp .env.example .env.local
 
 Open `.env.local` and fill in (see `AGENTS.md` → "Key Conventions" for required vars):
 
-| Variable | Purpose |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `AUTH_SECRET` | Auth.js session secret |
-| `RESEND_API_KEY` | Resend transactional email |
-| `PAYSTACK_SECRET_KEY` | Paystack payments |
-| `AFRICAS_TALKING_API_KEY` | SMS (Phase 8) |
+| Variable                  | Purpose                      |
+| ------------------------- | ---------------------------- |
+| `DATABASE_URL`            | PostgreSQL connection string |
+| `AUTH_SECRET`             | Auth.js session secret       |
+| `RESEND_API_KEY`          | Resend transactional email   |
+| `PAYSTACK_SECRET_KEY`     | Paystack payments            |
+| `AFRICAS_TALKING_API_KEY` | SMS (Phase 8)                |
 
 ### 3. Set up the database
 
@@ -56,14 +56,15 @@ Open [http://localhost:3000](http://localhost:3000).
 
 The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; the app lives in `apps/web`.
 
-| Path | Responsibility |
-|---|---|
-| `apps/web` | Next.js 16 app (App Router). All pages, `app/api/*` route handlers, `components/`, `hooks/`, `services/`, `lib/`. Imports shared packages via `@/...`. |
-| `packages/database` | Drizzle schema (`src/schema/*`), client, migrations, seed. Imported as `@edunexus/database`. |
-| `packages/shared` | Shared TypeScript types (`UserRole`, etc.), constants (roles, grades, Ghana), utilities (payroll, grade, formatters). Imported as `@edunexus/shared`. |
-| root | `turbo.json`, pnpm workspace config, GitHub Actions CI (`lint`, `typecheck`, `test`), Docker/dev env. |
+| Path                | Responsibility                                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `apps/web`          | Next.js 16 app (App Router). All pages, `app/api/*` route handlers, `components/`, `hooks/`, `services/`, `lib/`. Imports shared packages via `@/...`. |
+| `packages/database` | Drizzle schema (`src/schema/*`), client, migrations, seed. Imported as `@edunexus/database`.                                                           |
+| `packages/shared`   | Shared TypeScript types (`UserRole`, etc.), constants (roles, grades, Ghana), utilities (payroll, grade, formatters). Imported as `@edunexus/shared`.  |
+| root                | `turbo.json`, pnpm workspace config, GitHub Actions CI (`lint`, `typecheck`, `test`), Docker/dev env.                                                  |
 
 **Import conventions:**
+
 - Within `apps/web`: use the `@/` alias (e.g. `@/components/ui`, `@/lib/api`).
 - Cross-package: `@edunexus/database` and `@edunexus/shared` (never reach into a package's `src` path directly).
 - DB access happens only in API route handlers / Server Components / server scripts — never in client components.
@@ -72,27 +73,27 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Framework | Next.js 16 (App Router, Turbopack, TypeScript strict) |
-| Database ORM | Drizzle ORM |
-| Database | PostgreSQL 17 |
-| Auth | Auth.js v5 (Credentials provider, scrypt) |
+| Layer         | Choice                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| Framework     | Next.js 16 (App Router, Turbopack, TypeScript strict)                                       |
+| Database ORM  | Drizzle ORM                                                                                 |
+| Database      | PostgreSQL 17                                                                               |
+| Auth          | Auth.js v5 (Credentials provider, scrypt)                                                   |
 | Multi-tenancy | Proxy (`proxy.ts`) resolves subdomain → `school_id`; API routes read it via `requireRole()` |
-| Real-time | WebSockets (`ws`) + optional Redis |
-| Offline | Dexie (IndexedDB) |
-| File Storage | S3-compatible (MinIO dev / Backblaze B2 prod) |
-| Queue | BullMQ (Redis) |
-| Payments | Paystack API (abstract `IPaymentProvider`) |
-| Email | Resend API |
-| SMS | Africa's Talking API |
-| UI Framework | shadcn/ui v4 Nova (Base UI primitives) |
-| Charts | Recharts |
-| Forms | react-hook-form + zod |
-| Tables | TanStack Table v8 |
-| PDF | jsPDF + jsPDF-AutoTable |
-| Deployment | Vercel (Next.js) + Railway (DB/Redis) |
-| Monorepo | Turborepo (pnpm workspaces) |
+| Real-time     | WebSockets (`ws`) + optional Redis                                                          |
+| Offline       | Dexie (IndexedDB)                                                                           |
+| File Storage  | S3-compatible (MinIO dev / Backblaze B2 prod)                                               |
+| Queue         | BullMQ (Redis)                                                                              |
+| Payments      | Paystack API (abstract `IPaymentProvider`)                                                  |
+| Email         | Resend API                                                                                  |
+| SMS           | Africa's Talking API                                                                        |
+| UI Framework  | shadcn/ui v4 Nova (Base UI primitives)                                                      |
+| Charts        | Recharts                                                                                    |
+| Forms         | react-hook-form + zod                                                                       |
+| Tables        | TanStack Table v8                                                                           |
+| PDF           | jsPDF + jsPDF-AutoTable                                                                     |
+| Deployment    | Vercel (Next.js) + Railway (DB/Redis)                                                       |
+| Monorepo      | Turborepo (pnpm workspaces)                                                                 |
 
 ---
 
@@ -107,13 +108,13 @@ The codebase follows a platform-level access model:
 
 ### User Hierarchy
 
-| Role | Scope | Primary Responsibility |
-|---|---|---|
+| Role          | Scope                       | Primary Responsibility                                                |
+| ------------- | --------------------------- | --------------------------------------------------------------------- |
 | `super_admin` | Platform-wide (all schools) | School provisioning, cross-school user lifecycle, platform governance |
-| `admin` | Single school | School operations, user administration, settings, reporting |
-| `teacher` | Assigned classes/subjects | Attendance, grading, class-level communication |
-| `student` | Self | Personal academics, attendance, fees, wellness |
-| `parent` | Linked children | Child progress, communication, fee visibility/payments |
+| `admin`       | Single school               | School operations, user administration, settings, reporting           |
+| `teacher`     | Assigned classes/subjects   | Attendance, grading, class-level communication                        |
+| `student`     | Self                        | Personal academics, attendance, fees, wellness                        |
+| `parent`      | Linked children             | Child progress, communication, fee visibility/payments                |
 
 ---
 
@@ -121,18 +122,18 @@ The codebase follows a platform-level access model:
 
 Each phase delivers a complete, working portal for one stakeholder. See `ROADMAP.md` for the full phase map and `docs/superpowers/plans/` for task-level plans.
 
-| Phase | Status | Description |
-|---|---|---|
-| **1 — Foundation** | ✅ Complete | Next.js scaffold, Drizzle schema, proxy, Auth.js, Docker, CI |
-| **2 — Super Admin Portal** | ✅ Complete | School CRUD, user lifecycle, billing schema, payment infra, email service, audit logs, shadcn/ui |
-| **3 — Admin (School) Portal** | ⬜ Pending | Students, staff, classes, subjects, timetable, fee setup, payroll, reports |
-| **4 — Teacher Portal** | ⬜ Pending | Attendance, assessments, grades, report cards, lesson plans |
-| **5 — Student Portal** | ⬜ Pending | View timetable, grades, report cards, attendance, fees |
-| **6 — Parent Portal** | ⬜ Pending | Children overview, payments (Paystack/MoMo), communication |
-| **7 — Design System & Polish** | ⬜ Pending | Full design system, animations, responsive, a11y, all UI states |
-| **8 — Cross-Role Communication** | ⬜ Pending | Announcements, messaging, SMS/Email, notifications |
-| **9 — Production Hardening** | ⬜ Pending | Sentry, rate limits, backups, PWA, offline, performance, security |
-| **10 — Extended Features** | ⬜ Pending | Library, transport, inventory, behavior, AI insights |
+| Phase                            | Status      | Description                                                                                      |
+| -------------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| **1 — Foundation**               | ✅ Complete | Next.js scaffold, Drizzle schema, proxy, Auth.js, Docker, CI                                     |
+| **2 — Super Admin Portal**       | ✅ Complete | School CRUD, user lifecycle, billing schema, payment infra, email service, audit logs, shadcn/ui |
+| **3 — Admin (School) Portal**    | ⬜ Pending  | Students, staff, classes, subjects, timetable, fee setup, payroll, reports                       |
+| **4 — Teacher Portal**           | ⬜ Pending  | Attendance, assessments, grades, report cards, lesson plans                                      |
+| **5 — Student Portal**           | ⬜ Pending  | View timetable, grades, report cards, attendance, fees                                           |
+| **6 — Parent Portal**            | ⬜ Pending  | Children overview, payments (Paystack/MoMo), communication                                       |
+| **7 — Design System & Polish**   | ⬜ Pending  | Full design system, animations, responsive, a11y, all UI states                                  |
+| **8 — Cross-Role Communication** | ⬜ Pending  | Announcements, messaging, SMS/Email, notifications                                               |
+| **9 — Production Hardening**     | ⬜ Pending  | Sentry, rate limits, backups, PWA, offline, performance, security                                |
+| **10 — Extended Features**       | ⬜ Pending  | Library, transport, inventory, behavior, AI insights                                             |
 
 ---
 
@@ -152,24 +153,24 @@ Each phase delivers a complete, working portal for one stakeholder. See `ROADMAP
 
 ## Supported Curricula
 
-| Mode | Grade Levels | Grading | Calendar |
-|---|---|---|---|
-| Ghana Basic (default) | Crèche → JHS 3 | Grade 1–6 | 3 terms |
-| Ghana SHS (WASSCE) | SHS 1–3 | A1–F9 | 3 terms |
-| British | Nursery → Year 13 | GCSE 9–1 | 3 terms |
-| American | Pre-K → Grade 12 | A–F / GPA | 2 semesters |
-| IB | Configurable | 1–7 | 2 semesters |
+| Mode                  | Grade Levels      | Grading   | Calendar    |
+| --------------------- | ----------------- | --------- | ----------- |
+| Ghana Basic (default) | Crèche → JHS 3    | Grade 1–6 | 3 terms     |
+| Ghana SHS (WASSCE)    | SHS 1–3           | A1–F9     | 3 terms     |
+| British               | Nursery → Year 13 | GCSE 9–1  | 3 terms     |
+| American              | Pre-K → Grade 12  | A–F / GPA | 2 semesters |
+| IB                    | Configurable      | 1–7       | 2 semesters |
 
 ---
 
 ## Brand Colors
 
-| Color | Hex | Usage |
-|---|---|---|
-| Indigo (Primary) | `#6366F1` | Buttons, active states, brand |
+| Color            | Hex       | Usage                             |
+| ---------------- | --------- | --------------------------------- |
+| Indigo (Primary) | `#6366F1` | Buttons, active states, brand     |
 | Emerald (Accent) | `#10B981` | Success states, growth indicators |
-| Slate (Neutral) | `#0F172A` | Primary text |
+| Slate (Neutral)  | `#0F172A` | Primary text                      |
 
 ---
 
-*EduNexus · Next.js 16 monorepo · Phase 2 (Super Admin Portal) Complete*
+_EduNexus · Next.js 16 monorepo · Phase 2 (Super Admin Portal) Complete_

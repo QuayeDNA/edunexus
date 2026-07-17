@@ -1,15 +1,19 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { profiles, schools, auditLogs } from '@edunexus/database';
-import { desc, eq, like, and, count } from 'drizzle-orm';
-import { z } from 'zod';
-import { scryptSync, randomBytes } from 'crypto';
-import { routeHandler } from '@/lib/api/handler';
-import { NotFoundError, ValidationError, ConflictError } from '@/lib/api/errors';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess } from '@/lib/api/response';
-import { sendEmail } from '@/services/email';
-import { welcomeAdminEmail } from '@/services/email/templates/welcome-admin';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { profiles, schools, auditLogs } from "@edunexus/database";
+import { desc, eq, like, and, count } from "drizzle-orm";
+import { z } from "zod";
+import { scryptSync, randomBytes } from "crypto";
+import { routeHandler } from "@/lib/api/handler";
+import {
+  NotFoundError,
+  ValidationError,
+  ConflictError,
+} from "@/lib/api/errors";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess } from "@/lib/api/response";
+import { sendEmail } from "@/services/email";
+import { welcomeAdminEmail } from "@/services/email/templates/welcome-admin";
 
 const createUserSchema = z.object({
   schoolId: z.string().uuid(),
@@ -17,33 +21,33 @@ const createUserSchema = z.object({
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
   phone: z.string().max(20).optional(),
-  role: z.enum(['admin', 'teacher', 'student', 'parent']).default('admin'),
+  role: z.enum(["admin", "teacher", "student", "parent"]).default("admin"),
 });
 
 function hashPassword(password: string): string {
-  const salt = randomBytes(32).toString('hex');
-  const hash = scryptSync(password, salt, 64).toString('hex');
+  const salt = randomBytes(32).toString("hex");
+  const hash = scryptSync(password, salt, 64).toString("hex");
   return `scrypt:${salt}:${hash}`;
 }
 
 export const GET = routeHandler(async (request: NextRequest) => {
-  const { error } = await requireRole('super_admin');
+  const { error } = await requireRole("super_admin");
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
-  const search = searchParams.get('search');
-  const schoolId = searchParams.get('schoolId');
-  const role = searchParams.get('role');
-  const status = searchParams.get('status');
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '10');
+  const search = searchParams.get("search");
+  const schoolId = searchParams.get("schoolId");
+  const role = searchParams.get("role");
+  const status = searchParams.get("status");
+  const page = parseInt(searchParams.get("page") || "1");
+  const pageSize = parseInt(searchParams.get("pageSize") || "10");
 
   const conditions = and(
     search ? like(profiles.email, `%${search}%`) : undefined,
     schoolId ? eq(profiles.schoolId, schoolId) : undefined,
     role ? eq(profiles.role, role) : undefined,
-    status === 'active' ? eq(profiles.isActive, true) : undefined,
-    status === 'inactive' ? eq(profiles.isActive, false) : undefined,
+    status === "active" ? eq(profiles.isActive, true) : undefined,
+    status === "inactive" ? eq(profiles.isActive, false) : undefined,
   );
 
   const [total] = await db
@@ -70,20 +74,24 @@ export const GET = routeHandler(async (request: NextRequest) => {
     .offset((page - 1) * pageSize);
 
   return apiSuccess(userList, {
-    page, pageSize,
+    page,
+    pageSize,
     total: Number(total.count),
     totalPages: Math.ceil(Number(total.count) / pageSize),
   });
 });
 
 export const POST = routeHandler(async (request: NextRequest) => {
-  const { error: authError, user: adminUser } = await requireRole('super_admin');
+  const { error: authError, user: adminUser } =
+    await requireRole("super_admin");
   if (authError) return authError;
 
   const body = await request.json();
   const parsed = createUserSchema.safeParse(body);
   if (!parsed.success) {
-    throw new ValidationError(parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    throw new ValidationError(
+      parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    );
   }
 
   const { schoolId, email, firstName, lastName, phone, role } = parsed.data;
@@ -94,25 +102,34 @@ export const POST = routeHandler(async (request: NextRequest) => {
     .where(and(eq(profiles.email, email), eq(profiles.schoolId, schoolId)))
     .limit(1);
   if (existing) {
-    throw new ConflictError('A user with this email already exists in this school');
+    throw new ConflictError(
+      "A user with this email already exists in this school",
+    );
   }
 
-  const [school] = await db.select().from(schools).where(eq(schools.id, schoolId)).limit(1);
-  if (!school) throw new NotFoundError('School');
+  const [school] = await db
+    .select()
+    .from(schools)
+    .where(eq(schools.id, schoolId))
+    .limit(1);
+  if (!school) throw new NotFoundError("School");
 
-  const tempPassword = randomBytes(8).toString('hex');
+  const tempPassword = randomBytes(8).toString("hex");
   const passwordHash = hashPassword(tempPassword);
 
-  const [user] = await db.insert(profiles).values({
-    schoolId,
-    email,
-    firstName,
-    lastName,
-    phone: phone || null,
-    role,
-    passwordHash,
-    isActive: true,
-  }).returning();
+  const [user] = await db
+    .insert(profiles)
+    .values({
+      schoolId,
+      email,
+      firstName,
+      lastName,
+      phone: phone || null,
+      role,
+      passwordHash,
+      isActive: true,
+    })
+    .returning();
 
   await sendEmail({
     to: email,
@@ -129,8 +146,8 @@ export const POST = routeHandler(async (request: NextRequest) => {
   await db.insert(auditLogs).values({
     schoolId,
     userId: adminUser!.id,
-    action: 'user.created',
-    tableName: 'profiles',
+    action: "user.created",
+    tableName: "profiles",
     recordId: user.id,
     newData: { email, firstName, lastName, role },
   });

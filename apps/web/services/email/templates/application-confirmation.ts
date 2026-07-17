@@ -3,7 +3,10 @@ interface ApplicationConfirmationParams {
   studentName: string;
 }
 
-export function applicationConfirmationEmail({ guardianName, studentName }: ApplicationConfirmationParams): string {
+export function applicationConfirmationEmail({
+  guardianName,
+  studentName,
+}: ApplicationConfirmationParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>

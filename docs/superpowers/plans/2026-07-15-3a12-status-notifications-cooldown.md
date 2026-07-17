@@ -21,10 +21,12 @@
 ### Task 1: Schema Migration — Add `anonymized_at` Column
 
 **Files:**
+
 - Modify: `packages/database/src/schema/applicants.ts`
 - Run: `pnpm db:migrate` (drizzle-kit push)
 
 **Interfaces:**
+
 - Consumes: existing `applicants` table schema
 - Produces: `applicants.anonymizedAt` column
 
@@ -57,6 +59,7 @@ git commit -m "feat(3a): add anonymized_at column to applicants table"
 ### Task 2: Email Templates for Status Changes
 
 **Files:**
+
 - Create: `apps/web/services/email/templates/application-under-review.ts`
 - Create: `apps/web/services/email/templates/application-accepted.ts`
 - Create: `apps/web/services/email/templates/application-rejected.ts`
@@ -64,6 +67,7 @@ git commit -m "feat(3a): add anonymized_at column to applicants table"
 - Modify: (none — each file is self-contained)
 
 **Interfaces:**
+
 - Produces: 4 functions, each taking `{ guardianName: string; studentName: string; ... }` and returning an HTML string
 
 - [ ] **Step 1: Create `application-under-review.ts`**
@@ -74,7 +78,10 @@ interface UnderReviewParams {
   studentName: string;
 }
 
-export function applicationUnderReviewEmail({ guardianName, studentName }: UnderReviewParams): string {
+export function applicationUnderReviewEmail({
+  guardianName,
+  studentName,
+}: UnderReviewParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
@@ -109,7 +116,11 @@ interface AcceptedParams {
   schoolName: string;
 }
 
-export function applicationAcceptedEmail({ guardianName, studentName, schoolName }: AcceptedParams): string {
+export function applicationAcceptedEmail({
+  guardianName,
+  studentName,
+  schoolName,
+}: AcceptedParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
@@ -144,7 +155,11 @@ interface RejectedParams {
   cooldownDate: string;
 }
 
-export function applicationRejectedEmail({ guardianName, studentName, cooldownDate }: RejectedParams): string {
+export function applicationRejectedEmail({
+  guardianName,
+  studentName,
+  cooldownDate,
+}: RejectedParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
@@ -179,7 +194,10 @@ interface WaitlistedParams {
   studentName: string;
 }
 
-export function applicationWaitlistedEmail({ guardianName, studentName }: WaitlistedParams): string {
+export function applicationWaitlistedEmail({
+  guardianName,
+  studentName,
+}: WaitlistedParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
@@ -217,10 +235,12 @@ git commit -m "feat(3a): add email templates for applicant status changes"
 ### Task 3: Anonymization Service
 
 **Files:**
+
 - Create: `apps/web/services/anonymize.ts`
 - Test: `apps/web/tests/services/anonymize.test.ts`
 
 **Interfaces:**
+
 - Consumes: `db` from `@/lib/db/client`, `applicants` table schema
 - Produces: `anonymizeApplicant(db, applicantId)` function
 
@@ -229,8 +249,8 @@ git commit -m "feat(3a): add email templates for applicant status changes"
 `apps/web/tests/services/anonymize.test.ts`:
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { anonymizeApplicant } from '@/services/anonymize';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { anonymizeApplicant } from "@/services/anonymize";
 
 const mockDb = {
   update: vi.fn().mockReturnThis(),
@@ -238,7 +258,7 @@ const mockDb = {
   where: vi.fn().mockReturnThis(),
 };
 
-vi.mock('@/lib/db/client', () => ({
+vi.mock("@/lib/db/client", () => ({
   db: mockDb,
 }));
 
@@ -246,34 +266,36 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('anonymizeApplicant', () => {
-  it('clears personal fields and sets anonymized_at', async () => {
-    await anonymizeApplicant(mockDb as any, 'test-id');
+describe("anonymizeApplicant", () => {
+  it("clears personal fields and sets anonymized_at", async () => {
+    await anonymizeApplicant(mockDb as any, "test-id");
 
     expect(mockDb.update).toHaveBeenCalled();
-    expect(mockDb.set).toHaveBeenCalledWith(expect.objectContaining({
-      anonymizedAt: expect.any(Date),
-      firstName: '[redacted]',
-      lastName: '[redacted]',
-      dateOfBirth: null,
-      guardianName: null,
-      guardianEmail: null,
-      guardianPhone: null,
-      guardianAddress: null,
-      guardianOccupation: null,
-      guardianEmployer: null,
-      previousSchool: null,
-      medicalAllergies: null,
-      medicalConditions: null,
-      medicalMedications: null,
-      doctorName: null,
-      doctorPhone: null,
-      emergencyContacts: null,
-      siblingDetails: null,
-      birthCertificateFileId: null,
-      priorReportCardFileId: null,
-      photoFileId: null,
-    }));
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        anonymizedAt: expect.any(Date),
+        firstName: "[redacted]",
+        lastName: "[redacted]",
+        dateOfBirth: null,
+        guardianName: null,
+        guardianEmail: null,
+        guardianPhone: null,
+        guardianAddress: null,
+        guardianOccupation: null,
+        guardianEmployer: null,
+        previousSchool: null,
+        medicalAllergies: null,
+        medicalConditions: null,
+        medicalMedications: null,
+        doctorName: null,
+        doctorPhone: null,
+        emergencyContacts: null,
+        siblingDetails: null,
+        birthCertificateFileId: null,
+        priorReportCardFileId: null,
+        photoFileId: null,
+      }),
+    );
     expect(mockDb.where).toHaveBeenCalledWith(expect.anything());
   });
 });
@@ -287,16 +309,20 @@ Expected: FAIL — "Cannot find module '@/services/anonymize'"
 `apps/web/services/anonymize.ts`:
 
 ```typescript
-import { eq } from 'drizzle-orm';
-import { applicants } from '@edunexus/database';
-import type { PostgresDb } from '@/lib/db/client';
+import { eq } from "drizzle-orm";
+import { applicants } from "@edunexus/database";
+import type { PostgresDb } from "@/lib/db/client";
 
-export async function anonymizeApplicant(client: typeof import('@/lib/db/client').db, applicantId: string): Promise<void> {
-  await client.update(applicants)
+export async function anonymizeApplicant(
+  client: typeof import("@/lib/db/client").db,
+  applicantId: string,
+): Promise<void> {
+  await client
+    .update(applicants)
     .set({
       anonymizedAt: new Date(),
-      firstName: '[redacted]',
-      lastName: '[redacted]',
+      firstName: "[redacted]",
+      lastName: "[redacted]",
       dateOfBirth: null,
       guardianName: null,
       guardianEmail: null,
@@ -337,9 +363,11 @@ git commit -m "feat(3a): add anonymizeApplicant service"
 ### Task 4: PATCH Route — Send Emails on Status Change
 
 **Files:**
+
 - Modify: `apps/web/app/api/applicants/[id]/route.ts`
 
 **Interfaces:**
+
 - Consumes: email templates from Task 2, existing `sendEmail()` service
 - Produces: email sent to guardian on status change
 
@@ -350,74 +378,83 @@ In `apps/web/app/api/applicants/[id]/route.ts`:
 After the existing audit log insert for status change (around line 122), add:
 
 ```typescript
-import { sendEmail } from '@/services/email';
-import { applicationUnderReviewEmail } from '@/services/email/templates/application-under-review';
-import { applicationAcceptedEmail } from '@/services/email/templates/application-accepted';
-import { applicationRejectedEmail } from '@/services/email/templates/application-rejected';
-import { applicationWaitlistedEmail } from '@/services/email/templates/application-waitlisted';
+import { sendEmail } from "@/services/email";
+import { applicationUnderReviewEmail } from "@/services/email/templates/application-under-review";
+import { applicationAcceptedEmail } from "@/services/email/templates/application-accepted";
+import { applicationRejectedEmail } from "@/services/email/templates/application-rejected";
+import { applicationWaitlistedEmail } from "@/services/email/templates/application-waitlisted";
 
 // After the audit log block for status changes (after line 122):
-  if (parsed.data.status && parsed.data.status !== existing.status) {
-    // ... existing audit log insert ...
+if (parsed.data.status && parsed.data.status !== existing.status) {
+  // ... existing audit log insert ...
 
-    const cooldownEnd = parsed.data.status === 'rejected'
-      ? new Date(existing.createdAt.getTime() + 180 * 24 * 60 * 60 * 1000)
-        .toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' })
+  const cooldownEnd =
+    parsed.data.status === "rejected"
+      ? new Date(
+          existing.createdAt.getTime() + 180 * 24 * 60 * 60 * 1000,
+        ).toLocaleDateString("en-GH", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
       : undefined;
 
-    const emailContent = (() => {
-      switch (parsed.data.status) {
-        case 'under_review':
-          return {
-            subject: 'Application Under Review — EduNexus',
-            html: applicationUnderReviewEmail({
-              guardianName: existing.guardianName ?? 'Parent/Guardian',
-              studentName: `${existing.firstName} ${existing.lastName}`,
-            }),
-          };
-        case 'accepted': {
-          const schoolName = existing.schoolId ? 'the school' : 'the school';
-          return {
-            subject: 'Congratulations — Application Accepted — EduNexus',
-            html: applicationAcceptedEmail({
-              guardianName: existing.guardianName ?? 'Parent/Guardian',
-              studentName: `${existing.firstName} ${existing.lastName}`,
-              schoolName,
-            }),
-          };
-        }
-        case 'rejected':
-          return {
-            subject: 'Application Status Update — EduNexus',
-            html: applicationRejectedEmail({
-              guardianName: existing.guardianName ?? 'Parent/Guardian',
-              studentName: `${existing.firstName} ${existing.lastName}`,
-              cooldownDate: cooldownEnd!,
-            }),
-          };
-        case 'waitlisted':
-          return {
-            subject: 'Application Waitlisted — EduNexus',
-            html: applicationWaitlistedEmail({
-              guardianName: existing.guardianName ?? 'Parent/Guardian',
-              studentName: `${existing.firstName} ${existing.lastName}`,
-            }),
-          };
-        default:
-          return null;
+  const emailContent = (() => {
+    switch (parsed.data.status) {
+      case "under_review":
+        return {
+          subject: "Application Under Review — EduNexus",
+          html: applicationUnderReviewEmail({
+            guardianName: existing.guardianName ?? "Parent/Guardian",
+            studentName: `${existing.firstName} ${existing.lastName}`,
+          }),
+        };
+      case "accepted": {
+        const schoolName = existing.schoolId ? "the school" : "the school";
+        return {
+          subject: "Congratulations — Application Accepted — EduNexus",
+          html: applicationAcceptedEmail({
+            guardianName: existing.guardianName ?? "Parent/Guardian",
+            studentName: `${existing.firstName} ${existing.lastName}`,
+            schoolName,
+          }),
+        };
       }
-    })();
-
-    if (emailContent && existing.guardianEmail) {
-      sendEmail({
-        to: existing.guardianEmail,
-        subject: emailContent.subject,
-        html: emailContent.html,
-      }).catch(err => {
-        console.error(`[APPLICANT] Failed to send ${parsed.data.status} email for ${id}:`, err);
-      });
+      case "rejected":
+        return {
+          subject: "Application Status Update — EduNexus",
+          html: applicationRejectedEmail({
+            guardianName: existing.guardianName ?? "Parent/Guardian",
+            studentName: `${existing.firstName} ${existing.lastName}`,
+            cooldownDate: cooldownEnd!,
+          }),
+        };
+      case "waitlisted":
+        return {
+          subject: "Application Waitlisted — EduNexus",
+          html: applicationWaitlistedEmail({
+            guardianName: existing.guardianName ?? "Parent/Guardian",
+            studentName: `${existing.firstName} ${existing.lastName}`,
+          }),
+        };
+      default:
+        return null;
     }
+  })();
+
+  if (emailContent && existing.guardianEmail) {
+    sendEmail({
+      to: existing.guardianEmail,
+      subject: emailContent.subject,
+      html: emailContent.html,
+    }).catch((err) => {
+      console.error(
+        `[APPLICANT] Failed to send ${parsed.data.status} email for ${id}:`,
+        err,
+      );
+    });
   }
+}
 ```
 
 Note: The insert is after the existing status change audit log block. The fire-and-forget pattern (`.catch()`) means email failure never affects the PATCH response.
@@ -434,10 +471,12 @@ git commit -m "feat(3a): send email notifications on applicant status changes"
 ### Task 5: POST Route — Re-application Cooldown Guard
 
 **Files:**
+
 - Modify: `apps/web/app/api/applicants/route.ts`
 - Modify: `apps/web/services/anonymize.ts` (already created in Task 3)
 
 **Interfaces:**
+
 - Consumes: `anonymizeApplicant()` from Task 3
 - Produces: 409 when cooldown active, 201 with auto-anonymization when cooldown expired
 
@@ -446,32 +485,36 @@ git commit -m "feat(3a): send email notifications on applicant status changes"
 In `apps/web/app/api/applicants/route.ts`, after the grade level validation block (`if (!gradeLevel) return apiError(422, 'Invalid grade level')`) and before the insert, add:
 
 ```typescript
-import { and, isNull, desc } from 'drizzle-orm';
-import { anonymizeApplicant } from '@/services/anonymize';
+import { and, isNull, desc } from "drizzle-orm";
+import { anonymizeApplicant } from "@/services/anonymize";
 
 // After grade level validation:
-  const existingRejected = await db
-    .select({ id: applicants.id, createdAt: applicants.createdAt })
-    .from(applicants)
-    .where(and(
+const existingRejected = await db
+  .select({ id: applicants.id, createdAt: applicants.createdAt })
+  .from(applicants)
+  .where(
+    and(
       eq(applicants.schoolId, schoolId),
       eq(applicants.guardianEmail, parsed.data.guardianEmail),
-      eq(applicants.status, 'rejected'),
+      eq(applicants.status, "rejected"),
       isNull(applicants.anonymizedAt),
-    ))
-    .orderBy(desc(applicants.createdAt))
-    .limit(1);
+    ),
+  )
+  .orderBy(desc(applicants.createdAt))
+  .limit(1);
 
-  if (existingRejected.length > 0) {
-    const cooldownEnd = new Date(existingRejected[0].createdAt.getTime() + 180 * 24 * 60 * 60 * 1000);
-    if (cooldownEnd > new Date()) {
-      return apiError(
-        409,
-        `You may re-apply after ${cooldownEnd.toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' })}`,
-      );
-    }
-    await anonymizeApplicant(db, existingRejected[0].id);
+if (existingRejected.length > 0) {
+  const cooldownEnd = new Date(
+    existingRejected[0].createdAt.getTime() + 180 * 24 * 60 * 60 * 1000,
+  );
+  if (cooldownEnd > new Date()) {
+    return apiError(
+      409,
+      `You may re-apply after ${cooldownEnd.toLocaleDateString("en-GH", { year: "numeric", month: "long", day: "numeric" })}`,
+    );
   }
+  await anonymizeApplicant(db, existingRejected[0].id);
+}
 ```
 
 Also add `isNull` to the drizzle-orm import at the top of the file.
@@ -488,10 +531,12 @@ git commit -m "feat(3a): add re-application cooldown guard to POST route"
 ### Task 6: Cleanup Endpoint — POST /api/applicants/cleanup
 
 **Files:**
+
 - Create: `apps/web/app/api/applicants/cleanup/route.ts`
 - Test: `apps/web/tests/app/api/applicants/cleanup.test.ts`
 
 **Interfaces:**
+
 - Consumes: `anonymizeApplicant()` from Task 3
 - Produces: `{ anonymized: number }` count
 
@@ -500,7 +545,7 @@ git commit -m "feat(3a): add re-application cooldown guard to POST route"
 `apps/web/tests/app/api/applicants/cleanup.test.ts`:
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockDb = {
   select: vi.fn().mockReturnThis(),
@@ -513,35 +558,37 @@ const mockDb = {
 
 const mockAnonymize = vi.fn();
 
-vi.mock('@/lib/db/client', () => ({ db: mockDb }));
-vi.mock('@/services/anonymize', () => ({ anonymizeApplicant: mockAnonymize }));
+vi.mock("@/lib/db/client", () => ({ db: mockDb }));
+vi.mock("@/services/anonymize", () => ({ anonymizeApplicant: mockAnonymize }));
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('POST /api/applicants/cleanup', () => {
-  it('anonymizes expired rejected records and returns count', async () => {
-    mockDb.limit.mockResolvedValueOnce([
-      { id: 'id-1' }, { id: 'id-2' },
-    ]);
+describe("POST /api/applicants/cleanup", () => {
+  it("anonymizes expired rejected records and returns count", async () => {
+    mockDb.limit.mockResolvedValueOnce([{ id: "id-1" }, { id: "id-2" }]);
 
-    const { POST } = await import('@/app/api/applicants/cleanup/route');
-    const req = new Request('http://localhost:3000/api/applicants/cleanup', { method: 'POST' });
+    const { POST } = await import("@/app/api/applicants/cleanup/route");
+    const req = new Request("http://localhost:3000/api/applicants/cleanup", {
+      method: "POST",
+    });
     const res = await POST(req as any);
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data.anonymized).toBe(2);
     expect(mockAnonymize).toHaveBeenCalledTimes(2);
-    expect(mockAnonymize).toHaveBeenCalledWith(mockDb, 'id-1');
+    expect(mockAnonymize).toHaveBeenCalledWith(mockDb, "id-1");
   });
 
-  it('returns 0 when no expired records exist', async () => {
+  it("returns 0 when no expired records exist", async () => {
     mockDb.limit.mockResolvedValueOnce([]);
 
-    const { POST } = await import('@/app/api/applicants/cleanup/route');
-    const req = new Request('http://localhost:3000/api/applicants/cleanup', { method: 'POST' });
+    const { POST } = await import("@/app/api/applicants/cleanup/route");
+    const req = new Request("http://localhost:3000/api/applicants/cleanup", {
+      method: "POST",
+    });
     const res = await POST(req as any);
 
     expect(res.status).toBe(200);
@@ -559,16 +606,16 @@ Expected: FAIL — route module not found
 `apps/web/app/api/applicants/cleanup/route.ts`:
 
 ```typescript
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db/client';
-import { applicants } from '@edunexus/database';
-import { eq, and, lt, isNull } from 'drizzle-orm';
-import { requireRole } from '@/lib/api/require-role';
-import { anonymizeApplicant } from '@/services/anonymize';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db/client";
+import { applicants } from "@edunexus/database";
+import { eq, and, lt, isNull } from "drizzle-orm";
+import { requireRole } from "@/lib/api/require-role";
+import { anonymizeApplicant } from "@/services/anonymize";
+import { apiSuccess, apiError } from "@/lib/api/response";
 
 export async function POST() {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
   const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
@@ -576,11 +623,13 @@ export async function POST() {
   const expired = await db
     .select({ id: applicants.id })
     .from(applicants)
-    .where(and(
-      eq(applicants.status, 'rejected'),
-      isNull(applicants.anonymizedAt),
-      lt(applicants.createdAt, sixMonthsAgo),
-    ))
+    .where(
+      and(
+        eq(applicants.status, "rejected"),
+        isNull(applicants.anonymizedAt),
+        lt(applicants.createdAt, sixMonthsAgo),
+      ),
+    )
     .limit(100);
 
   for (const record of expired) {
@@ -608,9 +657,11 @@ git commit -m "feat(3a): add admin cleanup endpoint for expired rejected applica
 ### Task 7: Backend Integration Tests for Status Transition Emails
 
 **Files:**
+
 - Create: `apps/web/tests/app/api/applicants/emails.test.ts`
 
 **Interfaces:**
+
 - Tests: PATCH route sends correct email for each status transition
 
 - [ ] **Step 1: Write the test file**
@@ -618,7 +669,7 @@ git commit -m "feat(3a): add admin cleanup endpoint for expired rejected applica
 `apps/web/tests/app/api/applicants/emails.test.ts`:
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockSendEmail = vi.fn().mockResolvedValue(undefined);
 
@@ -634,34 +685,39 @@ const mockDb = {
   values: vi.fn().mockReturnThis(),
 };
 
-vi.mock('@/lib/db/client', () => ({ db: mockDb }));
-vi.mock('@/services/email', () => ({ sendEmail: mockSendEmail }));
-vi.mock('@/lib/auth/auth.guard', () => ({
-  requireRole: vi.fn().mockResolvedValue({ error: null, user: { id: 'admin-1', role: 'admin', schoolId: 'school-1' } }),
+vi.mock("@/lib/db/client", () => ({ db: mockDb }));
+vi.mock("@/services/email", () => ({ sendEmail: mockSendEmail }));
+vi.mock("@/lib/auth/auth.guard", () => ({
+  requireRole: vi
+    .fn()
+    .mockResolvedValue({
+      error: null,
+      user: { id: "admin-1", role: "admin", schoolId: "school-1" },
+    }),
 }));
-vi.mock('@/lib/tenant/resolve', () => ({
-  resolveTenant: vi.fn().mockResolvedValue({ schoolId: 'school-1' }),
+vi.mock("@/lib/tenant/resolve", () => ({
+  resolveTenant: vi.fn().mockResolvedValue({ schoolId: "school-1" }),
 }));
 
 function makeRequest(method: string, path: string, body?: any): Request {
   return new Request(`http://localhost:3000${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
+    headers: { "Content-Type": "application/json", host: "localhost:3000" },
     body: body ? JSON.stringify(body) : undefined,
   });
 }
 
 function makeApplicantRow(overrides = {}) {
   return {
-    id: 'app-1',
-    schoolId: 'school-1',
-    firstName: 'John',
-    lastName: 'Doe',
-    guardianName: 'Jane Doe',
-    guardianEmail: 'jane@example.com',
-    status: 'submitted',
-    createdAt: new Date('2026-01-01'),
-    gradeLevelId: 'grade-1',
+    id: "app-1",
+    schoolId: "school-1",
+    firstName: "John",
+    lastName: "Doe",
+    guardianName: "Jane Doe",
+    guardianEmail: "jane@example.com",
+    status: "submitted",
+    createdAt: new Date("2026-01-01"),
+    gradeLevelId: "grade-1",
     ...overrides,
   };
 }
@@ -670,92 +726,135 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('PATCH /api/applicants/[id] — email notifications', () => {
-  it('sends under_review email when status changes to under_review', async () => {
+describe("PATCH /api/applicants/[id] — email notifications", () => {
+  it("sends under_review email when status changes to under_review", async () => {
     mockDb.limit.mockResolvedValueOnce([makeApplicantRow()]);
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
     mockDb.where.mockReturnThis();
-    mockDb.returning.mockResolvedValueOnce([{ ...makeApplicantRow(), status: 'under_review' }]);
+    mockDb.returning.mockResolvedValueOnce([
+      { ...makeApplicantRow(), status: "under_review" },
+    ]);
     mockDb.insert.mockReturnThis();
     mockDb.values.mockReturnThis();
 
-    const { PATCH } = await import('@/app/api/applicants/[id]/route');
-    await PATCH(makeRequest('PATCH', '/api/applicants/app-1', { status: 'under_review' }), { params: Promise.resolve({ id: 'app-1' }) } as any);
+    const { PATCH } = await import("@/app/api/applicants/[id]/route");
+    await PATCH(
+      makeRequest("PATCH", "/api/applicants/app-1", { status: "under_review" }),
+      { params: Promise.resolve({ id: "app-1" }) } as any,
+    );
 
     expect(mockSendEmail).toHaveBeenCalledOnce();
-    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
-      to: 'jane@example.com',
-      subject: expect.stringContaining('Under Review'),
-    }));
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "jane@example.com",
+        subject: expect.stringContaining("Under Review"),
+      }),
+    );
   });
 
-  it('sends accepted email when status changes to accepted', async () => {
-    mockDb.limit.mockResolvedValueOnce([makeApplicantRow({ status: 'under_review' })]);
+  it("sends accepted email when status changes to accepted", async () => {
+    mockDb.limit.mockResolvedValueOnce([
+      makeApplicantRow({ status: "under_review" }),
+    ]);
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
     mockDb.where.mockReturnThis();
-    mockDb.returning.mockResolvedValueOnce([{ ...makeApplicantRow({ status: 'under_review' }), status: 'accepted' }]);
+    mockDb.returning.mockResolvedValueOnce([
+      { ...makeApplicantRow({ status: "under_review" }), status: "accepted" },
+    ]);
     mockDb.insert.mockReturnThis();
     mockDb.values.mockReturnThis();
 
-    const { PATCH } = await import('@/app/api/applicants/[id]/route');
-    await PATCH(makeRequest('PATCH', '/api/applicants/app-1', { status: 'accepted' }), { params: Promise.resolve({ id: 'app-1' }) } as any);
+    const { PATCH } = await import("@/app/api/applicants/[id]/route");
+    await PATCH(
+      makeRequest("PATCH", "/api/applicants/app-1", { status: "accepted" }),
+      { params: Promise.resolve({ id: "app-1" }) } as any,
+    );
 
     expect(mockSendEmail).toHaveBeenCalledOnce();
-    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
-      to: 'jane@example.com',
-      subject: expect.stringContaining('Accepted'),
-    }));
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "jane@example.com",
+        subject: expect.stringContaining("Accepted"),
+      }),
+    );
   });
 
-  it('sends rejected email when status changes to rejected', async () => {
-    mockDb.limit.mockResolvedValueOnce([makeApplicantRow({ status: 'under_review' })]);
+  it("sends rejected email when status changes to rejected", async () => {
+    mockDb.limit.mockResolvedValueOnce([
+      makeApplicantRow({ status: "under_review" }),
+    ]);
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
     mockDb.where.mockReturnThis();
-    mockDb.returning.mockResolvedValueOnce([{ ...makeApplicantRow({ status: 'under_review' }), status: 'rejected' }]);
+    mockDb.returning.mockResolvedValueOnce([
+      { ...makeApplicantRow({ status: "under_review" }), status: "rejected" },
+    ]);
     mockDb.insert.mockReturnThis();
     mockDb.values.mockReturnThis();
 
-    const { PATCH } = await import('@/app/api/applicants/[id]/route');
-    await PATCH(makeRequest('PATCH', '/api/applicants/app-1', { status: 'rejected' }), { params: Promise.resolve({ id: 'app-1' }) } as any);
+    const { PATCH } = await import("@/app/api/applicants/[id]/route");
+    await PATCH(
+      makeRequest("PATCH", "/api/applicants/app-1", { status: "rejected" }),
+      { params: Promise.resolve({ id: "app-1" }) } as any,
+    );
 
     expect(mockSendEmail).toHaveBeenCalledOnce();
-    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
-      to: 'jane@example.com',
-      subject: expect.stringContaining('Status Update'),
-    }));
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "jane@example.com",
+        subject: expect.stringContaining("Status Update"),
+      }),
+    );
   });
 
-  it('sends waitlisted email when status changes to waitlisted', async () => {
-    mockDb.limit.mockResolvedValueOnce([makeApplicantRow({ status: 'under_review' })]);
+  it("sends waitlisted email when status changes to waitlisted", async () => {
+    mockDb.limit.mockResolvedValueOnce([
+      makeApplicantRow({ status: "under_review" }),
+    ]);
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
     mockDb.where.mockReturnThis();
-    mockDb.returning.mockResolvedValueOnce([{ ...makeApplicantRow({ status: 'under_review' }), status: 'waitlisted' }]);
+    mockDb.returning.mockResolvedValueOnce([
+      { ...makeApplicantRow({ status: "under_review" }), status: "waitlisted" },
+    ]);
     mockDb.insert.mockReturnThis();
     mockDb.values.mockReturnThis();
 
-    const { PATCH } = await import('@/app/api/applicants/[id]/route');
-    await PATCH(makeRequest('PATCH', '/api/applicants/app-1', { status: 'waitlisted' }), { params: Promise.resolve({ id: 'app-1' }) } as any);
+    const { PATCH } = await import("@/app/api/applicants/[id]/route");
+    await PATCH(
+      makeRequest("PATCH", "/api/applicants/app-1", { status: "waitlisted" }),
+      { params: Promise.resolve({ id: "app-1" }) } as any,
+    );
 
     expect(mockSendEmail).toHaveBeenCalledOnce();
-    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
-      to: 'jane@example.com',
-      subject: expect.stringContaining('Waitlisted'),
-    }));
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "jane@example.com",
+        subject: expect.stringContaining("Waitlisted"),
+      }),
+    );
   });
 
-  it('does not send email when status does not change', async () => {
-    mockDb.limit.mockResolvedValueOnce([makeApplicantRow({ status: 'under_review' })]);
+  it("does not send email when status does not change", async () => {
+    mockDb.limit.mockResolvedValueOnce([
+      makeApplicantRow({ status: "under_review" }),
+    ]);
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
     mockDb.where.mockReturnThis();
-    mockDb.returning.mockResolvedValueOnce([makeApplicantRow({ status: 'under_review' })]);
+    mockDb.returning.mockResolvedValueOnce([
+      makeApplicantRow({ status: "under_review" }),
+    ]);
 
-    const { PATCH } = await import('@/app/api/applicants/[id]/route');
-    await PATCH(makeRequest('PATCH', '/api/applicants/app-1', { guardianName: 'New Name' }), { params: Promise.resolve({ id: 'app-1' }) } as any);
+    const { PATCH } = await import("@/app/api/applicants/[id]/route");
+    await PATCH(
+      makeRequest("PATCH", "/api/applicants/app-1", {
+        guardianName: "New Name",
+      }),
+      { params: Promise.resolve({ id: "app-1" }) } as any,
+    );
 
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
@@ -779,9 +878,11 @@ git commit -m "test(3a): backend integration tests for status change emails"
 ### Task 8: Backend Integration Tests for Re-application Cooldown
 
 **Files:**
+
 - Create: `apps/web/tests/app/api/applicants/cooldown.test.ts`
 
 **Interfaces:**
+
 - Tests: POST route blocks re-application within cooldown, allows after expiry
 
 - [ ] **Step 1: Write the test file**
@@ -789,7 +890,7 @@ git commit -m "test(3a): backend integration tests for status change emails"
 `apps/web/tests/app/api/applicants/cooldown.test.ts`:
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockSendEmail = vi.fn().mockResolvedValue(undefined);
 const mockAnonymize = vi.fn().mockResolvedValue(undefined);
@@ -807,17 +908,17 @@ const mockDb = {
   set: vi.fn().mockReturnThis(),
 };
 
-vi.mock('@/lib/db/client', () => ({ db: mockDb }));
-vi.mock('@/services/email', () => ({ sendEmail: mockSendEmail }));
-vi.mock('@/services/anonymize', () => ({ anonymizeApplicant: mockAnonymize }));
-vi.mock('@/lib/tenant/resolve', () => ({
-  resolveTenant: vi.fn().mockResolvedValue({ schoolId: 'school-1' }),
+vi.mock("@/lib/db/client", () => ({ db: mockDb }));
+vi.mock("@/services/email", () => ({ sendEmail: mockSendEmail }));
+vi.mock("@/services/anonymize", () => ({ anonymizeApplicant: mockAnonymize }));
+vi.mock("@/lib/tenant/resolve", () => ({
+  resolveTenant: vi.fn().mockResolvedValue({ schoolId: "school-1" }),
 }));
 
 function makeRequest(body: any): Request {
-  return new Request('http://localhost:3000/api/applicants', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
+  return new Request("http://localhost:3000/api/applicants", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", host: "localhost:3000" },
     body: JSON.stringify(body),
   });
 }
@@ -826,87 +927,105 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('POST /api/applicants — re-application cooldown', () => {
-  it('returns 409 when cooldown has not expired', async () => {
+describe("POST /api/applicants — re-application cooldown", () => {
+  it("returns 409 when cooldown has not expired", async () => {
     const recentDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
     mockDb.select.mockReturnThis();
     mockDb.from.mockReturnThis();
     mockDb.where.mockReturnThis();
     mockDb.orderBy.mockReturnThis();
     mockDb.limit.mockResolvedValueOnce([]); // grade level lookup
-    mockDb.limit.mockResolvedValueOnce([{ id: 'rejected-1', createdAt: recentDate }]); // existing rejected
+    mockDb.limit.mockResolvedValueOnce([
+      { id: "rejected-1", createdAt: recentDate },
+    ]); // existing rejected
 
-    const { POST } = await import('@/app/api/applicants/route');
-    const res = await POST(makeRequest({
-      firstName: 'John',
-      lastName: 'Doe',
-      dateOfBirth: '2015-01-01',
-      gender: 'male',
-      guardianName: 'Jane Doe',
-      guardianEmail: 'jane@example.com',
-      gradeLevelId: 'grade-1',
-    }));
+    const { POST } = await import("@/app/api/applicants/route");
+    const res = await POST(
+      makeRequest({
+        firstName: "John",
+        lastName: "Doe",
+        dateOfBirth: "2015-01-01",
+        gender: "male",
+        guardianName: "Jane Doe",
+        guardianEmail: "jane@example.com",
+        gradeLevelId: "grade-1",
+      }),
+    );
 
     expect(res.status).toBe(409);
     const body = await res.json();
-    expect(body.error).toContain('re-apply');
+    expect(body.error).toContain("re-apply");
     expect(mockAnonymize).not.toHaveBeenCalled();
   });
 
-  it('allows application when cooldown has expired and anonymizes old record', async () => {
+  it("allows application when cooldown has expired and anonymizes old record", async () => {
     const oldDate = new Date(Date.now() - 200 * 24 * 60 * 60 * 1000); // 200 days ago, > 6 months
     mockDb.select.mockReturnThis();
     mockDb.from.mockReturnThis();
     mockDb.where.mockReturnThis();
     mockDb.orderBy.mockReturnThis();
-    mockDb.limit.mockResolvedValueOnce([{ id: 'grade-1', schoolId: 'school-1' }]); // grade level found
-    mockDb.limit.mockResolvedValueOnce([{ id: 'rejected-1', createdAt: oldDate }]); // expired rejected
+    mockDb.limit.mockResolvedValueOnce([
+      { id: "grade-1", schoolId: "school-1" },
+    ]); // grade level found
+    mockDb.limit.mockResolvedValueOnce([
+      { id: "rejected-1", createdAt: oldDate },
+    ]); // expired rejected
     mockDb.insert.mockReturnThis();
     mockDb.values.mockReturnThis();
-    mockDb.returning.mockResolvedValueOnce([{ id: 'new-app-1', status: 'submitted' }]);
+    mockDb.returning.mockResolvedValueOnce([
+      { id: "new-app-1", status: "submitted" },
+    ]);
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
     mockDb.where.mockReturnThis();
 
-    const { POST } = await import('@/app/api/applicants/route');
-    const res = await POST(makeRequest({
-      firstName: 'John',
-      lastName: 'Doe',
-      dateOfBirth: '2015-01-01',
-      gender: 'male',
-      guardianName: 'Jane Doe',
-      guardianEmail: 'jane@example.com',
-      gradeLevelId: 'grade-1',
-    }));
+    const { POST } = await import("@/app/api/applicants/route");
+    const res = await POST(
+      makeRequest({
+        firstName: "John",
+        lastName: "Doe",
+        dateOfBirth: "2015-01-01",
+        gender: "male",
+        guardianName: "Jane Doe",
+        guardianEmail: "jane@example.com",
+        gradeLevelId: "grade-1",
+      }),
+    );
 
     expect(res.status).toBe(200);
-    expect(mockAnonymize).toHaveBeenCalledWith(expect.anything(), 'rejected-1');
+    expect(mockAnonymize).toHaveBeenCalledWith(expect.anything(), "rejected-1");
   });
 
-  it('allows application when no existing rejected record exists', async () => {
+  it("allows application when no existing rejected record exists", async () => {
     mockDb.select.mockReturnThis();
     mockDb.from.mockReturnThis();
     mockDb.where.mockReturnThis();
     mockDb.orderBy.mockReturnThis();
-    mockDb.limit.mockResolvedValueOnce([{ id: 'grade-1', schoolId: 'school-1' }]); // grade level found
+    mockDb.limit.mockResolvedValueOnce([
+      { id: "grade-1", schoolId: "school-1" },
+    ]); // grade level found
     mockDb.limit.mockResolvedValueOnce([]); // no existing rejected
     mockDb.insert.mockReturnThis();
     mockDb.values.mockReturnThis();
-    mockDb.returning.mockResolvedValueOnce([{ id: 'new-app-1', status: 'submitted' }]);
+    mockDb.returning.mockResolvedValueOnce([
+      { id: "new-app-1", status: "submitted" },
+    ]);
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
     mockDb.where.mockReturnThis();
 
-    const { POST } = await import('@/app/api/applicants/route');
-    const res = await POST(makeRequest({
-      firstName: 'John',
-      lastName: 'Doe',
-      dateOfBirth: '2015-01-01',
-      gender: 'male',
-      guardianName: 'Jane Doe',
-      guardianEmail: 'jane@example.com',
-      gradeLevelId: 'grade-1',
-    }));
+    const { POST } = await import("@/app/api/applicants/route");
+    const res = await POST(
+      makeRequest({
+        firstName: "John",
+        lastName: "Doe",
+        dateOfBirth: "2015-01-01",
+        gender: "male",
+        guardianName: "Jane Doe",
+        guardianEmail: "jane@example.com",
+        gradeLevelId: "grade-1",
+      }),
+    );
 
     expect(res.status).toBe(200);
     expect(mockAnonymize).not.toHaveBeenCalled();
@@ -931,10 +1050,12 @@ git commit -m "test(3a): backend tests for re-application cooldown guard"
 ### Task 9: Set Up Web App Test Infrastructure
 
 **Files:**
+
 - Modify: `apps/web/vitest.config.ts`
 - Modify: `apps/web/package.json`
 
 **Interfaces:**
+
 - Produces: component test environment with `@testing-library/react` + jsdom
 
 - [ ] **Step 1: Install dependencies**
@@ -948,19 +1069,19 @@ cd apps/web && pnpm add -D @testing-library/react @testing-library/jest-dom jsdo
 `apps/web/vitest.config.ts`:
 
 ```typescript
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+import { defineConfig } from "vitest/config";
+import path from "path";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
-    include: ['./tests/**/*.test.ts'],
+    environment: "node",
+    include: ["./tests/**/*.test.ts"],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, '.'),
-      '@edunexus/shared': path.resolve(__dirname, '../../packages/shared/src'),
+      "@": path.resolve(__dirname, "."),
+      "@edunexus/shared": path.resolve(__dirname, "../../packages/shared/src"),
     },
   },
 });
@@ -969,24 +1090,24 @@ export default defineConfig({
 Add a separate project for component tests or use a multi-config setup. Simpler: use `environmentMatchGlobs` to route component tests to jsdom:
 
 ```typescript
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+import { defineConfig } from "vitest/config";
+import path from "path";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: "node",
     environmentMatchGlobs: [
-      ['tests/components/**/*.test.ts', 'jsdom'],
-      ['tests/app/components/**/*.test.ts', 'jsdom'],
+      ["tests/components/**/*.test.ts", "jsdom"],
+      ["tests/app/components/**/*.test.ts", "jsdom"],
     ],
-    include: ['./tests/**/*.test.ts'],
-    setupFiles: ['./tests/setup.ts'],
+    include: ["./tests/**/*.test.ts"],
+    setupFiles: ["./tests/setup.ts"],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, '.'),
-      '@edunexus/shared': path.resolve(__dirname, '../../packages/shared/src'),
+      "@": path.resolve(__dirname, "."),
+      "@edunexus/shared": path.resolve(__dirname, "../../packages/shared/src"),
     },
   },
 });
@@ -997,7 +1118,7 @@ export default defineConfig({
 `apps/web/tests/setup.ts`:
 
 ```typescript
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 ```
 
 - [ ] **Step 4: Verify setup works with a smoke test**
@@ -1005,12 +1126,12 @@ import '@testing-library/jest-dom';
 Create `apps/web/tests/components/smoke.test.ts`:
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
-describe('component test environment', () => {
-  it('resolves jsdom environment', () => {
-    expect(typeof window).toBe('object');
-    expect(typeof document).toBe('object');
+describe("component test environment", () => {
+  it("resolves jsdom environment", () => {
+    expect(typeof window).toBe("object");
+    expect(typeof document).toBe("object");
   });
 });
 ```
@@ -1030,6 +1151,7 @@ git commit -m "test: add component test infrastructure (jsdom, testing-library)"
 ### Task 10: Web App Component Tests
 
 **Files:**
+
 - Create: `apps/web/tests/components/apply/application-form.test.tsx`
 - Create: `apps/web/tests/components/admin/applicants/applicant-actions.test.tsx`
 

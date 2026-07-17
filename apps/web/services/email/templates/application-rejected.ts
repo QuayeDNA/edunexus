@@ -4,7 +4,11 @@ interface RejectedParams {
   cooldownDate: string;
 }
 
-export function applicationRejectedEmail({ guardianName, studentName, cooldownDate }: RejectedParams): string {
+export function applicationRejectedEmail({
+  guardianName,
+  studentName,
+  cooldownDate,
+}: RejectedParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>

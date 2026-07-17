@@ -1,49 +1,57 @@
-import { db } from '@/lib/db';
-import { applicants, gradeLevels } from '@edunexus/database';
-import { eq, and } from 'drizzle-orm';
-import { requireRole } from '@/lib/auth/auth.guard';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ApplicantDetailInfo } from '@/components/admin/applicants/applicant-detail-info';
-import { ApplicantDocuments } from '@/components/admin/applicants/applicant-documents';
-import { ApplicantActions } from '@/components/admin/applicants/applicant-actions';
-import { ApplicantAuditLog } from '@/components/admin/applicants/applicant-audit-log';
+import { db } from "@/lib/db";
+import { applicants, gradeLevels } from "@edunexus/database";
+import { eq, and } from "drizzle-orm";
+import { requireRole } from "@/lib/auth/auth.guard";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ApplicantDetailInfo } from "@/components/admin/applicants/applicant-detail-info";
+import { ApplicantDocuments } from "@/components/admin/applicants/applicant-documents";
+import { ApplicantActions } from "@/components/admin/applicants/applicant-actions";
+import { ApplicantAuditLog } from "@/components/admin/applicants/applicant-audit-log";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const statusBadge: Record<string, string> = {
-  submitted: 'bg-yellow-100 text-yellow-800',
-  under_review: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  waitlisted: 'bg-purple-100 text-purple-800',
+  submitted: "bg-yellow-100 text-yellow-800",
+  under_review: "bg-blue-100 text-blue-800",
+  accepted: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
+  waitlisted: "bg-purple-100 text-purple-800",
 };
 
 const statusLabel: Record<string, string> = {
-  submitted: 'Submitted',
-  under_review: 'Under Review',
-  accepted: 'Accepted',
-  rejected: 'Rejected',
-  waitlisted: 'Waitlisted',
+  submitted: "Submitted",
+  under_review: "Under Review",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  waitlisted: "Waitlisted",
 };
 
-export default async function ApplicantDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ApplicantDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
-  const session = await requireRole('admin', 'super_admin');
+  const session = await requireRole("admin", "super_admin");
 
-  const [applicant] = await db.select()
+  const [applicant] = await db
+    .select()
     .from(applicants)
-    .where(and(
-      eq(applicants.id, id),
-      eq(applicants.schoolId, session.user.schoolId!),
-    ))
+    .where(
+      and(
+        eq(applicants.id, id),
+        eq(applicants.schoolId, session.user.schoolId!),
+      ),
+    )
     .limit(1);
 
   if (!applicant) notFound();
 
-  const [gradeLevel] = await db.select()
+  const [gradeLevel] = await db
+    .select()
     .from(gradeLevels)
     .where(eq(gradeLevels.id, applicant.gradeLevelId))
     .limit(1);
@@ -51,7 +59,10 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/admin/applicants" className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          href="/admin/applicants"
+          className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to queue
         </Link>
@@ -63,12 +74,17 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
             <h1 className="text-2xl font-semibold">
               {applicant.firstName} {applicant.lastName}
             </h1>
-            <Badge className={statusBadge[applicant.status] ?? ''}>
+            <Badge className={statusBadge[applicant.status] ?? ""}>
               {statusLabel[applicant.status] ?? applicant.status}
             </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Applied {new Date(applicant.createdAt).toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' })}
+            Applied{" "}
+            {new Date(applicant.createdAt).toLocaleDateString("en-GH", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </p>
         </div>
       </div>
@@ -89,8 +105,14 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
         applicant={{
           ...applicant,
           createdAt: applicant.createdAt.toISOString(),
-          emergencyContacts: applicant.emergencyContacts as Array<{name: string; phone: string; relationship: string}> | null,
-          gradeLevelName: gradeLevel ? `${gradeLevel.name} (${gradeLevel.code})` : null,
+          emergencyContacts: applicant.emergencyContacts as Array<{
+            name: string;
+            phone: string;
+            relationship: string;
+          }> | null,
+          gradeLevelName: gradeLevel
+            ? `${gradeLevel.name} (${gradeLevel.code})`
+            : null,
         }}
       />
 

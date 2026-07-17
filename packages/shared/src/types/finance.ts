@@ -26,7 +26,7 @@ export interface StudentFee {
   fee_schedule_id: string;
   amount_paid?: number;
   balance: number;
-  status: 'pending' | 'partial' | 'paid' | 'overpaid' | 'waived';
+  status: "pending" | "partial" | "paid" | "overpaid" | "waived";
   due_date: string;
   created_at: string;
   updated_at: string;
@@ -39,7 +39,8 @@ export interface Payment {
   academic_year_id: string;
   term_id?: string | null;
   amount: number;
-  payment_method: 'cash' | 'mobile_money' | 'bank_transfer' | 'cheque' | 'card' | 'other';
+  payment_method:
+    "cash" | "mobile_money" | "bank_transfer" | "cheque" | "card" | "other";
   momo_provider?: string | null;
   transaction_reference?: string | null;
   payment_date: string;

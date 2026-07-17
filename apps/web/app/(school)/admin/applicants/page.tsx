@@ -1,15 +1,16 @@
-import { db } from '@/lib/db';
-import { gradeLevels } from '@edunexus/database';
-import { eq } from 'drizzle-orm';
-import { requireRole } from '@/lib/auth/auth.guard';
-import { ApplicantTable } from '@/components/admin/applicants/applicant-table';
+import { db } from "@/lib/db";
+import { gradeLevels } from "@edunexus/database";
+import { eq } from "drizzle-orm";
+import { requireRole } from "@/lib/auth/auth.guard";
+import { ApplicantTable } from "@/components/admin/applicants/applicant-table";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function ApplicantsPage() {
-  const session = await requireRole('admin', 'super_admin');
+  const session = await requireRole("admin", "super_admin");
   const schoolGrades = session.user.schoolId
-    ? await db.select()
+    ? await db
+        .select()
         .from(gradeLevels)
         .where(eq(gradeLevels.schoolId, session.user.schoolId))
         .orderBy(gradeLevels.sortOrder)

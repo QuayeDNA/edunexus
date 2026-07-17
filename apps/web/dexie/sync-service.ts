@@ -1,10 +1,10 @@
-import { dexieDb, type DexieSyncQueueItem } from './schema';
+import { dexieDb, type DexieSyncQueueItem } from "./schema";
 
 export class SyncService {
   private processing = false;
 
   async enqueue(
-    operation: DexieSyncQueueItem['operation'],
+    operation: DexieSyncQueueItem["operation"],
     table: string,
     recordId: string,
     payload: unknown,
@@ -22,14 +22,16 @@ export class SyncService {
     });
   }
 
-  async processQueue(batchSize = 50): Promise<{ synced: number; failed: number }> {
+  async processQueue(
+    batchSize = 50,
+  ): Promise<{ synced: number; failed: number }> {
     if (this.processing) return { synced: 0, failed: 0 };
     this.processing = true;
 
     try {
       const pending = await dexieDb.syncQueue
-        .where('createdAt')
-        .above('')
+        .where("createdAt")
+        .above("")
         .limit(batchSize)
         .toArray();
 
@@ -64,8 +66,10 @@ export class SyncService {
       const method = this.resolveOperation(item.operation);
       const response = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: ['POST', 'PUT', 'PATCH'].includes(method) ? item.payload : undefined,
+        headers: { "Content-Type": "application/json" },
+        body: ["POST", "PUT", "PATCH"].includes(method)
+          ? item.payload
+          : undefined,
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -73,13 +77,20 @@ export class SyncService {
       const serverData = await response.json();
 
       if (serverData.updatedAt) {
-        await this.applyServerTimestamp(item.table, item.recordId, serverData.updatedAt);
+        await this.applyServerTimestamp(
+          item.table,
+          item.recordId,
+          serverData.updatedAt,
+        );
       }
 
       return true;
     } catch (error) {
-      item.lastError = error instanceof Error ? error.message : 'Unknown error';
-      console.warn(`[SyncService] Failed to sync ${item.table}#${item.recordId}:`, item.lastError);
+      item.lastError = error instanceof Error ? error.message : "Unknown error";
+      console.warn(
+        `[SyncService] Failed to sync ${item.table}#${item.recordId}:`,
+        item.lastError,
+      );
       return false;
     }
   }
@@ -90,29 +101,44 @@ export class SyncService {
     serverUpdatedAt: string,
   ): Promise<void> {
     const store = dexieDb.table<any>(table);
-    store.update(recordId, { updatedAt: serverUpdatedAt, syncStatus: 'synced' });
+    store.update(recordId, {
+      updatedAt: serverUpdatedAt,
+      syncStatus: "synced",
+    });
     return Promise.resolve();
   }
 
   private resolveEndpoint(table: string): string {
     switch (table) {
-      case 'students': return '/api/students';
-      case 'staff': return '/api/staff';
-      case 'classes': return '/api/classes';
-      case 'attendance': return '/api/attendance';
-      case 'assessmentScores': return '/api/assessment-scores';
-      case 'payments': return '/api/payments';
-      case 'announcements': return '/api/announcements';
-      case 'notifications': return '/api/notifications';
-      default: return `/api/${table}`;
+      case "students":
+        return "/api/students";
+      case "staff":
+        return "/api/staff";
+      case "classes":
+        return "/api/classes";
+      case "attendance":
+        return "/api/attendance";
+      case "assessmentScores":
+        return "/api/assessment-scores";
+      case "payments":
+        return "/api/payments";
+      case "announcements":
+        return "/api/announcements";
+      case "notifications":
+        return "/api/notifications";
+      default:
+        return `/api/${table}`;
     }
   }
 
-  private resolveOperation(method: DexieSyncQueueItem['operation']): string {
+  private resolveOperation(method: DexieSyncQueueItem["operation"]): string {
     switch (method) {
-      case 'create': return 'POST';
-      case 'update': return 'PATCH';
-      case 'delete': return 'DELETE';
+      case "create":
+        return "POST";
+      case "update":
+        return "PATCH";
+      case "delete":
+        return "DELETE";
     }
   }
 }

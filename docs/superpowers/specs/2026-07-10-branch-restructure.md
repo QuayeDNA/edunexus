@@ -24,6 +24,7 @@ Workflow:
 ## CI Pipeline
 
 `.github/workflows/ci.yml` — runs on:
+
 - Push to `preview`
 - Pull request targeting `preview` or `main`
 
@@ -33,13 +34,13 @@ Each job: ubuntu-latest, pnpm 9, Node 20, `pnpm install --frozen-lockfile`, then
 
 ## Branch Protection
 
-| Setting | main | preview |
-|---|---|---|
-| Require PR | ✅ (1 approval) | ❌ |
+| Setting               | main                            | preview                         |
+| --------------------- | ------------------------------- | ------------------------------- |
+| Require PR            | ✅ (1 approval)                 | ❌                              |
 | Require status checks | ✅ lint, typecheck, test, build | ✅ lint, typecheck, test, build |
-| Strict (up-to-date) | ✅ | ❌ |
-| Enforce admins | ✅ | ❌ |
-| Force pushes | ❌ | ✅ |
+| Strict (up-to-date)   | ✅                              | ❌                              |
+| Enforce admins        | ✅                              | ❌                              |
+| Force pushes          | ❌                              | ✅                              |
 
 ## Landing Page
 

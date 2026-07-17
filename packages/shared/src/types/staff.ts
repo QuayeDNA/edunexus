@@ -1,4 +1,4 @@
-import type { Gender, EmploymentStatus } from './common';
+import type { Gender, EmploymentStatus } from "./common";
 
 export interface Staff {
   id: string;
@@ -12,7 +12,14 @@ export interface Staff {
   phone: string;
   email: string;
   address: string;
-  role: 'teacher' | 'admin' | 'support' | 'accountant' | 'librarian' | 'transport' | 'nurse';
+  role:
+    | "teacher"
+    | "admin"
+    | "support"
+    | "accountant"
+    | "librarian"
+    | "transport"
+    | "nurse";
   employment_status: EmploymentStatus;
   qualification?: string | null;
   specialization?: string | null;

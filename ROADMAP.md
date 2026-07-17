@@ -8,7 +8,7 @@
 
 ## 0. What changed and why
 
-Your original plan organizes phases **by portal** (Admin → Teacher → Student → Parent). That's the right lens for *shipping visible value*, but it hides two problems:
+Your original plan organizes phases **by portal** (Admin → Teacher → Student → Parent). That's the right lens for _shipping visible value_, but it hides two problems:
 
 1. **Entity rework risk.** `Attendance`, `Grade`, `Fee`, and `Announcement` are each consumed by 3–4 roles. Building them once inside "Admin Portal" and re-touching them in every later phase (new query, new permission check, new UI) means you re-open the same table/API 4 times across 4 phases instead of once.
 2. **Coverage gaps.** The original roadmap has no admissions/enrollment pipeline, no promotion/graduation workflow, no ID cards/certificates, no hostel/boarding module (relevant for Ghana boarding schools), and — most importantly for your market — **no WAEC/BECE/GES compliance layer**, which is likely the single biggest differentiator against generic school SaaS in Ghana.
@@ -74,22 +74,22 @@ Layer 10 — Platform Hardening
 
 ## 1a. Role Coverage Matrix
 
-Every phase below is still organized around **who it's for**, same as your original plan — the entity graph in §1 only decides *internal build order*, it doesn't replace role-based delivery. Use this table to see, at a glance, which role a phase primarily serves and which roles get secondary/read-only exposure.
+Every phase below is still organized around **who it's for**, same as your original plan — the entity graph in §1 only decides _internal build order_, it doesn't replace role-based delivery. Use this table to see, at a glance, which role a phase primarily serves and which roles get secondary/read-only exposure.
 
-| Phase | super_admin (Platform Operator) | admin (School) | teacher | student | parent |
-|---|:---:|:---:|:---:|:---:|:---:|
-| 1 — Foundation | ✅ primary | — | — | — | — |
-| 2 — Super Admin Portal | ✅ primary | — | — | — | — |
-| 3a — Admissions & Enrollment | — | ✅ primary | — | — | incidental (application form) |
-| 3 — Admin Portal | 🔧 ongoing ops (§16) | ✅ primary | — | — | — |
-| 4 — Teacher Portal | 🔧 ongoing ops (§16) | secondary (oversight) | ✅ primary | — | — |
-| 5 — Student Portal | — | secondary (oversight) | secondary (input source) | ✅ primary | — |
-| 6 — Parent Portal | 🔧 ongoing ops (§16) | secondary (oversight) | — | secondary (data source) | ✅ primary |
-| 7 — Communication | 🔧 ongoing ops (§16) | ✅ shared | ✅ shared | ✅ shared | ✅ shared |
-| 8 — Design System | ✅ shared | ✅ shared | ✅ shared | ✅ shared | ✅ shared |
-| 9 — Ghana Compliance | 🔧 ongoing ops (§16) | ✅ primary | secondary | — | — |
-| 10 — Production Hardening | ✅ primary (platform-wide) | secondary | — | — | — |
-| 11 — Extended Modules | 🔧 ongoing ops (§16) | ✅ primary | varies | varies | varies |
+| Phase                        | super_admin (Platform Operator) |    admin (School)     |         teacher          |         student         |            parent             |
+| ---------------------------- | :-----------------------------: | :-------------------: | :----------------------: | :---------------------: | :---------------------------: |
+| 1 — Foundation               |           ✅ primary            |           —           |            —             |            —            |               —               |
+| 2 — Super Admin Portal       |           ✅ primary            |           —           |            —             |            —            |               —               |
+| 3a — Admissions & Enrollment |                —                |      ✅ primary       |            —             |            —            | incidental (application form) |
+| 3 — Admin Portal             |      🔧 ongoing ops (§16)       |      ✅ primary       |            —             |            —            |               —               |
+| 4 — Teacher Portal           |      🔧 ongoing ops (§16)       | secondary (oversight) |        ✅ primary        |            —            |               —               |
+| 5 — Student Portal           |                —                | secondary (oversight) | secondary (input source) |       ✅ primary        |               —               |
+| 6 — Parent Portal            |      🔧 ongoing ops (§16)       | secondary (oversight) |            —             | secondary (data source) |          ✅ primary           |
+| 7 — Communication            |      🔧 ongoing ops (§16)       |       ✅ shared       |        ✅ shared         |        ✅ shared        |           ✅ shared           |
+| 8 — Design System            |            ✅ shared            |       ✅ shared       |        ✅ shared         |        ✅ shared        |           ✅ shared           |
+| 9 — Ghana Compliance         |      🔧 ongoing ops (§16)       |      ✅ primary       |        secondary         |            —            |               —               |
+| 10 — Production Hardening    |   ✅ primary (platform-wide)    |       secondary       |            —             |            —            |               —               |
+| 11 — Extended Modules        |      🔧 ongoing ops (§16)       |      ✅ primary       |          varies          |         varies          |            varies             |
 
 **"🔧 ongoing ops" means:** the phase itself is not for the platform operator, but it creates new things the operator needs visibility/control over (new module to meter, new cost to monitor, new tenant behavior to support). §16 lists these explicitly so they don't get silently dropped the way they were in v1, where super_admin work disappeared after Phase 2.
 
@@ -121,12 +121,13 @@ One paragraph — what and why.
 
 ---
 
-## 3. Phase 3a — Admissions & Enrollment *(NEW — insert before old Phase 3)*
+## 3. Phase 3a — Admissions & Enrollment _(NEW — insert before old Phase 3)_
 
 **Goal:** Get students and guardians into the system properly, instead of assuming they already exist.
 **Timeline:** 1–2 weeks
 
 ### Epic 3a.1 — Applicant intake
+
 - ~~[3a.1.1] Public application form~~ ✅ **Complete** (PR #115, merged to `preview` Jul 10)
   - Tasks: public form route per school subdomain; file upload for birth certificate (PR #118); application status enum; email confirmation via Resend.
   - AC: Given a valid subdomain, when a guardian submits the form, then an `Applicant` row is created with status `submitted` and a confirmation email is sent within 1 minute.
@@ -143,6 +144,7 @@ One paragraph — what and why.
   - **AC:** Given a rejected applicant re-applies within 6 months, then the POST returns 409 with cooldown expiry date. Given a rejected applicant re-applies after 6 months, then the old record is anonymized and the new application proceeds normally. Given a POST to `/api/applicants/cleanup`, then all rejected records older than 6 months are anonymized (up to 100 per call).
 
 ### Epic 3a.2 — Student & Guardian conversion
+
 - ~~[3a.2.1] Accepted → Student conversion~~ ✅ **Complete** (PR #121, merged to `preview` Jul 15)
   - Tasks: convert `Applicant` to `Student` + `Enrollment` in one transaction; generate student ID number (school-configurable format); create or link `Guardian` record(s), support multiple guardians per student and multiple students per guardian.
   - AC: Given an applicant is accepted, when the admin confirms conversion, then a `Student`, `Enrollment`, and at least one `Guardian` link exist, and the operation is atomic (no partial state on failure).
@@ -152,23 +154,25 @@ One paragraph — what and why.
   - AC: Given a CSV with 200 rows where 5 have invalid data, when imported, then 195 succeed, 5 are reported with row-level error messages, and nothing partially commits per invalid row.
 
 ### Epic 3a.3 — Lifecycle events
+
 - ~~[3a.3.1] Transfer / Withdrawal / Re-admission~~ ✅ **Complete** (PR #124, merged to `preview` Jul 16)
   - Tasks: status field on `Enrollment` (`active`, `transferred_out`, `withdrawn`, `graduated`); transfer certificate generation (PDF); re-admission flow reuses existing `Student` record.
   - AC: Given a withdrawn student, when re-admitted next year, then historical records (grades, attendance) remain linked to the same `Student` id.
 
-- **[3a.3.2] Parent/student transfer request & admin approval workflow** *(deferred — depends on Phase 6/7)*
+- **[3a.3.2] Parent/student transfer request & admin approval workflow** _(deferred — depends on Phase 6/7)_
   - Tasks: parent/student submits transfer request via portal; admin approval queue; approved request triggers same backend flow as [3a.3.1]; notification sent on status change.
   - AC: Given a parent submits a transfer request, when the admin approves it, then the enrollment status updates to `transferred_out` and the parent receives a notification.
   - ⚡ **GitHub:** [#123](https://github.com/QuayeDNA/edunexus/issues/123)
 
 ---
 
-## 4. Phase 3 — Admin (School) Portal *(restructured in entity order)*
+## 4. Phase 3 — Admin (School) Portal _(restructured in entity order)_
 
 **Goal:** School admin manages the full academic and operational lifecycle.
 **Timeline:** 4–6 weeks
 
 ### Epic 3.1 — Academic structure (Layer 1)
+
 - **[3.1.1] Academic Years & Terms CRUD** — set current year/term, lock past terms from edits
   - AC: Given a term is marked `locked`, when any user attempts to edit grades/attendance in it, then the write is rejected with a clear error.
 - **[3.1.2] Grade Levels & Classes CRUD** — capacity, homeroom teacher assignment
@@ -176,6 +180,7 @@ One paragraph — what and why.
 - **[3.1.4] Class-Subject-Teacher assignment matrix** — bulk assign, conflict warning if teacher already booked
 
 ### Epic 3.2 — Students (Layer 2, list/detail beyond admissions)
+
 - ~~[3.2.1] Student list/detail/edit~~ ✅ **Complete** (PR #124, merged to `preview` Jul 16)
   - Tasks: list page with stats bar + filters, detail page with info/enrollments/guardians/audit log, edit profile form, lifecycle actions (withdraw/transfer/graduate/re-admit) on detail page
 - **[3.2.2] Promotion & graduation workflow** — Depends on: Layer 4 grades/attendance thresholds
@@ -184,16 +189,19 @@ One paragraph — what and why.
 - **[3.2.3] ID card generation** — PDF/print template with photo, QR code linking to student record
 
 ### Epic 3.3 — Staff
+
 - **[3.3.1] Staff list/detail/new/edit** — employment contract (type, salary, start/end date)
 - **[3.3.2] Leave management** — request, approve/reject, balance tracking per leave type
 - **[3.3.3] Staff attendance** (Layer 3, if not covered by teacher self check-in)
 
 ### Epic 3.4 — Timetable (Layer 3)
+
 - **[3.4.1] Timetable builder** — drag-drop grid, per class/teacher/room
   - AC: Given two classes are assigned the same teacher at the same period, then the system flags a conflict before save.
 - **[3.4.2] Timetable PDF export** — per class and per teacher
 
 ### Epic 3.5 — Fees & Payroll (Layer 5)
+
 - **[3.5.1] Fee categories & schedules** — recurring vs one-time, per grade level or per student overrides
 - **[3.5.2] Auto-generation of student invoices** — run per term, idempotent (safe to re-run)
 - **[3.5.3] Scholarships & discounts** — percentage or fixed, approval workflow, audit trail
@@ -203,6 +211,7 @@ One paragraph — what and why.
 - **[3.5.6] Payslip PDF generation** — per staff, batch export
 
 ### Epic 3.6 — Reports hub
+
 - **[3.6.1] Cross-entity report builder** — attendance summary, fee arrears, grade distribution, payroll cost center
 - **[3.6.2] Scheduled/exportable reports** — CSV/PDF, email delivery option
 
@@ -249,7 +258,7 @@ One paragraph — what and why.
 
 ---
 
-## 8. Phase 7 — Cross-Role Communication *(moved earlier — was Phase 8)*
+## 8. Phase 7 — Cross-Role Communication _(moved earlier — was Phase 8)_
 
 **Rationale for reordering:** Parent Portal (Phase 6) references announcements and payment notifications; building comms after Phase 6 means Phase 6 ships with dead stubs. Build the entity layer here, expose it progressively.
 
@@ -276,7 +285,7 @@ One paragraph — what and why.
 
 ---
 
-## 10. Phase 9 — Ghana Compliance & Reporting *(NEW)*
+## 10. Phase 9 — Ghana Compliance & Reporting _(NEW)_
 
 **Goal:** This is likely your strongest market differentiator — most generic school SaaS doesn't handle this.
 **Timeline:** 2–3 weeks
@@ -310,31 +319,31 @@ One paragraph — what and why.
 
 - **[11.1] Library** — catalog, loans, fines, barcode scanner support
 - **[11.2] Transport** — fleet, routes, manifests, GPS tracking, parent live-view of bus
-- **[11.3] Hostel/Boarding** *(NEW — high relevance for Ghana SHS)* — room inventory, allocation, roll call integration with attendance
+- **[11.3] Hostel/Boarding** _(NEW — high relevance for Ghana SHS)_ — room inventory, allocation, roll call integration with attendance
 - **[11.4] Inventory & procurement** — stock movements, purchase orders, supplier records
 - **[11.5] Behavior gamification** — points, badges, leaderboards (consumes 4.6 incident log)
 - **[11.6] Wellness check-ins** — mood tracking, counselor-flagged review queue, privacy-restricted access
-- **[11.7] Alumni network** *(NEW)* — post-graduation contact retention, event invites
+- **[11.7] Alumni network** _(NEW)_ — post-graduation contact retention, event invites
 - **[11.8] AI insights** — grade prediction, attendance anomaly detection, at-risk student flagging
 
 ---
 
 ## 13. Updated Milestone Summary
 
-| Phase | Weeks | Cumulative | Delivers Value To |
-|---|---|---|---|
-| 1 — Foundation | 1 (actual) | 1 | Developers |
-| 2 — Super Admin Portal | 1 (actual) | 2 | Platform operator |
-| 3a — Admissions & Enrollment | 1–2 | 3–4 | School admin |
-| 3 — Admin Portal | 4–6 | 7–10 | School admin |
-| 4 — Teacher Portal | 3–4 | 10–14 | Teachers |
-| 5 — Student Portal | 2–3 | 12–17 | Students |
-| 6 — Parent Portal | 3–4 | 15–21 | Parents |
-| 7 — Communication | 3–4 | 18–25 | All roles |
-| 8 — Design System | 2–3 | 20–28 | All roles |
-| 9 — Ghana Compliance | 2–3 | 22–31 | School admin, platform |
-| 10 — Production Hardening | 3–4 | 25–35 | Platform |
-| 11 — Extended Modules | Ongoing | — | All roles |
+| Phase                        | Weeks      | Cumulative | Delivers Value To      |
+| ---------------------------- | ---------- | ---------- | ---------------------- |
+| 1 — Foundation               | 1 (actual) | 1          | Developers             |
+| 2 — Super Admin Portal       | 1 (actual) | 2          | Platform operator      |
+| 3a — Admissions & Enrollment | 1–2        | 3–4        | School admin           |
+| 3 — Admin Portal             | 4–6        | 7–10       | School admin           |
+| 4 — Teacher Portal           | 3–4        | 10–14      | Teachers               |
+| 5 — Student Portal           | 2–3        | 12–17      | Students               |
+| 6 — Parent Portal            | 3–4        | 15–21      | Parents                |
+| 7 — Communication            | 3–4        | 18–25      | All roles              |
+| 8 — Design System            | 2–3        | 20–28      | All roles              |
+| 9 — Ghana Compliance         | 2–3        | 22–31      | School admin, platform |
+| 10 — Production Hardening    | 3–4        | 25–35      | Platform               |
+| 11 — Extended Modules        | Ongoing    | —          | All roles              |
 
 **Total estimated time to production-ready (Phase 10): ~25–35 weeks** (up from 22–30 in v1, reflecting the added admissions and compliance phases — both of which materially increase what you can charge for vs. a generic competitor).
 
@@ -342,19 +351,19 @@ One paragraph — what and why.
 
 ## 14. Gap Analysis — what v1 was missing
 
-| Missing in v1 | Added where | Why it matters |
-|---|---|---|
-| Admissions/applicant pipeline | Phase 3a | You can't have students without an intake process |
-| Promotion/graduation workflow | Phase 3, Epic 3.2 | Schools need year-end batch processing, not just CRUD |
-| Transfer/withdrawal/re-admission | Phase 3a, Epic 3a.3 | Student records must persist across lifecycle changes |
-| ID card / certificate generation | Phase 3, Epic 3.2 | Common, expected feature; cheap to add once Student entity exists |
-| Hostel/boarding management | Phase 11 | High relevance for Ghana SHS (many are boarding) |
-| WAEC/BECE compliance exports | Phase 9 | Strongest local differentiator vs. generic SaaS |
-| GES statutory reporting | Phase 9 | Required for real adoption by Ghanaian schools |
-| 2FA for privileged roles | Phase 10 | Security expectation for admin/super_admin |
-| Idempotency on payments/imports | Woven into 3a.2.2 and 6.3 AC | Prevents duplicate financial records on retry/webhook replay |
-| Alumni network | Phase 11 | Low cost, revenue/engagement upside |
-| Reordered: Communication before Design Polish | Phases 6/7 swapped from v1 | Parent Portal in v1 referenced announcements/notifications before they existed |
+| Missing in v1                                 | Added where                  | Why it matters                                                                 |
+| --------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
+| Admissions/applicant pipeline                 | Phase 3a                     | You can't have students without an intake process                              |
+| Promotion/graduation workflow                 | Phase 3, Epic 3.2            | Schools need year-end batch processing, not just CRUD                          |
+| Transfer/withdrawal/re-admission              | Phase 3a, Epic 3a.3          | Student records must persist across lifecycle changes                          |
+| ID card / certificate generation              | Phase 3, Epic 3.2            | Common, expected feature; cheap to add once Student entity exists              |
+| Hostel/boarding management                    | Phase 11                     | High relevance for Ghana SHS (many are boarding)                               |
+| WAEC/BECE compliance exports                  | Phase 9                      | Strongest local differentiator vs. generic SaaS                                |
+| GES statutory reporting                       | Phase 9                      | Required for real adoption by Ghanaian schools                                 |
+| 2FA for privileged roles                      | Phase 10                     | Security expectation for admin/super_admin                                     |
+| Idempotency on payments/imports               | Woven into 3a.2.2 and 6.3 AC | Prevents duplicate financial records on retry/webhook replay                   |
+| Alumni network                                | Phase 11                     | Low cost, revenue/engagement upside                                            |
+| Reordered: Communication before Design Polish | Phases 6/7 swapped from v1   | Parent Portal in v1 referenced announcements/notifications before they existed |
 
 ---
 
@@ -372,6 +381,7 @@ One paragraph — what and why.
 This is the section v1 was missing entirely: v1 treated "platform operator" as something you finish in Phase 2 and never revisit. In reality, every later phase adds something the operator needs to see, meter, gate, or support. These issues are **role: super_admin only**, cut across the whole roadmap, and should be scheduled alongside (not after) the phase they attach to — pull them into whichever sprint touches that phase.
 
 ### Attach to Phase 3 (Admin Portal exists → operator needs oversight of many schools using it)
+
 - **[16.1] Cross-tenant operations dashboard** — aggregate KPIs across all schools: total students, enrollment growth, active admins, feature adoption per module.
   - AC: Given 50 tenant schools exist, when super_admin opens the dashboard, then aggregate stats load in under 2s via a materialized/summary table (not a live scan of all 43+ tables per request).
 - **[16.2] Support impersonation** — super_admin can "view as" a school admin for support/debugging, fully audit-logged, time-boxed session.
@@ -380,23 +390,28 @@ This is the section v1 was missing entirely: v1 treated "platform operator" as s
   - AC: Given a school is on the "Basic" plan, when their admin tries to access a "Pro"-only feature, then they see an upgrade prompt instead of the feature, enforced server-side (not just hidden in UI).
 
 ### Attach to Phase 6 (Payments go live → operator needs financial oversight)
+
 - **[16.4] Platform-wide payment reconciliation** — view Paystack settlements across all schools, flag failed/disputed transactions.
 - **[16.5] Revenue/commission tracking** — if the platform takes a cut of school transaction volume, track and report it separately from subscription billing.
 - **[16.6] Dunning & subscription lifecycle automation** — auto-notify schools on failed subscription payment, grace period, auto-suspend after N days, reactivation flow.
 
 ### Attach to Phase 7 (Communication → operator needs cost/abuse visibility)
+
 - **[16.7] Platform-wide announcements** — super_admin broadcasts to all school admins (maintenance windows, new feature notices), separate channel from school-level announcements.
 - **[16.8] Comms cost monitoring** — Africa's Talking SMS spend and Resend email volume, per-tenant and platform-wide, with plan-tier quota enforcement.
 
 ### Attach to Phase 9 (Compliance → operator needs bulk/multi-school tooling)
+
 - **[16.9] Bulk compliance export across schools** — for platform-managed clusters of schools (e.g. a group of affiliated schools), generate WAEC/GES exports in batch rather than one school at a time.
 
 ### Attach to Phase 10 (Hardening → this is inherently platform-operator territory)
+
 - **[16.10] System health dashboard** — uptime, error rates (from Sentry), DB performance, per-tenant resource usage.
 - **[16.11] Incident status page** — public-facing status page for school admins during outages.
 - **[16.12] Data export & deletion tooling** — for schools that cancel/offboard: full data export (self-service) and scheduled deletion after retention window, with confirmation safeguards.
 
 ### Attach to Phase 11 (Extended modules → operator needs to package/monetize them)
+
 - **[16.13] Module marketplace toggle** — per-school enable/disable of extended modules (Library, Transport, Hostel, etc.), tied to plan tier or add-on billing.
 - **[16.14] Usage-based billing hooks** — for modules billed by usage (e.g. SMS volume, storage), meter and surface to the existing billing schema from Phase 2.
 

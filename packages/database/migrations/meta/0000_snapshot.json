@@ -104,12 +104,8 @@
           "name": "academic_years_school_id_schools_id_fk",
           "tableFrom": "academic_years",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -232,12 +228,8 @@
           "name": "announcements_school_id_schools_id_fk",
           "tableFrom": "announcements",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -245,12 +237,8 @@
           "name": "announcements_created_by_profiles_id_fk",
           "tableFrom": "announcements",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -430,12 +418,8 @@
           "name": "applicants_school_id_schools_id_fk",
           "tableFrom": "applicants",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -443,12 +427,8 @@
           "name": "applicants_grade_level_id_grade_levels_id_fk",
           "tableFrom": "applicants",
           "tableTo": "grade_levels",
-          "columnsFrom": [
-            "grade_level_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["grade_level_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -588,12 +568,8 @@
           "name": "assessment_scores_school_id_schools_id_fk",
           "tableFrom": "assessment_scores",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -601,12 +577,8 @@
           "name": "assessment_scores_assessment_id_assessments_id_fk",
           "tableFrom": "assessment_scores",
           "tableTo": "assessments",
-          "columnsFrom": [
-            "assessment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assessment_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -614,12 +586,8 @@
           "name": "assessment_scores_student_id_students_id_fk",
           "tableFrom": "assessment_scores",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -702,12 +670,8 @@
           "name": "assessment_types_school_id_schools_id_fk",
           "tableFrom": "assessment_types",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -856,12 +820,8 @@
           "name": "assessments_school_id_schools_id_fk",
           "tableFrom": "assessments",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -869,12 +829,8 @@
           "name": "assessments_class_id_classes_id_fk",
           "tableFrom": "assessments",
           "tableTo": "classes",
-          "columnsFrom": [
-            "class_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["class_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -882,12 +838,8 @@
           "name": "assessments_subject_id_subjects_id_fk",
           "tableFrom": "assessments",
           "tableTo": "subjects",
-          "columnsFrom": [
-            "subject_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["subject_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -895,12 +847,8 @@
           "name": "assessments_term_id_terms_id_fk",
           "tableFrom": "assessments",
           "tableTo": "terms",
-          "columnsFrom": [
-            "term_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["term_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -908,12 +856,8 @@
           "name": "assessments_academic_year_id_academic_years_id_fk",
           "tableFrom": "assessments",
           "tableTo": "academic_years",
-          "columnsFrom": [
-            "academic_year_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["academic_year_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -921,12 +865,8 @@
           "name": "assessments_assessment_type_id_assessment_types_id_fk",
           "tableFrom": "assessments",
           "tableTo": "assessment_types",
-          "columnsFrom": [
-            "assessment_type_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assessment_type_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1084,12 +1024,8 @@
           "name": "attendance_school_id_schools_id_fk",
           "tableFrom": "attendance",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1097,12 +1033,8 @@
           "name": "attendance_student_id_students_id_fk",
           "tableFrom": "attendance",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1110,12 +1042,8 @@
           "name": "attendance_class_id_classes_id_fk",
           "tableFrom": "attendance",
           "tableTo": "classes",
-          "columnsFrom": [
-            "class_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["class_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1281,12 +1209,8 @@
           "name": "audit_logs_school_id_schools_id_fk",
           "tableFrom": "audit_logs",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1436,12 +1360,8 @@
           "name": "behavior_records_school_id_schools_id_fk",
           "tableFrom": "behavior_records",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1449,12 +1369,8 @@
           "name": "behavior_records_student_id_students_id_fk",
           "tableFrom": "behavior_records",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1462,12 +1378,8 @@
           "name": "behavior_records_recorded_by_profiles_id_fk",
           "tableFrom": "behavior_records",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "recorded_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recorded_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1620,12 +1532,8 @@
           "name": "book_loans_school_id_schools_id_fk",
           "tableFrom": "book_loans",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1633,12 +1541,8 @@
           "name": "book_loans_book_id_books_id_fk",
           "tableFrom": "book_loans",
           "tableTo": "books",
-          "columnsFrom": [
-            "book_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["book_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1646,12 +1550,8 @@
           "name": "book_loans_student_id_students_id_fk",
           "tableFrom": "book_loans",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1659,12 +1559,8 @@
           "name": "book_loans_staff_id_staff_id_fk",
           "tableFrom": "book_loans",
           "tableTo": "staff",
-          "columnsFrom": [
-            "staff_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["staff_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1800,12 +1696,8 @@
           "name": "books_school_id_schools_id_fk",
           "tableFrom": "books",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1933,12 +1825,8 @@
           "name": "class_subjects_school_id_schools_id_fk",
           "tableFrom": "class_subjects",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1946,12 +1834,8 @@
           "name": "class_subjects_class_id_classes_id_fk",
           "tableFrom": "class_subjects",
           "tableTo": "classes",
-          "columnsFrom": [
-            "class_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["class_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1959,12 +1843,8 @@
           "name": "class_subjects_subject_id_subjects_id_fk",
           "tableFrom": "class_subjects",
           "tableTo": "subjects",
-          "columnsFrom": [
-            "subject_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["subject_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1972,12 +1852,8 @@
           "name": "class_subjects_teacher_id_staff_id_fk",
           "tableFrom": "class_subjects",
           "tableTo": "staff",
-          "columnsFrom": [
-            "teacher_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2135,12 +2011,8 @@
           "name": "classes_school_id_schools_id_fk",
           "tableFrom": "classes",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2148,12 +2020,8 @@
           "name": "classes_grade_level_id_grade_levels_id_fk",
           "tableFrom": "classes",
           "tableTo": "grade_levels",
-          "columnsFrom": [
-            "grade_level_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["grade_level_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2161,12 +2029,8 @@
           "name": "classes_academic_year_id_academic_years_id_fk",
           "tableFrom": "classes",
           "tableTo": "academic_years",
-          "columnsFrom": [
-            "academic_year_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["academic_year_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2174,12 +2038,8 @@
           "name": "classes_homeroom_teacher_id_staff_id_fk",
           "tableFrom": "classes",
           "tableTo": "staff",
-          "columnsFrom": [
-            "homeroom_teacher_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["homeroom_teacher_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2307,12 +2167,8 @@
           "name": "expenses_school_id_schools_id_fk",
           "tableFrom": "expenses",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2396,12 +2252,8 @@
           "name": "fee_categories_school_id_schools_id_fk",
           "tableFrom": "fee_categories",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2517,12 +2369,8 @@
           "name": "fee_schedules_school_id_schools_id_fk",
           "tableFrom": "fee_schedules",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2530,12 +2378,8 @@
           "name": "fee_schedules_academic_year_id_academic_years_id_fk",
           "tableFrom": "fee_schedules",
           "tableTo": "academic_years",
-          "columnsFrom": [
-            "academic_year_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["academic_year_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2543,12 +2387,8 @@
           "name": "fee_schedules_term_id_terms_id_fk",
           "tableFrom": "fee_schedules",
           "tableTo": "terms",
-          "columnsFrom": [
-            "term_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["term_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2556,12 +2396,8 @@
           "name": "fee_schedules_fee_category_id_fee_categories_id_fk",
           "tableFrom": "fee_schedules",
           "tableTo": "fee_categories",
-          "columnsFrom": [
-            "fee_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fee_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2569,12 +2405,8 @@
           "name": "fee_schedules_class_id_classes_id_fk",
           "tableFrom": "fee_schedules",
           "tableTo": "classes",
-          "columnsFrom": [
-            "class_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["class_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2690,12 +2522,8 @@
           "name": "grade_levels_school_id_schools_id_fk",
           "tableFrom": "grade_levels",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2809,12 +2637,8 @@
           "name": "guardians_school_id_schools_id_fk",
           "tableFrom": "guardians",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2938,12 +2762,8 @@
           "name": "inventory_items_school_id_schools_id_fk",
           "tableFrom": "inventory_items",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3061,12 +2881,8 @@
           "name": "inventory_transactions_school_id_schools_id_fk",
           "tableFrom": "inventory_transactions",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3074,12 +2890,8 @@
           "name": "inventory_transactions_item_id_inventory_items_id_fk",
           "tableFrom": "inventory_transactions",
           "tableTo": "inventory_items",
-          "columnsFrom": [
-            "item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["item_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3196,12 +3008,8 @@
           "name": "invoices_school_id_schools_id_fk",
           "tableFrom": "invoices",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3209,12 +3017,8 @@
           "name": "invoices_subscription_id_school_subscriptions_id_fk",
           "tableFrom": "invoices",
           "tableTo": "school_subscriptions",
-          "columnsFrom": [
-            "subscription_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["subscription_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3224,9 +3028,7 @@
         "invoices_invoice_number_unique": {
           "name": "invoices_invoice_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "invoice_number"
-          ]
+          "columns": ["invoice_number"]
         }
       },
       "policies": {},
@@ -3384,12 +3186,8 @@
           "name": "lesson_plans_school_id_schools_id_fk",
           "tableFrom": "lesson_plans",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3397,12 +3195,8 @@
           "name": "lesson_plans_teacher_id_staff_id_fk",
           "tableFrom": "lesson_plans",
           "tableTo": "staff",
-          "columnsFrom": [
-            "teacher_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3548,12 +3342,8 @@
           "name": "messages_school_id_schools_id_fk",
           "tableFrom": "messages",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3561,12 +3351,8 @@
           "name": "messages_sender_id_profiles_id_fk",
           "tableFrom": "messages",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "sender_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sender_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3574,12 +3360,8 @@
           "name": "messages_recipient_id_profiles_id_fk",
           "tableFrom": "messages",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "recipient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3716,12 +3498,8 @@
           "name": "notifications_school_id_schools_id_fk",
           "tableFrom": "notifications",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3729,12 +3507,8 @@
           "name": "notifications_profile_id_profiles_id_fk",
           "tableFrom": "notifications",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "profile_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["profile_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3857,12 +3631,8 @@
           "name": "parent_engagements_school_id_schools_id_fk",
           "tableFrom": "parent_engagements",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3870,12 +3640,8 @@
           "name": "parent_engagements_student_id_students_id_fk",
           "tableFrom": "parent_engagements",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4037,12 +3803,8 @@
           "name": "payments_school_id_schools_id_fk",
           "tableFrom": "payments",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4050,12 +3812,8 @@
           "name": "payments_student_id_students_id_fk",
           "tableFrom": "payments",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4063,12 +3821,8 @@
           "name": "payments_student_fee_id_student_fees_id_fk",
           "tableFrom": "payments",
           "tableTo": "student_fees",
-          "columnsFrom": [
-            "student_fee_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_fee_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4218,12 +3972,8 @@
           "name": "payroll_runs_school_id_schools_id_fk",
           "tableFrom": "payroll_runs",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4396,12 +4146,8 @@
           "name": "payslips_school_id_schools_id_fk",
           "tableFrom": "payslips",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4409,12 +4155,8 @@
           "name": "payslips_payroll_run_id_payroll_runs_id_fk",
           "tableFrom": "payslips",
           "tableTo": "payroll_runs",
-          "columnsFrom": [
-            "payroll_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payroll_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4422,12 +4164,8 @@
           "name": "payslips_staff_id_staff_id_fk",
           "tableFrom": "payslips",
           "tableTo": "staff",
-          "columnsFrom": [
-            "staff_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["staff_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4589,12 +4327,8 @@
           "name": "profiles_school_id_schools_id_fk",
           "tableFrom": "profiles",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4780,12 +4514,8 @@
           "name": "report_cards_school_id_schools_id_fk",
           "tableFrom": "report_cards",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4793,12 +4523,8 @@
           "name": "report_cards_student_id_students_id_fk",
           "tableFrom": "report_cards",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4806,12 +4532,8 @@
           "name": "report_cards_academic_year_id_academic_years_id_fk",
           "tableFrom": "report_cards",
           "tableTo": "academic_years",
-          "columnsFrom": [
-            "academic_year_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["academic_year_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4819,12 +4541,8 @@
           "name": "report_cards_term_id_terms_id_fk",
           "tableFrom": "report_cards",
           "tableTo": "terms",
-          "columnsFrom": [
-            "term_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["term_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4832,12 +4550,8 @@
           "name": "report_cards_class_id_classes_id_fk",
           "tableFrom": "report_cards",
           "tableTo": "classes",
-          "columnsFrom": [
-            "class_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["class_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4938,12 +4652,8 @@
           "name": "routes_school_id_schools_id_fk",
           "tableFrom": "routes",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4951,12 +4661,8 @@
           "name": "routes_vehicle_id_vehicles_id_fk",
           "tableFrom": "routes",
           "tableTo": "vehicles",
-          "columnsFrom": [
-            "vehicle_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vehicle_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4964,12 +4670,8 @@
           "name": "routes_driver_id_staff_id_fk",
           "tableFrom": "routes",
           "tableTo": "staff",
-          "columnsFrom": [
-            "driver_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["driver_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5072,9 +4774,7 @@
         "school_plans_code_unique": {
           "name": "school_plans_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -5197,12 +4897,8 @@
           "name": "school_subscriptions_school_id_schools_id_fk",
           "tableFrom": "school_subscriptions",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5210,12 +4906,8 @@
           "name": "school_subscriptions_plan_id_school_plans_id_fk",
           "tableFrom": "school_subscriptions",
           "tableTo": "school_plans",
-          "columnsFrom": [
-            "plan_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plan_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5366,16 +5058,12 @@
         "schools_slug_unique": {
           "name": "schools_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         },
         "schools_code_unique": {
           "name": "schools_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -5613,12 +5301,8 @@
           "name": "staff_school_id_schools_id_fk",
           "tableFrom": "staff",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5770,12 +5454,8 @@
           "name": "staff_attendance_school_id_schools_id_fk",
           "tableFrom": "staff_attendance",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5783,12 +5463,8 @@
           "name": "staff_attendance_staff_id_staff_id_fk",
           "tableFrom": "staff_attendance",
           "tableTo": "staff",
-          "columnsFrom": [
-            "staff_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["staff_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5927,12 +5603,8 @@
           "name": "student_fees_school_id_schools_id_fk",
           "tableFrom": "student_fees",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5940,12 +5612,8 @@
           "name": "student_fees_student_id_students_id_fk",
           "tableFrom": "student_fees",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5953,12 +5621,8 @@
           "name": "student_fees_fee_schedule_id_fee_schedules_id_fk",
           "tableFrom": "student_fees",
           "tableTo": "fee_schedules",
-          "columnsFrom": [
-            "fee_schedule_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fee_schedule_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6050,12 +5714,8 @@
           "name": "student_guardians_student_id_students_id_fk",
           "tableFrom": "student_guardians",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6063,12 +5723,8 @@
           "name": "student_guardians_guardian_id_guardians_id_fk",
           "tableFrom": "student_guardians",
           "tableTo": "guardians",
-          "columnsFrom": [
-            "guardian_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["guardian_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6194,12 +5850,8 @@
           "name": "student_transport_school_id_schools_id_fk",
           "tableFrom": "student_transport",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6207,12 +5859,8 @@
           "name": "student_transport_student_id_students_id_fk",
           "tableFrom": "student_transport",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6220,12 +5868,8 @@
           "name": "student_transport_route_id_routes_id_fk",
           "tableFrom": "student_transport",
           "tableTo": "routes",
-          "columnsFrom": [
-            "route_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["route_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6430,12 +6074,8 @@
           "name": "students_school_id_schools_id_fk",
           "tableFrom": "students",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6539,12 +6179,8 @@
           "name": "subjects_school_id_schools_id_fk",
           "tableFrom": "subjects",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6688,12 +6324,8 @@
           "name": "terms_school_id_schools_id_fk",
           "tableFrom": "terms",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6701,12 +6333,8 @@
           "name": "terms_academic_year_id_academic_years_id_fk",
           "tableFrom": "terms",
           "tableTo": "academic_years",
-          "columnsFrom": [
-            "academic_year_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["academic_year_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6870,12 +6498,8 @@
           "name": "timetable_slots_school_id_schools_id_fk",
           "tableFrom": "timetable_slots",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6883,12 +6507,8 @@
           "name": "timetable_slots_class_id_classes_id_fk",
           "tableFrom": "timetable_slots",
           "tableTo": "classes",
-          "columnsFrom": [
-            "class_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["class_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6896,12 +6516,8 @@
           "name": "timetable_slots_subject_id_subjects_id_fk",
           "tableFrom": "timetable_slots",
           "tableTo": "subjects",
-          "columnsFrom": [
-            "subject_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["subject_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6909,12 +6525,8 @@
           "name": "timetable_slots_teacher_id_staff_id_fk",
           "tableFrom": "timetable_slots",
           "tableTo": "staff",
-          "columnsFrom": [
-            "teacher_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -7016,12 +6628,8 @@
           "name": "vehicles_school_id_schools_id_fk",
           "tableFrom": "vehicles",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -7145,12 +6753,8 @@
           "name": "wellness_checkins_school_id_schools_id_fk",
           "tableFrom": "wellness_checkins",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7158,12 +6762,8 @@
           "name": "wellness_checkins_student_id_students_id_fk",
           "tableFrom": "wellness_checkins",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

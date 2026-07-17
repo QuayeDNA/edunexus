@@ -69,7 +69,12 @@ export interface ApplicantClassOption {
 
 export interface ConversionResult {
   applicant: { id: string; status: string; targetClassId: string };
-  student: { id: string; studentIdNumber: string; firstName: string; lastName: string };
+  student: {
+    id: string;
+    studentIdNumber: string;
+    firstName: string;
+    lastName: string;
+  };
   enrollment: { id: string; classId: string; academicYearId: string };
   guardian: { id: string; name: string; email: string };
   credentials: {

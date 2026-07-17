@@ -1,14 +1,26 @@
-import { auth } from '@/lib/auth/auth.config';
-import type { UserRole } from '@edunexus/shared';
-import { apiError } from './response';
+import { auth } from "@/lib/auth/auth.config";
+import type { UserRole } from "@edunexus/shared";
+import { apiError } from "./response";
 
 export async function requireRole(...roles: UserRole[]) {
   const session = await auth();
   if (!session?.user) {
-    return { error: apiError(401, 'Unauthorized'), user: null };
+    return { error: apiError(401, "Unauthorized"), user: null };
   }
   if (!roles.includes(session.user.role as UserRole)) {
-    return { error: apiError(403, 'Forbidden: insufficient permissions'), user: null };
+    return {
+      error: apiError(403, "Forbidden: insufficient permissions"),
+      user: null,
+    };
   }
-  return { error: null, user: session.user as { id: string; role: UserRole; schoolId: string | null; email: string; name: string } };
+  return {
+    error: null,
+    user: session.user as {
+      id: string;
+      role: UserRole;
+      schoolId: string | null;
+      email: string;
+      name: string;
+    },
+  };
 }

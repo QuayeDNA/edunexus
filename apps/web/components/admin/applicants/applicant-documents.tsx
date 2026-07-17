@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface ApplicantDocumentsProps {
   birthCertificateFileId: string | null;
@@ -6,12 +6,16 @@ interface ApplicantDocumentsProps {
   photoFileId: string | null;
 }
 
-export function ApplicantDocuments({ birthCertificateFileId, priorReportCardFileId, photoFileId }: ApplicantDocumentsProps) {
+export function ApplicantDocuments({
+  birthCertificateFileId,
+  priorReportCardFileId,
+  photoFileId,
+}: ApplicantDocumentsProps) {
   const docs = [
-    { label: 'Birth Certificate', id: birthCertificateFileId },
-    { label: 'Prior Report Card', id: priorReportCardFileId },
-    { label: 'Applicant Photo', id: photoFileId },
-  ].filter(d => d.id);
+    { label: "Birth Certificate", id: birthCertificateFileId },
+    { label: "Prior Report Card", id: priorReportCardFileId },
+    { label: "Applicant Photo", id: photoFileId },
+  ].filter((d) => d.id);
 
   if (docs.length === 0) {
     return (
@@ -30,7 +34,7 @@ export function ApplicantDocuments({ birthCertificateFileId, priorReportCardFile
         Documents
       </h3>
       <ul className="space-y-2">
-        {docs.map(doc => (
+        {docs.map((doc) => (
           <li key={doc.id}>
             <a
               href={`/api/files/${doc.id}/download`}

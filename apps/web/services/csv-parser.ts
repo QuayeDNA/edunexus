@@ -10,8 +10,13 @@ export interface CsvParseResult {
 }
 
 export type KnownField =
-  | 'firstName' | 'lastName' | 'gender' | 'dateOfBirth'
-  | 'classId'   | 'guardianName' | 'guardianPhone';
+  | "firstName"
+  | "lastName"
+  | "gender"
+  | "dateOfBirth"
+  | "classId"
+  | "guardianName"
+  | "guardianPhone";
 
 export interface ColumnMap {
   mappings: Record<KnownField, string | null>;
@@ -20,13 +25,64 @@ export interface ColumnMap {
 }
 
 export const KNOWN_FIELD_LABELS: Record<KnownField, string[]> = {
-  firstName:    ['first name', 'firstname', 'first_name', 'given name', 'givenname', 'given_name', 'fname', 'forename'],
-  lastName:     ['last name', 'lastname', 'last_name', 'surname', 'family name', 'family_name', 'lname'],
-  gender:       ['gender', 'sex'],
-  dateOfBirth:  ['date of birth', 'dob', 'birth date', 'birthdate', 'birth_date', 'dateofbirth'],
-  classId:      ['class', 'class id', 'classid', 'class_id', 'class code', 'classcode', 'section'],
-  guardianName: ['guardian name', 'guardianname', 'guardian_name', 'parent name', 'parentname', 'parent_name', 'parent/guardian'],
-  guardianPhone:['guardian phone', 'guardianphone', 'guardian_phone', 'parent phone', 'parentphone', 'parent_phone', 'phone', 'mobile', 'telephone', 'contact'],
+  firstName: [
+    "first name",
+    "firstname",
+    "first_name",
+    "given name",
+    "givenname",
+    "given_name",
+    "fname",
+    "forename",
+  ],
+  lastName: [
+    "last name",
+    "lastname",
+    "last_name",
+    "surname",
+    "family name",
+    "family_name",
+    "lname",
+  ],
+  gender: ["gender", "sex"],
+  dateOfBirth: [
+    "date of birth",
+    "dob",
+    "birth date",
+    "birthdate",
+    "birth_date",
+    "dateofbirth",
+  ],
+  classId: [
+    "class",
+    "class id",
+    "classid",
+    "class_id",
+    "class code",
+    "classcode",
+    "section",
+  ],
+  guardianName: [
+    "guardian name",
+    "guardianname",
+    "guardian_name",
+    "parent name",
+    "parentname",
+    "parent_name",
+    "parent/guardian",
+  ],
+  guardianPhone: [
+    "guardian phone",
+    "guardianphone",
+    "guardian_phone",
+    "parent phone",
+    "parentphone",
+    "parent_phone",
+    "phone",
+    "mobile",
+    "telephone",
+    "contact",
+  ],
 };
 
 function levenshtein(a: string, b: string): number {
@@ -39,11 +95,7 @@ function levenshtein(a: string, b: string): number {
     curr[0] = i;
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      curr[j] = Math.min(
-        curr[j - 1] + 1,
-        prev[j] + 1,
-        prev[j - 1] + cost,
-      );
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
     }
     [prev, curr] = [curr, prev];
   }
@@ -53,7 +105,7 @@ function levenshtein(a: string, b: string): number {
 export function parseCsv(csvText: string): CsvParseResult {
   const rows: string[][] = [];
   let currentRow: string[] = [];
-  let currentField = '';
+  let currentField = "";
   let i = 0;
 
   while (i < csvText.length) {
@@ -70,32 +122,32 @@ export function parseCsv(csvText: string): CsvParseResult {
             i++;
             break;
           }
-        } else if (csvText[i] === '\r') {
-          currentField += '\n';
+        } else if (csvText[i] === "\r") {
+          currentField += "\n";
           i++;
-          if (i < csvText.length && csvText[i] === '\n') i++;
-        } else if (csvText[i] === '\n') {
-          currentField += '\n';
+          if (i < csvText.length && csvText[i] === "\n") i++;
+        } else if (csvText[i] === "\n") {
+          currentField += "\n";
           i++;
         } else {
           currentField += csvText[i];
           i++;
         }
       }
-    } else if (ch === ',') {
+    } else if (ch === ",") {
       currentRow.push(currentField);
-      currentField = '';
+      currentField = "";
       i++;
-    } else if (ch === '\r') {
+    } else if (ch === "\r") {
       currentRow.push(currentField);
-      currentField = '';
+      currentField = "";
       rows.push(currentRow);
       currentRow = [];
       i++;
-      if (i < csvText.length && csvText[i] === '\n') i++;
-    } else if (ch === '\n') {
+      if (i < csvText.length && csvText[i] === "\n") i++;
+    } else if (ch === "\n") {
       currentRow.push(currentField);
-      currentField = '';
+      currentField = "";
       rows.push(currentRow);
       currentRow = [];
       i++;
@@ -110,7 +162,10 @@ export function parseCsv(csvText: string): CsvParseResult {
     rows.push(currentRow);
   }
 
-  while (rows.length > 0 && rows[rows.length - 1].every(c => c.trim() === '')) {
+  while (
+    rows.length > 0 &&
+    rows[rows.length - 1].every((c) => c.trim() === "")
+  ) {
     rows.pop();
   }
 
@@ -118,7 +173,7 @@ export function parseCsv(csvText: string): CsvParseResult {
     return { headers: [], rows: [], totalRows: 0 };
   }
 
-  const headers = rows[0].map(h => h.trim());
+  const headers = rows[0].map((h) => h.trim());
   const dataRows = rows.slice(1).map((cells, idx) => ({
     index: idx + 2,
     cells,
@@ -132,7 +187,10 @@ export function parseCsv(csvText: string): CsvParseResult {
 }
 
 function normalizeHeader(header: string): string {
-  return header.toLowerCase().trim().replace(/[_\s-]+/g, ' ');
+  return header
+    .toLowerCase()
+    .trim()
+    .replace(/[_\s-]+/g, " ");
 }
 
 function scoreMatch(header: string, label: string): number {
@@ -150,7 +208,10 @@ function scoreMatch(header: string, label: string): number {
 export function autoMapColumns(headers: string[]): ColumnMap {
   const knownFields = Object.keys(KNOWN_FIELD_LABELS) as KnownField[];
 
-  const mapping: Record<KnownField, string | null> = {} as Record<KnownField, string | null>;
+  const mapping: Record<KnownField, string | null> = {} as Record<
+    KnownField,
+    string | null
+  >;
   for (const f of knownFields) mapping[f] = null;
 
   const usedFields = new Set<KnownField>();
@@ -196,7 +257,10 @@ export function autoMapColumns(headers: string[]): ColumnMap {
   allScores.sort((a, b) => b.score - a.score);
 
   for (const candidate of allScores) {
-    if (!usedFields.has(candidate.knownField) && mapping[candidate.knownField] === null) {
+    if (
+      !usedFields.has(candidate.knownField) &&
+      mapping[candidate.knownField] === null
+    ) {
       mapping[candidate.knownField] = candidate.header;
       usedFields.add(candidate.knownField);
     }

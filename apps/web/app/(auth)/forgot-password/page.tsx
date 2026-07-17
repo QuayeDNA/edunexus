@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, type FormEvent } from 'react';
-import Link from 'next/link';
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import {
   Card,
   CardHeader,
@@ -9,37 +9,37 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { APP_NAME } from '@/lib/utils/constants';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { APP_NAME } from "@/lib/utils/constants";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
       if (!res.ok) {
-        throw new Error('Failed to send reset email');
+        throw new Error("Failed to send reset email");
       }
 
       setSent(true);
     } catch {
-      setError('Failed to send reset email. Please try again.');
+      setError("Failed to send reset email. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-sm text-text-secondary">
-            Didn&apos;t receive the email? Check your spam folder or{' '}
+            Didn&apos;t receive the email? Check your spam folder or{" "}
             <button
               type="button"
               onClick={() => setSent(false)}
@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Sending...' : 'Send reset instructions'}
+            {loading ? "Sending..." : "Send reset instructions"}
           </Button>
           <Link
             href="/login"

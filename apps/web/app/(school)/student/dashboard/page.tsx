@@ -1,14 +1,16 @@
-import { requireRole } from '@/lib/auth/auth.guard';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { BookOpen, CalendarCheck, Trophy } from 'lucide-react';
+import { requireRole } from "@/lib/auth/auth.guard";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { BookOpen, CalendarCheck, Trophy } from "lucide-react";
 
 export default async function StudentDashboard() {
-  await requireRole('student');
+  await requireRole("student");
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-text-primary">Student Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-text-primary">
+          Student Dashboard
+        </h1>
         <p className="mt-1 text-sm text-text-secondary">
           Welcome back! Here&apos;s your academic overview
         </p>

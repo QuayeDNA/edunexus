@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from "react";
 
 type FilterValue = string | number | boolean | undefined | null;
 interface FilterState {
@@ -19,8 +19,11 @@ export function useFilters(initialFilters: FilterState = {}) {
   }, [initialFilters]);
 
   const activeFilterCount = useMemo(
-    () => Object.values(filters).filter((v) => v !== undefined && v !== null && v !== '').length,
-    [filters]
+    () =>
+      Object.values(filters).filter(
+        (v) => v !== undefined && v !== null && v !== "",
+      ).length,
+    [filters],
   );
 
   return { filters, setFilter, resetFilters, activeFilterCount };

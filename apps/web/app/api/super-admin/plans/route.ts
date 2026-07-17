@@ -1,42 +1,50 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { schoolPlans } from '@edunexus/database';
-import { desc } from 'drizzle-orm';
-import { z } from 'zod';
-import { routeHandler } from '@/lib/api/handler';
-import { ValidationError } from '@/lib/api/errors';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess } from '@/lib/api/response';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { schoolPlans } from "@edunexus/database";
+import { desc } from "drizzle-orm";
+import { z } from "zod";
+import { routeHandler } from "@/lib/api/handler";
+import { ValidationError } from "@/lib/api/errors";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess } from "@/lib/api/response";
 
 const createPlanSchema = z.object({
   name: z.string().min(2).max(255),
   code: z.string().min(2).max(50),
   description: z.string().max(500).optional(),
   price: z.coerce.number().positive(),
-  billingCycle: z.enum(['monthly', 'annual']),
+  billingCycle: z.enum(["monthly", "annual"]),
   maxStudents: z.coerce.number().int().min(0).default(0),
   maxStaff: z.coerce.number().int().min(0).default(0),
   features: z.array(z.string()).default([]),
 });
 
 export const GET = routeHandler(async () => {
-  const { error } = await requireRole('super_admin');
+  const { error } = await requireRole("super_admin");
   if (error) return error;
 
-  const plans = await db.select().from(schoolPlans).orderBy(desc(schoolPlans.createdAt));
+  const plans = await db
+    .select()
+    .from(schoolPlans)
+    .orderBy(desc(schoolPlans.createdAt));
   return apiSuccess(plans);
 });
 
 export const POST = routeHandler(async (request: NextRequest) => {
-  const { error: authError } = await requireRole('super_admin');
+  const { error: authError } = await requireRole("super_admin");
   if (authError) return authError;
 
   const body = await request.json();
   const parsed = createPlanSchema.safeParse(body);
   if (!parsed.success) {
-    throw new ValidationError(parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    throw new ValidationError(
+      parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    );
   }
 
-  const [plan] = await db.insert(schoolPlans).values({ ...parsed.data, price: String(parsed.data.price) }).returning();
+  const [plan] = await db
+    .insert(schoolPlans)
+    .values({ ...parsed.data, price: String(parsed.data.price) })
+    .returning();
   return apiSuccess(plan);
 });

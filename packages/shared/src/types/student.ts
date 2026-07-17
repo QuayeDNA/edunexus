@@ -1,4 +1,4 @@
-import type { Gender, Status } from './common';
+import type { Gender, Status } from "./common";
 
 export interface Student {
   id: string;
@@ -44,7 +44,7 @@ export interface Enrollment {
   student_id: string;
   class_id: string;
   academic_year_id: string;
-  status: 'active' | 'transferred_out' | 'withdrawn' | 'graduated';
+  status: "active" | "transferred_out" | "withdrawn" | "graduated";
   enrollment_date: string;
   created_at: string;
   updated_at: string;

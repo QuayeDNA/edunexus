@@ -1,5 +1,5 @@
-import { students } from '@edunexus/database';
-import { sql, like } from 'drizzle-orm';
+import { students } from "@edunexus/database";
+import { sql, like } from "drizzle-orm";
 
 export async function generateStudentId(
   q: any,
@@ -24,5 +24,5 @@ export async function generateStudentId(
     }
   }
 
-  return `${schoolCode}${year}${String(nextSeq).padStart(4, '0')}`;
+  return `${schoolCode}${year}${String(nextSeq).padStart(4, "0")}`;
 }

@@ -1,20 +1,23 @@
-import { NextRequest } from 'next/server';
-import { apiError, apiSuccess } from '@/lib/api/response';
-import { handleApiError } from '@/lib/api/errors';
-import { createStorageProvider } from '@/services/storage';
-import { FileTypeNotAllowedError, FileTooLargeError } from '@/services/storage/errors';
-import { db } from '@/lib/db/client';
-import { mediaFiles } from '@edunexus/database';
-import { resolveTenant } from '@/lib/tenant/resolve';
+import { NextRequest } from "next/server";
+import { apiError, apiSuccess } from "@/lib/api/response";
+import { handleApiError } from "@/lib/api/errors";
+import { createStorageProvider } from "@/services/storage";
+import {
+  FileTypeNotAllowedError,
+  FileTooLargeError,
+} from "@/services/storage/errors";
+import { db } from "@/lib/db/client";
+import { mediaFiles } from "@edunexus/database";
+import { resolveTenant } from "@/lib/tenant/resolve";
 import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE,
   buildStoragePath,
-} from '@edunexus/shared';
+} from "@edunexus/shared";
 
-import { randomUUID } from 'crypto';
+import { randomUUID } from "crypto";
 
-const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
+const SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 10;
@@ -34,23 +37,26 @@ function checkRateLimit(ip: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+    const ip =
+      request.headers.get("x-forwarded-for") ??
+      request.headers.get("x-real-ip") ??
+      "unknown";
     if (!checkRateLimit(ip)) {
-      return apiError(429, 'Too many uploads. Try again later.');
+      return apiError(429, "Too many uploads. Try again later.");
     }
 
-    const host = request.headers.get('host') ?? '';
+    const host = request.headers.get("host") ?? "";
     const tenant = await resolveTenant(host);
-    const schoolId = tenant.schoolId ?? request.headers.get('x-tenant-id');
+    const schoolId = tenant.schoolId ?? request.headers.get("x-tenant-id");
     if (!schoolId) {
-      return apiError(400, 'Tenant not resolved');
+      return apiError(400, "Tenant not resolved");
     }
 
     const formData = await request.formData();
-    const file = formData.get('file') as File | null;
+    const file = formData.get("file") as File | null;
 
     if (!file) {
-      return apiError(422, 'Missing file');
+      return apiError(422, "Missing file");
     }
 
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
@@ -63,7 +69,12 @@ export async function POST(request: NextRequest) {
 
     const tempEntityId = randomUUID();
     const buffer = Buffer.from(await file.arrayBuffer());
-    const storagePath = buildStoragePath(schoolId, 'applicant', tempEntityId, file.name);
+    const storagePath = buildStoragePath(
+      schoolId,
+      "applicant",
+      tempEntityId,
+      file.name,
+    );
     const provider = createStorageProvider();
     const result = await provider.upload(buffer, storagePath, file.type);
 
@@ -71,7 +82,7 @@ export async function POST(request: NextRequest) {
       .insert(mediaFiles)
       .values({
         schoolId,
-        entityType: 'applicant',
+        entityType: "applicant",
         entityId: tempEntityId,
         fileName: file.name,
         mimeType: file.type,

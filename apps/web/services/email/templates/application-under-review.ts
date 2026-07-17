@@ -3,7 +3,10 @@ interface UnderReviewParams {
   studentName: string;
 }
 
-export function applicationUnderReviewEmail({ guardianName, studentName }: UnderReviewParams): string {
+export function applicationUnderReviewEmail({
+  guardianName,
+  studentName,
+}: UnderReviewParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>

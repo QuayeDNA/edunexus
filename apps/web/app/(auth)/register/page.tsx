@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState } from "react";
+import Link from "next/link";
 import {
   Card,
   CardHeader,
@@ -9,15 +9,15 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from '@/components/ui/card';
-import { APP_NAME } from '@/lib/utils/constants';
+} from "@/components/ui/card";
+import { APP_NAME } from "@/lib/utils/constants";
 
 const STEPS = [
-  'School Details',
-  'Admin Account',
-  'Curriculum Setup',
-  'Academic Year',
-  'Confirmation',
+  "School Details",
+  "Admin Account",
+  "Curriculum Setup",
+  "Academic Year",
+  "Confirmation",
 ];
 
 export default function RegisterPage() {
@@ -36,17 +36,17 @@ export default function RegisterPage() {
               <div
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium ${
                   index < currentStep
-                    ? 'bg-brand-600 text-white'
+                    ? "bg-brand-600 text-white"
                     : index === currentStep
-                      ? 'border-2 border-brand-600 text-brand-600'
-                      : 'border border-border text-text-muted'
+                      ? "border-2 border-brand-600 text-brand-600"
+                      : "border border-border text-text-muted"
                 }`}
               >
-                {index < currentStep ? '✓' : index + 1}
+                {index < currentStep ? "✓" : index + 1}
               </div>
               <span
                 className={`text-sm ${
-                  index <= currentStep ? 'text-text-primary' : 'text-text-muted'
+                  index <= currentStep ? "text-text-primary" : "text-text-muted"
                 }`}
               >
                 {step}
@@ -66,7 +66,7 @@ export default function RegisterPage() {
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-center text-sm text-text-secondary">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link
             href="/login"
             className="font-medium text-brand-600 hover:text-brand-700"

@@ -24,28 +24,37 @@
 ### Task 1: GET /api/students list endpoint
 
 **Files:**
+
 - Create: `apps/web/app/api/students/route.ts`
 - Test: `tests/app/api/students/list.test.ts`
 
 **Interfaces:**
+
 - Consumes: `requireRole`, `resolveTenant`, `apiSuccess`, `apiError`, `db`, Drizzle schema types
 - Produces: `GET /api/students?search=&classId=&status=&gradeLevelId=&page=&pageSize=` returning `{ success, data: StudentRow[], meta }`
 
 - [ ] **Step 1: Write the failing test**
 
 Create `apps/web/tests/app/api/students/list.test.ts`:
-```typescript
-import { vi, describe, it, expect } from 'vitest';
-import { NextRequest } from 'next/server';
-import { GET } from '@/app/api/students/route';
 
-vi.mock('next/headers', () => ({ cookies: () => ({ get: () => null }) }));
-vi.mock('@/lib/auth/auth.config', () => ({
+```typescript
+import { vi, describe, it, expect } from "vitest";
+import { NextRequest } from "next/server";
+import { GET } from "@/app/api/students/route";
+
+vi.mock("next/headers", () => ({ cookies: () => ({ get: () => null }) }));
+vi.mock("@/lib/auth/auth.config", () => ({
   auth: vi.fn().mockResolvedValue({
-    user: { id: 'u1', role: 'admin', schoolId: 'school-1', email: 'a@b.com', name: 'A' },
+    user: {
+      id: "u1",
+      role: "admin",
+      schoolId: "school-1",
+      email: "a@b.com",
+      name: "A",
+    },
   }),
 }));
-vi.mock('@/lib/db', () => {
+vi.mock("@/lib/db", () => {
   const mockDb = {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
@@ -55,37 +64,41 @@ vi.mock('@/lib/db', () => {
     offset: vi.fn().mockReturnThis(),
     leftJoin: vi.fn().mockReturnThis(),
   };
-  const countFn = vi.fn().mockResolvedValue([{ count: '5' }]);
+  const countFn = vi.fn().mockResolvedValue([{ count: "5" }]);
   (mockDb as any).$count = countFn;
   return { db: mockDb, mockDb };
 });
 
-describe('GET /api/students', () => {
-  it('returns paginated student list', async () => {
-    const req = new NextRequest('http://localhost/api/students?page=1&pageSize=10');
-    req.headers.set('host', 'demo.edunexus.com');
+describe("GET /api/students", () => {
+  it("returns paginated student list", async () => {
+    const req = new NextRequest(
+      "http://localhost/api/students?page=1&pageSize=10",
+    );
+    req.headers.set("host", "demo.edunexus.com");
     const res = await GET(req);
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(Array.isArray(body.data)).toBe(true);
   });
-  it('filters by search term', async () => {
-    const req = new NextRequest('http://localhost/api/students?search=John');
-    req.headers.set('host', 'demo.edunexus.com');
+  it("filters by search term", async () => {
+    const req = new NextRequest("http://localhost/api/students?search=John");
+    req.headers.set("host", "demo.edunexus.com");
     const res = await GET(req);
     expect(res.status).toBe(200);
   });
-  it('filters by classId', async () => {
-    const req = new NextRequest('http://localhost/api/students?classId=c1');
-    req.headers.set('host', 'demo.edunexus.com');
+  it("filters by classId", async () => {
+    const req = new NextRequest("http://localhost/api/students?classId=c1");
+    req.headers.set("host", "demo.edunexus.com");
     const res = await GET(req);
     expect(res.status).toBe(200);
   });
-  it('requires admin role', async () => {
-    const { auth } = await import('@/lib/auth/auth.config');
-    (auth as any).mockResolvedValueOnce({ user: { id: 'u2', role: 'student', schoolId: 'school-1' } });
-    const req = new NextRequest('http://localhost/api/students');
-    req.headers.set('host', 'demo.edunexus.com');
+  it("requires admin role", async () => {
+    const { auth } = await import("@/lib/auth/auth.config");
+    (auth as any).mockResolvedValueOnce({
+      user: { id: "u2", role: "student", schoolId: "school-1" },
+    });
+    const req = new NextRequest("http://localhost/api/students");
+    req.headers.set("host", "demo.edunexus.com");
     const res = await GET(req);
     expect(res.status).toBe(403);
   });
@@ -98,39 +111,52 @@ Expected: FAIL — endpoint doesn't exist yet
 - [ ] **Step 2: Implement GET /api/students**
 
 Create `apps/web/app/api/students/route.ts`:
+
 ```typescript
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { students, enrollments, classes, gradeLevels, studentGuardians, guardians } from '@edunexus/database';
-import { eq, and, or, desc, count, ilike, sql } from 'drizzle-orm';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import {
+  students,
+  enrollments,
+  classes,
+  gradeLevels,
+  studentGuardians,
+  guardians,
+} from "@edunexus/database";
+import { eq, and, or, desc, count, ilike, sql } from "drizzle-orm";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
 
 export async function GET(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
   const { searchParams } = new URL(request.url);
-  const search = searchParams.get('search')?.trim() || '';
-  const classId = searchParams.get('classId');
-  const status = searchParams.get('status');
-  const gradeLevelId = searchParams.get('gradeLevelId');
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get('pageSize') || '20', 10)));
+  const search = searchParams.get("search")?.trim() || "";
+  const classId = searchParams.get("classId");
+  const status = searchParams.get("status");
+  const gradeLevelId = searchParams.get("gradeLevelId");
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const pageSize = Math.min(
+    50,
+    Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10)),
+  );
 
   const conditions = [eq(students.schoolId, schoolId)];
   if (search) {
-    conditions.push(or(
-      ilike(students.firstName, `%${search}%`),
-      ilike(students.lastName, `%${search}%`),
-      ilike(students.studentIdNumber, `%${search}%`),
-    ));
+    conditions.push(
+      or(
+        ilike(students.firstName, `%${search}%`),
+        ilike(students.lastName, `%${search}%`),
+        ilike(students.studentIdNumber, `%${search}%`),
+      ),
+    );
   }
   if (status) conditions.push(eq(students.status, status));
 
@@ -140,21 +166,25 @@ export async function GET(request: NextRequest) {
     gradeJoin = and(eq(classes.gradeLevelId, gradeLevelId));
   }
 
-  const [totalResult] = await db.select({ count: count() }).from(students).where(and(...conditions));
+  const [totalResult] = await db
+    .select({ count: count() })
+    .from(students)
+    .where(and(...conditions));
   const total = Number(totalResult.count);
 
-  const rows = await db.select({
-    id: students.id,
-    firstName: students.firstName,
-    lastName: students.lastName,
-    otherNames: students.otherNames,
-    studentIdNumber: students.studentIdNumber,
-    gender: students.gender,
-    status: students.status,
-    enrollmentDate: students.enrollmentDate,
-    className: classes.name,
-    gradeLevelName: gradeLevels.name,
-    guardianName: sql<string>`(
+  const rows = await db
+    .select({
+      id: students.id,
+      firstName: students.firstName,
+      lastName: students.lastName,
+      otherNames: students.otherNames,
+      studentIdNumber: students.studentIdNumber,
+      gender: students.gender,
+      status: students.status,
+      enrollmentDate: students.enrollmentDate,
+      className: classes.name,
+      gradeLevelName: gradeLevels.name,
+      guardianName: sql<string>`(
       SELECT CONCAT(g.first_name, ' ', g.last_name)
       FROM ${studentGuardians} sg
       JOIN ${guardians} g ON g.id = sg.guardian_id
@@ -162,20 +192,33 @@ export async function GET(request: NextRequest) {
       ORDER BY sg.is_primary DESC
       LIMIT 1
     )`,
-  })
+    })
     .from(students)
-    .leftJoin(enrollments, and(
-      eq(enrollments.studentId, students.id),
-      eq(enrollments.status, 'active'),
-    ))
+    .leftJoin(
+      enrollments,
+      and(
+        eq(enrollments.studentId, students.id),
+        eq(enrollments.status, "active"),
+      ),
+    )
     .leftJoin(classes, eq(classes.id, enrollments.classId))
     .leftJoin(gradeLevels, eq(gradeLevels.id, classes.gradeLevelId))
-    .where(and(...conditions, gradeLevelId ? eq(classes.gradeLevelId, gradeLevelId) : undefined))
+    .where(
+      and(
+        ...conditions,
+        gradeLevelId ? eq(classes.gradeLevelId, gradeLevelId) : undefined,
+      ),
+    )
     .orderBy(students.lastName)
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
-  return apiSuccess(rows, { page, pageSize, total, totalPages: Math.ceil(total / pageSize) });
+  return apiSuccess(rows, {
+    page,
+    pageSize,
+    total,
+    totalPages: Math.ceil(total / pageSize),
+  });
 }
 ```
 
@@ -196,45 +239,57 @@ git commit -m "feat(3.2.1): add GET /api/students list endpoint with search/filt
 ### Task 2: GET /api/students/stats endpoint
 
 **Files:**
+
 - Create: `apps/web/app/api/students/stats/route.ts`
 
 - [ ] **Step 1: Implement GET /api/students/stats**
 
 Create `apps/web/app/api/students/stats/route.ts`:
+
 ```typescript
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { students, enrollments, classes } from '@edunexus/database';
-import { eq, and, count, sql } from 'drizzle-orm';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { students, enrollments, classes } from "@edunexus/database";
+import { eq, and, count, sql } from "drizzle-orm";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
 
 export async function GET(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
-  const [totalResult] = await db.select({ count: count() })
-    .from(students).where(eq(students.schoolId, schoolId));
+  const [totalResult] = await db
+    .select({ count: count() })
+    .from(students)
+    .where(eq(students.schoolId, schoolId));
   const total = Number(totalResult.count);
 
-  const [activeResult] = await db.select({ count: count() })
-    .from(students).where(and(eq(students.schoolId, schoolId), eq(students.status, 'active')));
+  const [activeResult] = await db
+    .select({ count: count() })
+    .from(students)
+    .where(and(eq(students.schoolId, schoolId), eq(students.status, "active")));
   const activeCount = Number(activeResult.count);
 
-  const byStatus = await db.select({ status: students.status, count: count() })
-    .from(students).where(eq(students.schoolId, schoolId))
-    .groupBy(students.status).orderBy(students.status);
+  const byStatus = await db
+    .select({ status: students.status, count: count() })
+    .from(students)
+    .where(eq(students.schoolId, schoolId))
+    .groupBy(students.status)
+    .orderBy(students.status);
 
-  const byClass = await db.select({ className: classes.name, count: count() })
+  const byClass = await db
+    .select({ className: classes.name, count: count() })
     .from(enrollments)
     .innerJoin(classes, eq(classes.id, enrollments.classId))
-    .where(and(eq(enrollments.schoolId, schoolId), eq(enrollments.status, 'active')))
+    .where(
+      and(eq(enrollments.schoolId, schoolId), eq(enrollments.status, "active")),
+    )
     .groupBy(classes.name)
     .orderBy(sql`count DESC`)
     .limit(8);
@@ -260,24 +315,32 @@ git commit -m "feat(3.2.1): add GET /api/students/stats endpoint"
 ### Task 3: GET /api/students/[id] + PATCH /api/students/[id]
 
 **Files:**
+
 - Create: `apps/web/app/api/students/[id]/route.ts`
 - Test: `tests/app/api/students/detail.test.ts`, `tests/app/api/students/update.test.ts`
 
 - [ ] **Step 1: Write the failing tests**
 
 Create `tests/app/api/students/detail.test.ts`:
-```typescript
-import { vi, describe, it, expect } from 'vitest';
-import { NextRequest } from 'next/server';
-import { GET } from '@/app/api/students/[id]/route';
 
-vi.mock('next/headers', () => ({ cookies: () => ({ get: () => null }) }));
-vi.mock('@/lib/auth/auth.config', () => ({
+```typescript
+import { vi, describe, it, expect } from "vitest";
+import { NextRequest } from "next/server";
+import { GET } from "@/app/api/students/[id]/route";
+
+vi.mock("next/headers", () => ({ cookies: () => ({ get: () => null }) }));
+vi.mock("@/lib/auth/auth.config", () => ({
   auth: vi.fn().mockResolvedValue({
-    user: { id: 'u1', role: 'admin', schoolId: 'school-1', email: 'a@b.com', name: 'A' },
+    user: {
+      id: "u1",
+      role: "admin",
+      schoolId: "school-1",
+      email: "a@b.com",
+      name: "A",
+    },
   }),
 }));
-vi.mock('@/lib/db', () => ({
+vi.mock("@/lib/db", () => ({
   db: {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
@@ -285,69 +348,76 @@ vi.mock('@/lib/db', () => ({
     orderBy: vi.fn().mockReturnThis(),
     leftJoin: vi.fn().mockReturnThis(),
     innerJoin: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockResolvedValue([{ id: 's1', firstName: 'John' }]),
+    limit: vi.fn().mockResolvedValue([{ id: "s1", firstName: "John" }]),
   },
 }));
 
-describe('GET /api/students/[id]', () => {
-  it('returns student detail', async () => {
-    const req = new NextRequest('http://localhost/api/students/s1');
-    req.headers.set('host', 'demo.edunexus.com');
-    const res = await GET(req, { params: Promise.resolve({ id: 's1' }) });
+describe("GET /api/students/[id]", () => {
+  it("returns student detail", async () => {
+    const req = new NextRequest("http://localhost/api/students/s1");
+    req.headers.set("host", "demo.edunexus.com");
+    const res = await GET(req, { params: Promise.resolve({ id: "s1" }) });
     expect(res.status).toBe(200);
   });
-  it('returns 404 for missing student', async () => {
-    const { db } = await import('@/lib/db');
+  it("returns 404 for missing student", async () => {
+    const { db } = await import("@/lib/db");
     (db as any).limit.mockResolvedValueOnce([]);
-    const req = new NextRequest('http://localhost/api/students/missing');
-    req.headers.set('host', 'demo.edunexus.com');
-    const res = await GET(req, { params: Promise.resolve({ id: 'missing' }) });
+    const req = new NextRequest("http://localhost/api/students/missing");
+    req.headers.set("host", "demo.edunexus.com");
+    const res = await GET(req, { params: Promise.resolve({ id: "missing" }) });
     expect(res.status).toBe(404);
   });
 });
 ```
 
 Create `tests/app/api/students/update.test.ts`:
-```typescript
-import { vi, describe, it, expect } from 'vitest';
-import { NextRequest } from 'next/server';
-import { PATCH } from '@/app/api/students/[id]/route';
 
-vi.mock('next/headers', () => ({ cookies: () => ({ get: () => null }) }));
-vi.mock('@/lib/auth/auth.config', () => ({
+```typescript
+import { vi, describe, it, expect } from "vitest";
+import { NextRequest } from "next/server";
+import { PATCH } from "@/app/api/students/[id]/route";
+
+vi.mock("next/headers", () => ({ cookies: () => ({ get: () => null }) }));
+vi.mock("@/lib/auth/auth.config", () => ({
   auth: vi.fn().mockResolvedValue({
-    user: { id: 'u1', role: 'admin', schoolId: 'school-1', email: 'a@b.com', name: 'A' },
+    user: {
+      id: "u1",
+      role: "admin",
+      schoolId: "school-1",
+      email: "a@b.com",
+      name: "A",
+    },
   }),
 }));
-vi.mock('@/lib/db', () => ({
+vi.mock("@/lib/db", () => ({
   db: {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockResolvedValue([{ id: 's1' }]),
+    limit: vi.fn().mockResolvedValue([{ id: "s1" }]),
     update: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockResolvedValue([{ id: 's1', firstName: 'Updated' }]),
+    returning: vi.fn().mockResolvedValue([{ id: "s1", firstName: "Updated" }]),
   },
 }));
 
-describe('PATCH /api/students/[id]', () => {
-  it('updates student profile', async () => {
-    const req = new NextRequest('http://localhost/api/students/s1', {
-      method: 'PATCH',
-      body: JSON.stringify({ firstName: 'Updated', lastName: 'Name' }),
+describe("PATCH /api/students/[id]", () => {
+  it("updates student profile", async () => {
+    const req = new NextRequest("http://localhost/api/students/s1", {
+      method: "PATCH",
+      body: JSON.stringify({ firstName: "Updated", lastName: "Name" }),
     });
-    req.headers.set('host', 'demo.edunexus.com');
-    const res = await PATCH(req, { params: Promise.resolve({ id: 's1' }) });
+    req.headers.set("host", "demo.edunexus.com");
+    const res = await PATCH(req, { params: Promise.resolve({ id: "s1" }) });
     expect(res.status).toBe(200);
   });
-  it('validates request body', async () => {
-    const req = new NextRequest('http://localhost/api/students/s1', {
-      method: 'PATCH',
-      body: JSON.stringify({ gender: 'invalid' }),
+  it("validates request body", async () => {
+    const req = new NextRequest("http://localhost/api/students/s1", {
+      method: "PATCH",
+      body: JSON.stringify({ gender: "invalid" }),
     });
-    req.headers.set('host', 'demo.edunexus.com');
-    const res = await PATCH(req, { params: Promise.resolve({ id: 's1' }) });
+    req.headers.set("host", "demo.edunexus.com");
+    const res = await PATCH(req, { params: Promise.resolve({ id: "s1" }) });
     expect(res.status).toBe(422);
   });
 });
@@ -359,29 +429,43 @@ Expected: FAIL
 - [ ] **Step 2: Implement the endpoint**
 
 Create `apps/web/app/api/students/[id]/route.ts`:
+
 ```typescript
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { students, enrollments, classes, academicYears, studentGuardians, guardians } from '@edunexus/database';
-import { eq, and, desc } from 'drizzle-orm';
-import { z } from 'zod';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import {
+  students,
+  enrollments,
+  classes,
+  academicYears,
+  studentGuardians,
+  guardians,
+} from "@edunexus/database";
+import { eq, and, desc } from "drizzle-orm";
+import { z } from "zod";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
 
 const updateSchema = z.object({
   firstName: z.string().min(1).max(100).optional(),
   lastName: z.string().min(1).max(100).optional(),
   otherNames: z.string().max(100).nullable().optional(),
-  gender: z.enum(['male', 'female']).optional(),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  gender: z.enum(["male", "female"]).optional(),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   placeOfBirth: z.string().max(100).nullable().optional(),
   nationality: z.string().max(100).nullable().optional(),
   religion: z.string().max(50).nullable().optional(),
   address: z.string().nullable().optional(),
   phone: z.string().max(20).nullable().optional(),
-  email: z.string().email().nullable().optional().or(z.literal('')),
-  bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).nullable().optional(),
+  email: z.string().email().nullable().optional().or(z.literal("")),
+  bloodGroup: z
+    .enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
+    .nullable()
+    .optional(),
   medicalNotes: z.string().nullable().optional(),
 });
 
@@ -390,44 +474,49 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
-  const [student] = await db.select()
+  const [student] = await db
+    .select()
     .from(students)
     .where(and(eq(students.id, id), eq(students.schoolId, schoolId)))
     .limit(1);
-  if (!student) return apiError(404, 'Student not found');
+  if (!student) return apiError(404, "Student not found");
 
-  const enrollmentRows = await db.select({
-    id: enrollments.id,
-    className: classes.name,
-    academicYearName: academicYears.name,
-    status: enrollments.status,
-    enrollmentDate: enrollments.enrollmentDate,
-    endDate: enrollments.endDate,
-  })
+  const enrollmentRows = await db
+    .select({
+      id: enrollments.id,
+      className: classes.name,
+      academicYearName: academicYears.name,
+      status: enrollments.status,
+      enrollmentDate: enrollments.enrollmentDate,
+      endDate: enrollments.endDate,
+    })
     .from(enrollments)
     .leftJoin(classes, eq(classes.id, enrollments.classId))
     .leftJoin(academicYears, eq(academicYears.id, enrollments.academicYearId))
-    .where(and(eq(enrollments.studentId, id), eq(enrollments.schoolId, schoolId)))
+    .where(
+      and(eq(enrollments.studentId, id), eq(enrollments.schoolId, schoolId)),
+    )
     .orderBy(desc(enrollments.enrollmentDate));
 
-  const guardianRows = await db.select({
-    id: guardians.id,
-    firstName: guardians.firstName,
-    lastName: guardians.lastName,
-    relationship: studentGuardians.relationship,
-    phone: guardians.phone,
-    email: guardians.email,
-    occupation: guardians.occupation,
-    isPrimary: studentGuardians.isPrimary,
-  })
+  const guardianRows = await db
+    .select({
+      id: guardians.id,
+      firstName: guardians.firstName,
+      lastName: guardians.lastName,
+      relationship: studentGuardians.relationship,
+      phone: guardians.phone,
+      email: guardians.email,
+      occupation: guardians.occupation,
+      isPrimary: studentGuardians.isPrimary,
+    })
     .from(studentGuardians)
     .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
     .where(eq(studentGuardians.studentId, id));
@@ -448,27 +537,33 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
-  const [existing] = await db.select({ id: students.id })
+  const [existing] = await db
+    .select({ id: students.id })
     .from(students)
     .where(and(eq(students.id, id), eq(students.schoolId, schoolId)))
     .limit(1);
-  if (!existing) return apiError(404, 'Student not found');
+  if (!existing) return apiError(404, "Student not found");
 
   const body = await request.json().catch(() => ({}));
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
-    return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    return apiError(
+      422,
+      "Validation failed",
+      parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    );
   }
 
-  const [updated] = await db.update(students)
+  const [updated] = await db
+    .update(students)
     .set({ ...parsed.data, updatedAt: new Date() })
     .where(eq(students.id, id))
     .returning();
@@ -500,6 +595,7 @@ git commit -m "feat(3.2.1): add GET + PATCH /api/students/:id endpoints"
 ### Task 4: Student list page UI
 
 **Files:**
+
 - Create: `apps/web/app/(school)/admin/students/page.tsx`
 - Create: `apps/web/components/admin/students/student-table.tsx`
 - Create: `apps/web/components/admin/students/student-stats-bar.tsx`
@@ -507,6 +603,7 @@ git commit -m "feat(3.2.1): add GET + PATCH /api/students/:id endpoints"
 - [ ] **Step 1: Create the server component**
 
 Create `apps/web/app/(school)/admin/students/page.tsx`:
+
 ```typescript
 import { db } from '@/lib/db';
 import { classes, gradeLevels } from '@edunexus/database';
@@ -557,6 +654,7 @@ export default async function StudentsPage() {
 - [ ] **Step 2: Create the stats bar component**
 
 Create `apps/web/components/admin/students/student-stats-bar.tsx`:
+
 ```typescript
 'use client';
 
@@ -615,6 +713,7 @@ export function StudentStatsBar({ stats, activeStatus, onStatusChange, onClassFi
 - [ ] **Step 3: Create the student table client component**
 
 Create `apps/web/components/admin/students/student-table.tsx`:
+
 ```typescript
 'use client';
 
@@ -819,6 +918,7 @@ git commit -m "feat(3.2.1): add student list page with stats bar and filterable 
 ### Task 5: Student detail page UI
 
 **Files:**
+
 - Create: `apps/web/app/(school)/admin/students/[id]/page.tsx`
 - Create: `apps/web/components/admin/students/student-detail-info.tsx`
 - Create: `apps/web/components/admin/students/student-guardians.tsx`
@@ -828,6 +928,7 @@ git commit -m "feat(3.2.1): add student list page with stats bar and filterable 
 - [ ] **Step 1: Create the server component**
 
 Create `apps/web/app/(school)/admin/students/[id]/page.tsx`:
+
 ```typescript
 import { db } from '@/lib/db';
 import { students, enrollments, classes, academicYears, studentGuardians, guardians } from '@edunexus/database';
@@ -921,6 +1022,7 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
 - [ ] **Step 2: Create the detail info component**
 
 Create `apps/web/components/admin/students/student-detail-info.tsx`:
+
 ```typescript
 'use client';
 
@@ -987,6 +1089,7 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 - [ ] **Step 3: Create the guardians component**
 
 Create `apps/web/components/admin/students/student-guardians.tsx`:
+
 ```typescript
 'use client';
 
@@ -1023,6 +1126,7 @@ export function StudentGuardians({ guardians }: { guardians: GuardianRow[] }) {
 - [ ] **Step 4: Create the enrollments component**
 
 Create `apps/web/components/admin/students/student-enrollments.tsx`:
+
 ```typescript
 'use client';
 
@@ -1085,6 +1189,7 @@ export function StudentEnrollments({ enrollments }: { enrollments: EnrollmentRow
 - [ ] **Step 5: Create the audit log component**
 
 Create `apps/web/components/admin/students/student-audit-log.tsx`:
+
 ```typescript
 'use client';
 
@@ -1153,12 +1258,14 @@ git commit -m "feat(3.2.1): add student detail page with info, guardians, enroll
 ### Task 6: Student edit page UI
 
 **Files:**
+
 - Create: `apps/web/app/(school)/admin/students/[id]/edit/page.tsx`
 - Create: `apps/web/components/admin/students/edit-student-form.tsx`
 
 - [ ] **Step 1: Create the server component**
 
 Create `apps/web/app/(school)/admin/students/[id]/edit/page.tsx`:
+
 ```typescript
 import { db } from '@/lib/db';
 import { students } from '@edunexus/database';
@@ -1201,6 +1308,7 @@ export default async function EditStudentPage({ params }: { params: Promise<{ id
 - [ ] **Step 2: Create the edit form component**
 
 Create `apps/web/components/admin/students/edit-student-form.tsx`:
+
 ```typescript
 'use client';
 
@@ -1399,11 +1507,13 @@ git commit -m "feat(3.2.1): add student edit page with profile form"
 ### Task 7: Sidebar navigation change
 
 **Files:**
+
 - Modify: `apps/web/components/layouts/admin-sidebar.tsx`
 
 - [ ] **Step 1: Change sidebar link**
 
 In `apps/web/components/layouts/admin-sidebar.tsx`, line 18:
+
 ```typescript
 // Before:
 { href: '/admin/students/new', label: 'Students', icon: Users },
