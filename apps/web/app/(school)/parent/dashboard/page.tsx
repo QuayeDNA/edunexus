@@ -1,14 +1,16 @@
-import { requireRole } from '@/lib/auth/auth.guard';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Users, CalendarCheck, DollarSign } from 'lucide-react';
+import { requireRole } from "@/lib/auth/auth.guard";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Users, CalendarCheck, DollarSign } from "lucide-react";
 
 export default async function ParentDashboard() {
-  await requireRole('parent');
+  await requireRole("parent");
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-text-primary">Parent Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-text-primary">
+          Parent Dashboard
+        </h1>
         <p className="mt-1 text-sm text-text-secondary">
           Track your child&apos;s academic journey
         </p>

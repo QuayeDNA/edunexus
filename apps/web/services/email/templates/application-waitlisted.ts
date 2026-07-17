@@ -3,7 +3,10 @@ interface WaitlistedParams {
   studentName: string;
 }
 
-export function applicationWaitlistedEmail({ guardianName, studentName }: WaitlistedParams): string {
+export function applicationWaitlistedEmail({
+  guardianName,
+  studentName,
+}: WaitlistedParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>

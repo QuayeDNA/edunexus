@@ -1,12 +1,16 @@
-import { eq } from 'drizzle-orm';
-import { applicants } from '@edunexus/database';
+import { eq } from "drizzle-orm";
+import { applicants } from "@edunexus/database";
 
-export async function anonymizeApplicant(db: any, applicantId: string): Promise<void> {
-  await db.update(applicants)
+export async function anonymizeApplicant(
+  db: any,
+  applicantId: string,
+): Promise<void> {
+  await db
+    .update(applicants)
     .set({
       anonymizedAt: new Date(),
-      firstName: '[redacted]',
-      lastName: '[redacted]',
+      firstName: "[redacted]",
+      lastName: "[redacted]",
       dateOfBirth: null,
       guardianName: null,
       guardianEmail: null,

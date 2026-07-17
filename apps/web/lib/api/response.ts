@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export interface ApiMeta {
   page: number;
@@ -16,16 +16,20 @@ export interface ApiResponse<T = unknown> {
 }
 
 export function apiSuccess<T>(data: T, meta?: ApiMeta) {
-  return NextResponse.json({ success: true, data, meta } satisfies ApiResponse<T>);
+  return NextResponse.json({
+    success: true,
+    data,
+    meta,
+  } satisfies ApiResponse<T>);
 }
 
 export function apiError(
   status: number,
   message: string,
-  errors?: Record<string, string[]>
+  errors?: Record<string, string[]>,
 ) {
   return NextResponse.json(
     { success: false, error: message, errors } satisfies ApiResponse,
-    { status }
+    { status },
   );
 }

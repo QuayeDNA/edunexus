@@ -1,8 +1,8 @@
-import { v2 as cloudinary } from 'cloudinary';
-import type { StorageProvider, UploadResult } from '@edunexus/shared';
+import { v2 as cloudinary } from "cloudinary";
+import type { StorageProvider, UploadResult } from "@edunexus/shared";
 
 export class CloudinaryStorageProvider implements StorageProvider {
-  readonly name = 'cloudinary';
+  readonly name = "cloudinary";
 
   constructor() {
     cloudinary.config({
@@ -17,19 +17,19 @@ export class CloudinaryStorageProvider implements StorageProvider {
     storagePath: string,
     mimeType: string,
   ): Promise<UploadResult> {
-    const resourceType = mimeType.startsWith('image/') ? 'image' : 'raw';
-    const publicId = storagePath.replace(/\.[^.]+$/, '');
+    const resourceType = mimeType.startsWith("image/") ? "image" : "raw";
+    const publicId = storagePath.replace(/\.[^.]+$/, "");
 
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           public_id: publicId,
           resource_type: resourceType,
-          folder: '',
+          folder: "",
         },
         (error, result) => {
           if (error || !result) {
-            reject(new Error(error?.message ?? 'Cloudinary upload failed'));
+            reject(new Error(error?.message ?? "Cloudinary upload failed"));
             return;
           }
           resolve({
@@ -48,27 +48,24 @@ export class CloudinaryStorageProvider implements StorageProvider {
     storagePath: string,
     expiresIn: number = 3600,
   ): Promise<string> {
-    const publicId = storagePath.replace(/\.[^.]+$/, '');
+    const publicId = storagePath.replace(/\.[^.]+$/, "");
     return cloudinary.url(publicId, {
       secure: true,
       sign_url: true,
-      type: 'upload',
-      resource_type: 'image',
+      type: "upload",
+      resource_type: "image",
       expires_at: Math.floor(Date.now() / 1000) + expiresIn,
     });
   }
 
   async delete(storagePath: string): Promise<void> {
-    const publicId = storagePath.replace(/\.[^.]+$/, '');
+    const publicId = storagePath.replace(/\.[^.]+$/, "");
     await cloudinary.uploader.destroy(publicId);
   }
 
-  async copy(
-    sourcePath: string,
-    destPath: string,
-  ): Promise<string> {
-    const sourcePublicId = sourcePath.replace(/\.[^.]+$/, '');
-    const destPublicId = destPath.replace(/\.[^.]+$/, '');
+  async copy(sourcePath: string, destPath: string): Promise<string> {
+    const sourcePublicId = sourcePath.replace(/\.[^.]+$/, "");
+    const destPublicId = destPath.replace(/\.[^.]+$/, "");
     await cloudinary.uploader.rename(sourcePublicId, destPublicId);
     return destPath;
   }

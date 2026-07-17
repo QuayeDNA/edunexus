@@ -23,25 +23,27 @@
 ### Task 1: Shared types, constants, path utilities, RBAC matrix
 
 **Files:**
+
 - Create: `packages/shared/src/types/storage.ts`
 - Create: `packages/shared/src/constants/storage.ts`
 - Modify: `packages/shared/src/index.ts`
 - Test: `apps/web/tests/lib/storage/shared.test.ts`
 
 **Interfaces:**
+
 - Produces: `EntityType`, `MediaFile`, `UploadResult`, `StorageProvider`, `FilePermission`, `buildStoragePath()`, `ALLOWED_MIME_TYPES`, `MAX_FILE_SIZE`, `STORAGE_PERMISSIONS`, `checkFilePermission()`
 
 - [ ] **Step 1: Create `@edunexus/shared/src/types/storage.ts`**
 
 ```typescript
 export type EntityType =
-  | 'school'
-  | 'profile'
-  | 'applicant'
-  | 'student'
-  | 'staff'
-  | 'library'
-  | 'expense';
+  | "school"
+  | "profile"
+  | "applicant"
+  | "student"
+  | "staff"
+  | "library"
+  | "expense";
 
 export interface MediaFile {
   id: string;
@@ -51,7 +53,7 @@ export interface MediaFile {
   fileName: string;
   mimeType: string;
   size: number;
-  storageProvider: 's3' | 'cloudinary' | 'local';
+  storageProvider: "s3" | "cloudinary" | "local";
   storagePath: string;
   checksum?: string;
   uploadedBy: string;
@@ -85,8 +87,8 @@ export interface FilePermission {
 - [ ] **Step 2: Create `@edunexus/shared/src/constants/storage.ts`**
 
 ```typescript
-import type { EntityType, FilePermission } from '../types/storage';
-import crypto from 'crypto';
+import type { EntityType, FilePermission } from "../types/storage";
+import crypto from "crypto";
 
 export function buildStoragePath(
   schoolId: string,
@@ -99,55 +101,199 @@ export function buildStoragePath(
 }
 
 export const ALLOWED_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export const STORAGE_PERMISSIONS: FilePermission[] = [
-  { entityType: 'school',    role: 'super_admin', canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'school',    role: 'admin',       canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'profile',   role: 'super_admin', canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'profile',   role: 'admin',       canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'profile',   role: 'teacher',     canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'profile',   role: 'student',     canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'profile',   role: 'parent',      canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'applicant', role: 'super_admin', canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'applicant', role: 'admin',       canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'student',   role: 'super_admin', canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'student',   role: 'admin',       canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'student',   role: 'teacher',     canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'student',   role: 'student',     canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'student',   role: 'parent',      canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'staff',     role: 'super_admin', canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'staff',     role: 'admin',       canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'staff',     role: 'teacher',     canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'library',   role: 'super_admin', canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'library',   role: 'admin',       canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'library',   role: 'teacher',     canRead: true,  canWrite: true,  canDelete: true  },
-  { entityType: 'library',   role: 'student',     canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'library',   role: 'parent',      canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'expense',   role: 'super_admin', canRead: true,  canWrite: false, canDelete: false },
-  { entityType: 'expense',   role: 'admin',       canRead: true,  canWrite: true,  canDelete: true  },
+  {
+    entityType: "school",
+    role: "super_admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "school",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "profile",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "profile",
+    role: "admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "profile",
+    role: "teacher",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "profile",
+    role: "student",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "profile",
+    role: "parent",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "applicant",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "applicant",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "student",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "student",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "student",
+    role: "teacher",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "student",
+    role: "student",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "student",
+    role: "parent",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "staff",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "staff",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "staff",
+    role: "teacher",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "library",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "library",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "library",
+    role: "teacher",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "library",
+    role: "student",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "library",
+    role: "parent",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "expense",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "expense",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
 ];
 
 export function checkFilePermission(
   entityType: EntityType,
   role: string,
-  action: 'read' | 'write' | 'delete',
+  action: "read" | "write" | "delete",
 ): boolean {
   const perm = STORAGE_PERMISSIONS.find(
-    p => p.entityType === entityType && p.role === role,
+    (p) => p.entityType === entityType && p.role === role,
   );
   if (!perm) return false;
-  if (action === 'read') return perm.canRead;
-  if (action === 'write') return perm.canWrite;
-  if (action === 'delete') return perm.canDelete;
+  if (action === "read") return perm.canRead;
+  if (action === "write") return perm.canWrite;
+  if (action === "delete") return perm.canDelete;
   return false;
 }
 ```
@@ -155,6 +301,7 @@ export function checkFilePermission(
 - [ ] **Step 3: Update `packages/shared/src/index.ts`**
 
 Add exports:
+
 ```typescript
 export type {
   EntityType,
@@ -162,7 +309,7 @@ export type {
   UploadResult,
   StorageProvider,
   FilePermission,
-} from './types/storage';
+} from "./types/storage";
 
 export {
   buildStoragePath,
@@ -170,60 +317,71 @@ export {
   MAX_FILE_SIZE,
   STORAGE_PERMISSIONS,
   checkFilePermission,
-} from './constants/storage';
+} from "./constants/storage";
 ```
 
 - [ ] **Step 4: Write the failing test**
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { buildStoragePath, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, checkFilePermission, STORAGE_PERMISSIONS } from '@edunexus/shared';
+import { describe, it, expect } from "vitest";
+import {
+  buildStoragePath,
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  checkFilePermission,
+  STORAGE_PERMISSIONS,
+} from "@edunexus/shared";
 
-describe('buildStoragePath', () => {
-  it('returns path with schoolId/entityType/entityId/uuid-filename format', () => {
-    const path = buildStoragePath('school-1', 'applicant', 'entity-1', 'doc.pdf');
+describe("buildStoragePath", () => {
+  it("returns path with schoolId/entityType/entityId/uuid-filename format", () => {
+    const path = buildStoragePath(
+      "school-1",
+      "applicant",
+      "entity-1",
+      "doc.pdf",
+    );
     expect(path).toMatch(/^school-1\/applicant\/entity-1\/[\w-]+-doc\.pdf$/);
   });
 });
 
-describe('ALLOWED_MIME_TYPES', () => {
-  it('allows PDF and common image types', () => {
-    expect(ALLOWED_MIME_TYPES.has('application/pdf')).toBe(true);
-    expect(ALLOWED_MIME_TYPES.has('image/jpeg')).toBe(true);
-    expect(ALLOWED_MIME_TYPES.has('image/png')).toBe(true);
+describe("ALLOWED_MIME_TYPES", () => {
+  it("allows PDF and common image types", () => {
+    expect(ALLOWED_MIME_TYPES.has("application/pdf")).toBe(true);
+    expect(ALLOWED_MIME_TYPES.has("image/jpeg")).toBe(true);
+    expect(ALLOWED_MIME_TYPES.has("image/png")).toBe(true);
   });
 
-  it('rejects video and other types', () => {
-    expect(ALLOWED_MIME_TYPES.has('video/mp4')).toBe(false);
-    expect(ALLOWED_MIME_TYPES.has('text/html')).toBe(false);
+  it("rejects video and other types", () => {
+    expect(ALLOWED_MIME_TYPES.has("video/mp4")).toBe(false);
+    expect(ALLOWED_MIME_TYPES.has("text/html")).toBe(false);
   });
 });
 
-describe('MAX_FILE_SIZE', () => {
-  it('is 10 MB', () => {
+describe("MAX_FILE_SIZE", () => {
+  it("is 10 MB", () => {
     expect(MAX_FILE_SIZE).toBe(10 * 1024 * 1024);
   });
 });
 
-describe('checkFilePermission', () => {
-  it('allows admin to write applicant files', () => {
-    expect(checkFilePermission('applicant', 'admin', 'write')).toBe(true);
+describe("checkFilePermission", () => {
+  it("allows admin to write applicant files", () => {
+    expect(checkFilePermission("applicant", "admin", "write")).toBe(true);
   });
 
-  it('denies student from writing applicant files', () => {
-    expect(checkFilePermission('applicant', 'student', 'write')).toBe(false);
+  it("denies student from writing applicant files", () => {
+    expect(checkFilePermission("applicant", "student", "write")).toBe(false);
   });
 
-  it('allows student to read own profile', () => {
-    expect(checkFilePermission('profile', 'student', 'read')).toBe(true);
+  it("allows student to read own profile", () => {
+    expect(checkFilePermission("profile", "student", "read")).toBe(true);
   });
 
-  it('denies teacher from deleting school files', () => {
-    expect(checkFilePermission('school', 'teacher', 'delete')).toBe(false);
+  it("denies teacher from deleting school files", () => {
+    expect(checkFilePermission("school", "teacher", "delete")).toBe(false);
   });
 
-  it('returns false for unknown entity type', () => {
-    expect(checkFilePermission('school' as any, 'ghost', 'read')).toBe(false);
+  it("returns false for unknown entity type", () => {
+    expect(checkFilePermission("school" as any, "ghost", "read")).toBe(false);
   });
 });
 ```
@@ -249,10 +407,12 @@ git commit -m "feat: add shared storage types, constants, path builder, RBAC mat
 ### Task 2: DB schema — media_files table
 
 **Files:**
+
 - Create: `packages/database/src/schema/media-files.ts`
 - Modify: `packages/database/src/schema/index.ts`
 
 **Interfaces:**
+
 - Produces: `mediaFiles` table, `MediaFileSelect`, `MediaFileInsert` types
 - Consumes: `EntityType` from `@edunexus/shared` (via string literal, not FK)
 
@@ -267,38 +427,38 @@ import {
   varchar,
   integer,
   index,
-} from 'drizzle-orm/pg-core';
-import { schools } from './schools';
-import { profiles } from './profiles';
+} from "drizzle-orm/pg-core";
+import { schools } from "./schools";
+import { profiles } from "./profiles";
 
 export const mediaFiles = pgTable(
-  'media_files',
+  "media_files",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    schoolId: uuid('school_id')
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id),
-    entityType: varchar('entity_type', { length: 50 }).notNull(),
-    entityId: uuid('entity_id').notNull(),
-    fileName: varchar('file_name', { length: 255 }).notNull(),
-    mimeType: varchar('mime_type', { length: 100 }).notNull(),
-    size: integer('size').notNull(),
-    storageProvider: varchar('storage_provider', { length: 20 }).notNull(),
-    storagePath: text('storage_path').notNull(),
-    checksum: varchar('checksum', { length: 64 }),
-    uploadedBy: uuid('uploaded_by')
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: uuid("entity_id").notNull(),
+    fileName: varchar("file_name", { length: 255 }).notNull(),
+    mimeType: varchar("mime_type", { length: 100 }).notNull(),
+    size: integer("size").notNull(),
+    storageProvider: varchar("storage_provider", { length: 20 }).notNull(),
+    storagePath: text("storage_path").notNull(),
+    checksum: varchar("checksum", { length: 64 }),
+    uploadedBy: uuid("uploaded_by")
       .notNull()
       .references(() => profiles.id),
-    createdAt: timestamp('created_at', { withTimezone: true })
+    createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => [
-    index('idx_media_files_school_id').on(table.schoolId),
-    index('idx_media_files_entity').on(table.entityType, table.entityId),
-    index('idx_media_files_uploaded_by').on(table.uploadedBy),
-    index('idx_media_files_school_entity').on(
+    index("idx_media_files_school_id").on(table.schoolId),
+    index("idx_media_files_entity").on(table.entityType, table.entityId),
+    index("idx_media_files_uploaded_by").on(table.uploadedBy),
+    index("idx_media_files_school_entity").on(
       table.schoolId,
       table.entityType,
       table.entityId,
@@ -310,7 +470,7 @@ export const mediaFiles = pgTable(
 - [ ] **Step 2: Add export to `packages/database/src/schema/index.ts`**
 
 ```typescript
-export { mediaFiles } from './media-files';
+export { mediaFiles } from "./media-files";
 ```
 
 - [ ] **Step 3: Run typecheck to verify**
@@ -330,6 +490,7 @@ git commit -m "feat: add media_files DB table"
 ### Task 3: Storage provider implementations (Local, S3, Cloudinary) + factory
 
 **Files:**
+
 - Create: `apps/web/services/storage/providers/local.ts`
 - Create: `apps/web/services/storage/providers/s3.ts`
 - Create: `apps/web/services/storage/providers/cloudinary.ts`
@@ -341,12 +502,14 @@ git commit -m "feat: add media_files DB table"
 - Modify: `apps/web/package.json` (add @aws-sdk/client-s3, @aws-sdk/s3-request-presigner, cloudinary)
 
 **Interfaces:**
+
 - Consumes: `StorageProvider`, `UploadResult` from `@edunexus/shared`
 - Produces: `createStorageProvider()` factory, `LocalStorageProvider`, `S3StorageProvider`, `CloudinaryStorageProvider`
 
 - [ ] **Step 1: Install dependencies**
 
 Run:
+
 ```bash
 pnpm --filter @edunexus/web add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner cloudinary
 pnpm --filter @edunexus/web add -D @types/node
@@ -359,35 +522,31 @@ export class StorageError extends Error {
   constructor(
     message: string,
     public statusCode: number = 500,
-    public provider: string = 'unknown',
+    public provider: string = "unknown",
   ) {
     super(message);
-    this.name = 'StorageError';
+    this.name = "StorageError";
   }
 }
 
 export class FileNotFoundError extends StorageError {
   constructor(path: string, provider: string) {
     super(`File not found at ${path}`, 404, provider);
-    this.name = 'FileNotFoundError';
+    this.name = "FileNotFoundError";
   }
 }
 
 export class FileTypeNotAllowedError extends StorageError {
   constructor(mimeType: string) {
-    super(`File type ${mimeType} is not allowed`, 422, 'validation');
-    this.name = 'FileTypeNotAllowedError';
+    super(`File type ${mimeType} is not allowed`, 422, "validation");
+    this.name = "FileTypeNotAllowedError";
   }
 }
 
 export class FileTooLargeError extends StorageError {
   constructor(size: number, maxSize: number) {
-    super(
-      `File size ${size} exceeds maximum of ${maxSize}`,
-      422,
-      'validation',
-    );
-    this.name = 'FileTooLargeError';
+    super(`File size ${size} exceeds maximum of ${maxSize}`, 422, "validation");
+    this.name = "FileTooLargeError";
   }
 }
 ```
@@ -395,13 +554,13 @@ export class FileTooLargeError extends StorageError {
 - [ ] **Step 3: Create `apps/web/services/storage/providers/local.ts`**
 
 ```typescript
-import fs from 'fs/promises';
-import path from 'path';
-import crypto from 'crypto';
-import type { StorageProvider, UploadResult } from '@edunexus/shared';
+import fs from "fs/promises";
+import path from "path";
+import crypto from "crypto";
+import type { StorageProvider, UploadResult } from "@edunexus/shared";
 
 export class LocalStorageProvider implements StorageProvider {
-  readonly name = 'local';
+  readonly name = "local";
 
   private baseDir: string;
 
@@ -409,7 +568,7 @@ export class LocalStorageProvider implements StorageProvider {
     this.baseDir =
       baseDir ??
       process.env.STORAGE_LOCAL_PATH ??
-      path.join(process.cwd(), '.edunexus', 'storage', 'local');
+      path.join(process.cwd(), ".edunexus", "storage", "local");
   }
 
   async upload(
@@ -430,10 +589,10 @@ export class LocalStorageProvider implements StorageProvider {
     _expiresIn: number = 3600,
   ): Promise<string> {
     const signature = crypto
-      .createHmac('sha256', process.env.AUTH_SECRET ?? 'dev-secret')
+      .createHmac("sha256", process.env.AUTH_SECRET ?? "dev-secret")
       .update(storagePath)
       .update(_expiresIn.toString())
-      .digest('hex');
+      .digest("hex");
     return `/api/files/serve/${storagePath}?expires=${Date.now() + _expiresIn * 1000}&sig=${signature}`;
   }
 
@@ -442,10 +601,7 @@ export class LocalStorageProvider implements StorageProvider {
     await fs.unlink(fullPath);
   }
 
-  async copy(
-    sourcePath: string,
-    destPath: string,
-  ): Promise<string> {
+  async copy(sourcePath: string, destPath: string): Promise<string> {
     const fullSource = path.join(this.baseDir, sourcePath);
     const fullDest = path.join(this.baseDir, destPath);
     await fs.mkdir(path.dirname(fullDest), { recursive: true });
@@ -464,12 +620,12 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
   CopyObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import type { StorageProvider, UploadResult } from '@edunexus/shared';
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { StorageProvider, UploadResult } from "@edunexus/shared";
 
 export class S3StorageProvider implements StorageProvider {
-  readonly name = 's3';
+  readonly name = "s3";
 
   private client: S3Client;
   private bucket: string;
@@ -477,13 +633,13 @@ export class S3StorageProvider implements StorageProvider {
   constructor() {
     this.client = new S3Client({
       endpoint: process.env.STORAGE_ENDPOINT,
-      region: process.env.STORAGE_REGION ?? 'us-east-1',
+      region: process.env.STORAGE_REGION ?? "us-east-1",
       credentials: {
-        accessKeyId: process.env.STORAGE_ACCESS_KEY ?? '',
-        secretAccessKey: process.env.STORAGE_SECRET_KEY ?? '',
+        accessKeyId: process.env.STORAGE_ACCESS_KEY ?? "",
+        secretAccessKey: process.env.STORAGE_SECRET_KEY ?? "",
       },
     });
-    this.bucket = process.env.STORAGE_BUCKET ?? 'edunexus';
+    this.bucket = process.env.STORAGE_BUCKET ?? "edunexus";
   }
 
   async upload(
@@ -527,10 +683,7 @@ export class S3StorageProvider implements StorageProvider {
     );
   }
 
-  async copy(
-    sourcePath: string,
-    destPath: string,
-  ): Promise<string> {
+  async copy(sourcePath: string, destPath: string): Promise<string> {
     await this.client.send(
       new CopyObjectCommand({
         Bucket: this.bucket,
@@ -546,11 +699,11 @@ export class S3StorageProvider implements StorageProvider {
 - [ ] **Step 5: Create `apps/web/services/storage/providers/cloudinary.ts`**
 
 ```typescript
-import { v2 as cloudinary } from 'cloudinary';
-import type { StorageProvider, UploadResult } from '@edunexus/shared';
+import { v2 as cloudinary } from "cloudinary";
+import type { StorageProvider, UploadResult } from "@edunexus/shared";
 
 export class CloudinaryStorageProvider implements StorageProvider {
-  readonly name = 'cloudinary';
+  readonly name = "cloudinary";
 
   constructor() {
     cloudinary.config({
@@ -565,19 +718,19 @@ export class CloudinaryStorageProvider implements StorageProvider {
     storagePath: string,
     mimeType: string,
   ): Promise<UploadResult> {
-    const resourceType = mimeType.startsWith('image/') ? 'image' : 'raw';
-    const publicId = storagePath.replace(/\.[^.]+$/, '');
+    const resourceType = mimeType.startsWith("image/") ? "image" : "raw";
+    const publicId = storagePath.replace(/\.[^.]+$/, "");
 
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           public_id: publicId,
           resource_type: resourceType,
-          folder: '',
+          folder: "",
         },
         (error, result) => {
           if (error || !result) {
-            reject(new Error(error?.message ?? 'Cloudinary upload failed'));
+            reject(new Error(error?.message ?? "Cloudinary upload failed"));
             return;
           }
           resolve({
@@ -596,27 +749,24 @@ export class CloudinaryStorageProvider implements StorageProvider {
     storagePath: string,
     expiresIn: number = 3600,
   ): Promise<string> {
-    const publicId = storagePath.replace(/\.[^.]+$/, '');
+    const publicId = storagePath.replace(/\.[^.]+$/, "");
     return cloudinary.url(publicId, {
       secure: true,
       sign_url: true,
-      type: 'upload',
-      resource_type: 'image',
+      type: "upload",
+      resource_type: "image",
       expires_at: Math.floor(Date.now() / 1000) + expiresIn,
     });
   }
 
   async delete(storagePath: string): Promise<void> {
-    const publicId = storagePath.replace(/\.[^.]+$/, '');
+    const publicId = storagePath.replace(/\.[^.]+$/, "");
     await cloudinary.uploader.destroy(publicId);
   }
 
-  async copy(
-    sourcePath: string,
-    destPath: string,
-  ): Promise<string> {
-    const sourcePublicId = sourcePath.replace(/\.[^.]+$/, '');
-    const destPublicId = destPath.replace(/\.[^.]+$/, '');
+  async copy(sourcePath: string, destPath: string): Promise<string> {
+    const sourcePublicId = sourcePath.replace(/\.[^.]+$/, "");
+    const destPublicId = destPath.replace(/\.[^.]+$/, "");
     await cloudinary.uploader.rename(sourcePublicId, destPublicId);
     return destPath;
   }
@@ -626,17 +776,17 @@ export class CloudinaryStorageProvider implements StorageProvider {
 - [ ] **Step 6: Create `apps/web/services/storage/factory.ts`**
 
 ```typescript
-import type { StorageProvider } from '@edunexus/shared';
-import { LocalStorageProvider } from './providers/local';
-import { S3StorageProvider } from './providers/s3';
-import { CloudinaryStorageProvider } from './providers/cloudinary';
+import type { StorageProvider } from "@edunexus/shared";
+import { LocalStorageProvider } from "./providers/local";
+import { S3StorageProvider } from "./providers/s3";
+import { CloudinaryStorageProvider } from "./providers/cloudinary";
 
 export function createStorageProvider(): StorageProvider {
-  const provider = process.env.STORAGE_PROVIDER ?? 'local';
+  const provider = process.env.STORAGE_PROVIDER ?? "local";
   switch (provider) {
-    case 's3':
+    case "s3":
       return new S3StorageProvider();
-    case 'cloudinary':
+    case "cloudinary":
       return new CloudinaryStorageProvider();
     default:
       return new LocalStorageProvider();
@@ -647,31 +797,37 @@ export function createStorageProvider(): StorageProvider {
 - [ ] **Step 7: Create `apps/web/services/storage/index.ts`**
 
 Re-export everything:
+
 ```typescript
-export { createStorageProvider } from './factory';
-export { LocalStorageProvider } from './providers/local';
-export { S3StorageProvider } from './providers/s3';
-export { CloudinaryStorageProvider } from './providers/cloudinary';
-export { StorageError, FileNotFoundError, FileTypeNotAllowedError, FileTooLargeError } from './errors';
-export type { StorageProvider } from '@edunexus/shared';
+export { createStorageProvider } from "./factory";
+export { LocalStorageProvider } from "./providers/local";
+export { S3StorageProvider } from "./providers/s3";
+export { CloudinaryStorageProvider } from "./providers/cloudinary";
+export {
+  StorageError,
+  FileNotFoundError,
+  FileTypeNotAllowedError,
+  FileTooLargeError,
+} from "./errors";
+export type { StorageProvider } from "@edunexus/shared";
 ```
 
 - [ ] **Step 8: Write failing tests**
 
 ```typescript
 // apps/web/tests/services/storage/local-provider.test.ts
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import fs from 'fs/promises';
-import path from 'path';
-import os from 'os';
-import { LocalStorageProvider } from '@/services/storage/providers/local';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import fs from "fs/promises";
+import path from "path";
+import os from "os";
+import { LocalStorageProvider } from "@/services/storage/providers/local";
 
-describe('LocalStorageProvider', () => {
+describe("LocalStorageProvider", () => {
   let tmpDir: string;
   let provider: LocalStorageProvider;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'edunexus-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "edunexus-test-"));
     provider = new LocalStorageProvider(tmpDir);
   });
 
@@ -679,75 +835,78 @@ describe('LocalStorageProvider', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('uploads a file to the correct path', async () => {
+  it("uploads a file to the correct path", async () => {
     const result = await provider.upload(
-      Buffer.from('test content'),
-      'school-1/applicant/entity-1/test.pdf',
-      'application/pdf',
+      Buffer.from("test content"),
+      "school-1/applicant/entity-1/test.pdf",
+      "application/pdf",
     );
-    expect(result.mimeType).toBe('application/pdf');
+    expect(result.mimeType).toBe("application/pdf");
     expect(result.size).toBe(12);
-    expect(result.path).toBe('school-1/applicant/entity-1/test.pdf');
-    expect(result.url).toContain('/api/files/serve/');
+    expect(result.path).toBe("school-1/applicant/entity-1/test.pdf");
+    expect(result.url).toContain("/api/files/serve/");
 
     const fileContent = await fs.readFile(
-      path.join(tmpDir, 'school-1/applicant/entity-1/test.pdf'),
-      'utf-8',
+      path.join(tmpDir, "school-1/applicant/entity-1/test.pdf"),
+      "utf-8",
     );
-    expect(fileContent).toBe('test content');
+    expect(fileContent).toBe("test content");
   });
 
-  it('deletes a file from disk', async () => {
+  it("deletes a file from disk", async () => {
     await provider.upload(
-      Buffer.from('to-delete'),
-      'test/file.txt',
-      'text/plain',
+      Buffer.from("to-delete"),
+      "test/file.txt",
+      "text/plain",
     );
-    await provider.delete('test/file.txt');
+    await provider.delete("test/file.txt");
     await expect(
-      fs.access(path.join(tmpDir, 'test/file.txt')),
+      fs.access(path.join(tmpDir, "test/file.txt")),
     ).rejects.toThrow();
   });
 
-  it('getSignedUrl returns a URL with signature', async () => {
-    const url = await provider.getSignedUrl('test/doc.pdf', 3600);
-    expect(url).toContain('/api/files/serve/');
-    expect(url).toContain('expires=');
-    expect(url).toContain('sig=');
+  it("getSignedUrl returns a URL with signature", async () => {
+    const url = await provider.getSignedUrl("test/doc.pdf", 3600);
+    expect(url).toContain("/api/files/serve/");
+    expect(url).toContain("expires=");
+    expect(url).toContain("sig=");
   });
 
-  it('copy duplicates a file', async () => {
-    await provider.upload(Buffer.from('original'), 'source.txt', 'text/plain');
-    const destPath = await provider.copy('source.txt', 'dest.txt');
-    expect(destPath).toBe('dest.txt');
-    const destContent = await fs.readFile(path.join(tmpDir, 'dest.txt'), 'utf-8');
-    expect(destContent).toBe('original');
+  it("copy duplicates a file", async () => {
+    await provider.upload(Buffer.from("original"), "source.txt", "text/plain");
+    const destPath = await provider.copy("source.txt", "dest.txt");
+    expect(destPath).toBe("dest.txt");
+    const destContent = await fs.readFile(
+      path.join(tmpDir, "dest.txt"),
+      "utf-8",
+    );
+    expect(destContent).toBe("original");
   });
 });
 ```
 
 ```typescript
 // apps/web/tests/services/storage/factory.test.ts
-import { describe, it, expect } from 'vitest';
-import { createStorageProvider } from '@/services/storage/factory';
-import { LocalStorageProvider } from '@/services/storage/providers/local';
+import { describe, it, expect } from "vitest";
+import { createStorageProvider } from "@/services/storage/factory";
+import { LocalStorageProvider } from "@/services/storage/providers/local";
 
-describe('createStorageProvider', () => {
+describe("createStorageProvider", () => {
   const original = process.env.STORAGE_PROVIDER;
 
   afterEach(() => {
     process.env.STORAGE_PROVIDER = original;
   });
 
-  it('returns LocalStorageProvider by default', () => {
+  it("returns LocalStorageProvider by default", () => {
     delete process.env.STORAGE_PROVIDER;
     const provider = createStorageProvider();
     expect(provider).toBeInstanceOf(LocalStorageProvider);
-    expect(provider.name).toBe('local');
+    expect(provider.name).toBe("local");
   });
 
-  it('returns LocalStorageProvider when STORAGE_PROVIDER=local', () => {
-    process.env.STORAGE_PROVIDER = 'local';
+  it("returns LocalStorageProvider when STORAGE_PROVIDER=local", () => {
+    process.env.STORAGE_PROVIDER = "local";
     const provider = createStorageProvider();
     expect(provider).toBeInstanceOf(LocalStorageProvider);
   });
@@ -776,49 +935,62 @@ git commit -m "feat: add storage providers (local/S3/cloudinary) and factory"
 ### Task 4: File upload API route (POST /api/files/upload)
 
 **Files:**
+
 - Create: `apps/web/app/api/files/route.ts`
 - Test: `apps/web/tests/app/api/files/upload.test.ts`
 
 **Interfaces:**
+
 - Consumes: `requireRole()` from `@/lib/api/require-role`, `createStorageProvider()`, `buildStoragePath()`, `checkFilePermission()`, `ALLOWED_MIME_TYPES`, `MAX_FILE_SIZE`, `db` from `@/lib/db/client`, `mediaFiles` from `@edunexus/database`
 - Produces: `POST /api/files/upload` — multipart upload handler
 
 - [ ] **Step 1: Create `apps/web/app/api/files/route.ts`**
 
 ```typescript
-import { NextRequest } from 'next/server';
-import { routeHandler } from '@/lib/api/handler';
-import { requireRole } from '@/lib/api/require-role';
-import { apiError, apiSuccess } from '@/lib/api/response';
-import { createStorageProvider } from '@/services/storage';
-import { FileTypeNotAllowedError, FileTooLargeError } from '@/services/storage/errors';
-import { db } from '@/lib/db/client';
-import { mediaFiles } from '@edunexus/database';
+import { NextRequest } from "next/server";
+import { routeHandler } from "@/lib/api/handler";
+import { requireRole } from "@/lib/api/require-role";
+import { apiError, apiSuccess } from "@/lib/api/response";
+import { createStorageProvider } from "@/services/storage";
+import {
+  FileTypeNotAllowedError,
+  FileTooLargeError,
+} from "@/services/storage/errors";
+import { db } from "@/lib/db/client";
+import { mediaFiles } from "@edunexus/database";
 import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE,
   buildStoragePath,
   checkFilePermission,
-} from '@edunexus/shared';
+} from "@edunexus/shared";
 
 export const POST = routeHandler(async (req: NextRequest) => {
-  const { error, user } = await requireRole('admin', 'teacher', 'student', 'parent');
+  const { error, user } = await requireRole(
+    "admin",
+    "teacher",
+    "student",
+    "parent",
+  );
   if (error || !user) return error!;
 
-  const schoolId = req.headers.get('x-tenant-id');
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  const schoolId = req.headers.get("x-tenant-id");
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
   const formData = await req.formData();
-  const file = formData.get('file') as File | null;
-  const entityType = formData.get('entityType') as string | null;
-  const entityId = formData.get('entityId') as string | null;
+  const file = formData.get("file") as File | null;
+  const entityType = formData.get("entityType") as string | null;
+  const entityId = formData.get("entityId") as string | null;
 
   if (!file || !entityType || !entityId) {
-    return apiError(422, 'Missing required fields: file, entityType, entityId');
+    return apiError(422, "Missing required fields: file, entityType, entityId");
   }
 
-  if (!checkFilePermission(entityType as any, user.role, 'write')) {
-    return apiError(403, 'Forbidden: insufficient permissions for this entity type');
+  if (!checkFilePermission(entityType as any, user.role, "write")) {
+    return apiError(
+      403,
+      "Forbidden: insufficient permissions for this entity type",
+    );
   }
 
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
@@ -830,7 +1002,12 @@ export const POST = routeHandler(async (req: NextRequest) => {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const storagePath = buildStoragePath(schoolId, entityType as any, entityId, file.name);
+  const storagePath = buildStoragePath(
+    schoolId,
+    entityType as any,
+    entityId,
+    file.name,
+  );
   const provider = createStorageProvider();
   const result = await provider.upload(buffer, storagePath, file.type);
 
@@ -863,36 +1040,38 @@ export const POST = routeHandler(async (req: NextRequest) => {
 
 ```typescript
 // apps/web/tests/app/api/files/upload.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockDb = {
   insert: vi.fn().mockReturnThis(),
   values: vi.fn().mockReturnThis(),
-  returning: vi.fn().mockResolvedValue([{
-    id: 'file-1',
-    schoolId: 'school-1',
-    entityType: 'applicant',
-    entityId: 'entity-1',
-    fileName: 'test.pdf',
-    mimeType: 'application/pdf',
-    size: 1024,
-    storageProvider: 'local',
-    storagePath: 'school-1/applicant/entity-1/uuid-test.pdf',
-    uploadedBy: 'user-1',
-  }]),
+  returning: vi.fn().mockResolvedValue([
+    {
+      id: "file-1",
+      schoolId: "school-1",
+      entityType: "applicant",
+      entityId: "entity-1",
+      fileName: "test.pdf",
+      mimeType: "application/pdf",
+      size: 1024,
+      storageProvider: "local",
+      storagePath: "school-1/applicant/entity-1/uuid-test.pdf",
+      uploadedBy: "user-1",
+    },
+  ]),
 };
 
-vi.mock('@/lib/db/client', () => ({
+vi.mock("@/lib/db/client", () => ({
   db: mockDb,
 }));
 
-vi.mock('@/services/storage/factory', () => ({
+vi.mock("@/services/storage/factory", () => ({
   createStorageProvider: () => ({
-    name: 'local',
+    name: "local",
     upload: vi.fn().mockResolvedValue({
-      url: '/api/files/serve/school-1/applicant/entity-1/uuid-test.pdf',
-      path: 'school-1/applicant/entity-1/uuid-test.pdf',
-      mimeType: 'application/pdf',
+      url: "/api/files/serve/school-1/applicant/entity-1/uuid-test.pdf",
+      path: "school-1/applicant/entity-1/uuid-test.pdf",
+      mimeType: "application/pdf",
       size: 1024,
     }),
     getSignedUrl: vi.fn(),
@@ -903,26 +1082,31 @@ vi.mock('@/services/storage/factory', () => ({
 
 // We test the route logic at the unit level since full request simulation
 // would require Next.js runtime
-describe('File upload route', () => {
+describe("File upload route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('rejects unauthenticated requests', async () => {
+  it("rejects unauthenticated requests", async () => {
     // The route uses requireRole which checks session
     // This is verified by the integration pattern in existing tests
     expect(true).toBe(true);
   });
 
-  it('builds storage path with correct format', () => {
-    const { buildStoragePath } = require('@edunexus/shared');
-    const path = buildStoragePath('school-1', 'applicant', 'entity-1', 'doc.pdf');
+  it("builds storage path with correct format", () => {
+    const { buildStoragePath } = require("@edunexus/shared");
+    const path = buildStoragePath(
+      "school-1",
+      "applicant",
+      "entity-1",
+      "doc.pdf",
+    );
     expect(path).toMatch(/^school-1\/applicant\/entity-1\/[\w-]+-doc\.pdf$/);
   });
 
-  it('rejects unsupported file types via checkFilePermission', () => {
-    const { checkFilePermission } = require('@edunexus/shared');
-    expect(checkFilePermission('school', 'student', 'write')).toBe(false);
+  it("rejects unsupported file types via checkFilePermission", () => {
+    const { checkFilePermission } = require("@edunexus/shared");
+    expect(checkFilePermission("school", "student", "write")).toBe(false);
   });
 });
 ```
@@ -944,142 +1128,162 @@ git commit -m "feat: add POST /api/files/upload endpoint"
 ### Task 5: File read/delete API routes (GET, DELETE)
 
 **Files:**
+
 - Create: `apps/web/app/api/files/[id]/route.ts`
 - Create: `apps/web/app/api/files/[id]/download/route.ts`
 - Test: `apps/web/tests/app/api/files/file.test.ts`
 
 **Interfaces:**
+
 - Consumes: same as Task 4
 - Produces: `GET /api/files/:id` (metadata), `GET /api/files/:id/download` (signed URL redirect), `DELETE /api/files/:id`
 
 - [ ] **Step 1: Create `apps/web/app/api/files/[id]/route.ts`**
 
 ```typescript
-import { NextRequest } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { routeHandler } from '@/lib/api/handler';
-import { requireRole } from '@/lib/api/require-role';
-import { apiError, apiSuccess } from '@/lib/api/response';
-import { NotFoundError, ForbiddenError } from '@/lib/api/errors';
-import { db } from '@/lib/db/client';
-import { mediaFiles } from '@edunexus/database';
-import { checkFilePermission } from '@edunexus/shared';
+import { NextRequest } from "next/server";
+import { eq } from "drizzle-orm";
+import { routeHandler } from "@/lib/api/handler";
+import { requireRole } from "@/lib/api/require-role";
+import { apiError, apiSuccess } from "@/lib/api/response";
+import { NotFoundError, ForbiddenError } from "@/lib/api/errors";
+import { db } from "@/lib/db/client";
+import { mediaFiles } from "@edunexus/database";
+import { checkFilePermission } from "@edunexus/shared";
 
-export const GET = routeHandler(async (
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) => {
-  const { id } = await params;
-  const { error, user } = await requireRole('admin', 'teacher', 'student', 'parent', 'super_admin');
-  if (error || !user) return error!;
+export const GET = routeHandler(
+  async (
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) => {
+    const { id } = await params;
+    const { error, user } = await requireRole(
+      "admin",
+      "teacher",
+      "student",
+      "parent",
+      "super_admin",
+    );
+    if (error || !user) return error!;
 
-  const [record] = await db
-    .select()
-    .from(mediaFiles)
-    .where(eq(mediaFiles.id, id))
-    .limit(1);
+    const [record] = await db
+      .select()
+      .from(mediaFiles)
+      .where(eq(mediaFiles.id, id))
+      .limit(1);
 
-  if (!record) throw new NotFoundError('File');
+    if (!record) throw new NotFoundError("File");
 
-  if (!checkFilePermission(record.entityType as any, user.role, 'read')) {
-    throw new ForbiddenError('Insufficient permissions to read this file');
-  }
+    if (!checkFilePermission(record.entityType as any, user.role, "read")) {
+      throw new ForbiddenError("Insufficient permissions to read this file");
+    }
 
-  return apiSuccess(record);
-});
+    return apiSuccess(record);
+  },
+);
 
-export const DELETE = routeHandler(async (
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) => {
-  const { id } = await params;
-  const { error, user } = await requireRole('admin', 'super_admin');
-  if (error || !user) return error!;
+export const DELETE = routeHandler(
+  async (
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) => {
+    const { id } = await params;
+    const { error, user } = await requireRole("admin", "super_admin");
+    if (error || !user) return error!;
 
-  const [record] = await db
-    .select()
-    .from(mediaFiles)
-    .where(eq(mediaFiles.id, id))
-    .limit(1);
+    const [record] = await db
+      .select()
+      .from(mediaFiles)
+      .where(eq(mediaFiles.id, id))
+      .limit(1);
 
-  if (!record) throw new NotFoundError('File');
+    if (!record) throw new NotFoundError("File");
 
-  if (!checkFilePermission(record.entityType as any, user.role, 'delete')) {
-    throw new ForbiddenError('Insufficient permissions to delete this file');
-  }
+    if (!checkFilePermission(record.entityType as any, user.role, "delete")) {
+      throw new ForbiddenError("Insufficient permissions to delete this file");
+    }
 
-  const { createStorageProvider } = await import('@/services/storage');
-  const provider = createStorageProvider();
-  await provider.delete(record.storagePath);
+    const { createStorageProvider } = await import("@/services/storage");
+    const provider = createStorageProvider();
+    await provider.delete(record.storagePath);
 
-  await db
-    .update(mediaFiles)
-    .set({ deletedAt: new Date() })
-    .where(eq(mediaFiles.id, id));
+    await db
+      .update(mediaFiles)
+      .set({ deletedAt: new Date() })
+      .where(eq(mediaFiles.id, id));
 
-  return apiSuccess({ deleted: true });
-});
+    return apiSuccess({ deleted: true });
+  },
+);
 ```
 
 - [ ] **Step 2: Create `apps/web/app/api/files/[id]/download/route.ts`**
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { routeHandler } from '@/lib/api/handler';
-import { requireRole } from '@/lib/api/require-role';
-import { apiError } from '@/lib/api/response';
-import { NotFoundError, ForbiddenError } from '@/lib/api/errors';
-import { db } from '@/lib/db/client';
-import { mediaFiles } from '@edunexus/database';
-import { checkFilePermission } from '@edunexus/shared';
+import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { routeHandler } from "@/lib/api/handler";
+import { requireRole } from "@/lib/api/require-role";
+import { apiError } from "@/lib/api/response";
+import { NotFoundError, ForbiddenError } from "@/lib/api/errors";
+import { db } from "@/lib/db/client";
+import { mediaFiles } from "@edunexus/database";
+import { checkFilePermission } from "@edunexus/shared";
 
-export const GET = routeHandler(async (
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) => {
-  const { id } = await params;
-  const { error, user } = await requireRole('admin', 'teacher', 'student', 'parent', 'super_admin');
-  if (error || !user) return error!;
+export const GET = routeHandler(
+  async (
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) => {
+    const { id } = await params;
+    const { error, user } = await requireRole(
+      "admin",
+      "teacher",
+      "student",
+      "parent",
+      "super_admin",
+    );
+    if (error || !user) return error!;
 
-  const [record] = await db
-    .select()
-    .from(mediaFiles)
-    .where(eq(mediaFiles.id, id))
-    .limit(1);
+    const [record] = await db
+      .select()
+      .from(mediaFiles)
+      .where(eq(mediaFiles.id, id))
+      .limit(1);
 
-  if (!record) throw new NotFoundError('File');
+    if (!record) throw new NotFoundError("File");
 
-  if (!checkFilePermission(record.entityType as any, user.role, 'read')) {
-    throw new ForbiddenError('Insufficient permissions to read this file');
-  }
+    if (!checkFilePermission(record.entityType as any, user.role, "read")) {
+      throw new ForbiddenError("Insufficient permissions to read this file");
+    }
 
-  const { createStorageProvider } = await import('@/services/storage');
-  const provider = createStorageProvider();
-  const signedUrl = await provider.getSignedUrl(record.storagePath);
+    const { createStorageProvider } = await import("@/services/storage");
+    const provider = createStorageProvider();
+    const signedUrl = await provider.getSignedUrl(record.storagePath);
 
-  return NextResponse.redirect(signedUrl, 302);
-});
+    return NextResponse.redirect(signedUrl, 302);
+  },
+);
 ```
 
 - [ ] **Step 3: Write failing test**
 
 ```typescript
 // apps/web/tests/app/api/files/file.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockRecord = {
-  id: 'file-1',
-  schoolId: 'school-1',
-  entityType: 'student',
-  entityId: 'entity-1',
-  fileName: 'photo.jpg',
-  mimeType: 'image/jpeg',
+  id: "file-1",
+  schoolId: "school-1",
+  entityType: "student",
+  entityId: "entity-1",
+  fileName: "photo.jpg",
+  mimeType: "image/jpeg",
   size: 50000,
-  storageProvider: 'local',
-  storagePath: 'school-1/student/entity-1/uuid-photo.jpg',
+  storageProvider: "local",
+  storagePath: "school-1/student/entity-1/uuid-photo.jpg",
   checksum: null,
-  uploadedBy: 'user-1',
+  uploadedBy: "user-1",
   createdAt: new Date(),
   deletedAt: null,
 };
@@ -1093,36 +1297,39 @@ const mockDb = {
   set: vi.fn().mockReturnThis(),
 };
 
-vi.mock('@/lib/db/client', () => ({
+vi.mock("@/lib/db/client", () => ({
   db: mockDb,
 }));
 
-vi.mock('@/services/storage/factory', () => ({
+vi.mock("@/services/storage/factory", () => ({
   createStorageProvider: () => ({
-    name: 'local',
+    name: "local",
     upload: vi.fn(),
-    getSignedUrl: vi.fn().mockResolvedValue('/signed-url/photo.jpg'),
+    getSignedUrl: vi.fn().mockResolvedValue("/signed-url/photo.jpg"),
     delete: vi.fn().mockResolvedValue(undefined),
     copy: vi.fn(),
   }),
 }));
 
-describe('File metadata and download routes', () => {
+describe("File metadata and download routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('checks read permission before returning file metadata', () => {
-    const { checkFilePermission } = require('@edunexus/shared');
-    expect(checkFilePermission('student', 'teacher', 'read')).toBe(true);
-    expect(checkFilePermission('student', 'applicant', 'read')).toBe(false);
+  it("checks read permission before returning file metadata", () => {
+    const { checkFilePermission } = require("@edunexus/shared");
+    expect(checkFilePermission("student", "teacher", "read")).toBe(true);
+    expect(checkFilePermission("student", "applicant", "read")).toBe(false);
   });
 
-  it('soft-deletes and removes from storage on delete', async () => {
-    const { createStorageProvider } = await import('@/services/storage/factory');
+  it("soft-deletes and removes from storage on delete", async () => {
+    const { createStorageProvider } =
+      await import("@/services/storage/factory");
     const provider = createStorageProvider();
-    await provider.delete('school-1/student/entity-1/uuid-photo.jpg');
-    expect(provider.delete).toHaveBeenCalledWith('school-1/student/entity-1/uuid-photo.jpg');
+    await provider.delete("school-1/student/entity-1/uuid-photo.jpg");
+    expect(provider.delete).toHaveBeenCalledWith(
+      "school-1/student/entity-1/uuid-photo.jpg",
+    );
   });
 });
 ```
@@ -1144,19 +1351,21 @@ git commit -m "feat: add GET/DELETE file metadata and download endpoints"
 ### Task 6: Shared upload component
 
 **Files:**
+
 - Create: `apps/web/components/shared/file-upload.tsx`
 
 **Interfaces:**
+
 - Consumes: `POST /api/files/upload` API
 - Produces: `<FileUpload>` component with props `{ entityType, entityId, accept?, maxFiles?, onUploadComplete? }`
 
 - [ ] **Step 1: Create `apps/web/components/shared/file-upload.tsx`**
 
 ```tsx
-'use client';
+"use client";
 
-import { useState, useCallback, useRef } from 'react';
-import type { EntityType } from '@edunexus/shared';
+import { useState, useCallback, useRef } from "react";
+import type { EntityType } from "@edunexus/shared";
 
 interface UploadedFile {
   id: string;
@@ -1177,13 +1386,13 @@ interface FileUploadProps {
 export function FileUpload({
   entityType,
   entityId,
-  accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx',
+  accept = ".pdf,.jpg,.jpeg,.png,.doc,.docx",
   maxFiles = 5,
   onUploadComplete,
 }: FileUploadProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = useCallback(
@@ -1192,7 +1401,7 @@ export function FileUpload({
       if (!fileList?.length) return;
 
       setUploading(true);
-      setError('');
+      setError("");
       const uploaded: UploadedFile[] = [];
 
       for (const file of Array.from(fileList)) {
@@ -1200,24 +1409,24 @@ export function FileUpload({
 
         try {
           const formData = new FormData();
-          formData.append('file', file);
-          formData.append('entityType', entityType);
-          formData.append('entityId', entityId);
+          formData.append("file", file);
+          formData.append("entityType", entityType);
+          formData.append("entityId", entityId);
 
-          const res = await fetch('/api/files/upload', {
-            method: 'POST',
+          const res = await fetch("/api/files/upload", {
+            method: "POST",
             body: formData,
           });
 
           const json = await res.json();
           if (!res.ok) {
-            setError(json.error ?? 'Upload failed');
+            setError(json.error ?? "Upload failed");
             break;
           }
 
           uploaded.push(json.data);
         } catch {
-          setError('Network error during upload');
+          setError("Network error during upload");
           break;
         }
       }
@@ -1228,14 +1437,14 @@ export function FileUpload({
       setUploading(false);
 
       if (inputRef.current) {
-        inputRef.current.value = '';
+        inputRef.current.value = "";
       }
     },
     [entityType, entityId, files, maxFiles, onUploadComplete],
   );
 
   const removeFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
+    setFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
   return (
@@ -1267,13 +1476,11 @@ export function FileUpload({
         )}
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {files.length > 0 && (
         <ul className="space-y-2">
-          {files.map(f => (
+          {files.map((f) => (
             <li
               key={f.id}
               className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm"
@@ -1340,6 +1547,7 @@ git commit -m "feat: add reusable FileUpload component"
 ### Task 7: Environment config and cleanup
 
 **Files:**
+
 - Modify: `.env.example`
 
 - [ ] **Step 1: Update `.env.example` with new storage vars**
@@ -1377,23 +1585,23 @@ git commit -m "docs: update env.example with new storage provider vars"
 
 ### Spec Coverage Check
 
-| Spec Requirement | Task |
-|---|---|
-| StorageProvider interface in @edunexus/shared | Task 1 |
-| EntityType enum | Task 1 |
-| buildStoragePath() pure function | Task 1 |
-| ALLOWED_MIME_TYPES + MAX_FILE_SIZE | Task 1 |
-| RBAC permission matrix + checkFilePermission | Task 1 |
-| media_files DB table with indexes | Task 2 |
-| LocalStorageProvider | Task 3 |
-| S3StorageProvider | Task 3 |
-| CloudinaryStorageProvider | Task 3 |
-| createStorageProvider() factory | Task 3 |
-| POST /api/files/upload | Task 4 |
-| GET /api/files/:id (metadata) | Task 5 |
-| GET /api/files/:id/download (signed URL redirect) | Task 5 |
-| DELETE /api/files/:id (soft-delete) | Task 5 |
-| FileUpload component | Task 6 |
-| Env vars documented | Task 7 |
+| Spec Requirement                                    | Task                                     |
+| --------------------------------------------------- | ---------------------------------------- |
+| StorageProvider interface in @edunexus/shared       | Task 1                                   |
+| EntityType enum                                     | Task 1                                   |
+| buildStoragePath() pure function                    | Task 1                                   |
+| ALLOWED_MIME_TYPES + MAX_FILE_SIZE                  | Task 1                                   |
+| RBAC permission matrix + checkFilePermission        | Task 1                                   |
+| media_files DB table with indexes                   | Task 2                                   |
+| LocalStorageProvider                                | Task 3                                   |
+| S3StorageProvider                                   | Task 3                                   |
+| CloudinaryStorageProvider                           | Task 3                                   |
+| createStorageProvider() factory                     | Task 3                                   |
+| POST /api/files/upload                              | Task 4                                   |
+| GET /api/files/:id (metadata)                       | Task 5                                   |
+| GET /api/files/:id/download (signed URL redirect)   | Task 5                                   |
+| DELETE /api/files/:id (soft-delete)                 | Task 5                                   |
+| FileUpload component                                | Task 6                                   |
+| Env vars documented                                 | Task 7                                   |
 | Two-layer access control (matrix + ownership check) | Task 1 (matrix) + Task 4/5 (route-level) |
-| Extension points for media-heavy types (documented) | Task 1 (comments in code) |
+| Extension points for media-heavy types (documented) | Task 1 (comments in code)                |

@@ -1,19 +1,26 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import type { LucideIcon } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   title: string;
   value: string | number;
   icon: LucideIcon;
   description?: string;
-  trend?: { value: number; direction: 'up' | 'down' | 'neutral' };
+  trend?: { value: number; direction: "up" | "down" | "neutral" };
   className?: string;
 }
 
-export function StatCard({ title, value, icon: Icon, description, trend, className }: StatCardProps) {
+export function StatCard({
+  title,
+  value,
+  icon: Icon,
+  description,
+  trend,
+  className,
+}: StatCardProps) {
   return (
-    <Card className={cn('', className)}>
+    <Card className={cn("", className)}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -29,13 +36,16 @@ export function StatCard({ title, value, icon: Icon, description, trend, classNa
         </div>
         {trend && (
           <div className="mt-4 flex items-center gap-1 text-xs">
-            <span className={cn(
-              'font-medium',
-              trend.direction === 'up' && 'text-green-600',
-              trend.direction === 'down' && 'text-red-600',
-              trend.direction === 'neutral' && 'text-muted-foreground'
-            )}>
-              {trend.direction === 'up' ? '+' : ''}{trend.value}%
+            <span
+              className={cn(
+                "font-medium",
+                trend.direction === "up" && "text-green-600",
+                trend.direction === "down" && "text-red-600",
+                trend.direction === "neutral" && "text-muted-foreground",
+              )}
+            >
+              {trend.direction === "up" ? "+" : ""}
+              {trend.value}%
             </span>
             <span className="text-muted-foreground">vs last month</span>
           </div>

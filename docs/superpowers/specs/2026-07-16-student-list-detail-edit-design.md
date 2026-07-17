@@ -9,7 +9,7 @@
 
 ## 1. Overview
 
-Build the student management module for the admin portal: a list page with search/filter/pagination/stats, a detail page showing profile/enrollments/guardians, and an edit page for updating student profile fields. Lifecycle actions (withdraw, transfer, graduate, re-admit) are deferred to a separate issue — only lifecycle *display* (enrollment status badges, enrollment history) is in scope.
+Build the student management module for the admin portal: a list page with search/filter/pagination/stats, a detail page showing profile/enrollments/guardians, and an edit page for updating student profile fields. Lifecycle actions (withdraw, transfer, graduate, re-admit) are deferred to a separate issue — only lifecycle _display_ (enrollment status badges, enrollment history) is in scope.
 
 ---
 
@@ -20,6 +20,7 @@ Build the student management module for the admin portal: a list page with searc
 **Query params:** `search`, `classId`, `status`, `gradeLevelId`, `page`, `pageSize`
 
 **Response envelope:**
+
 ```json
 {
   "success": true,
@@ -50,6 +51,7 @@ Build the student management module for the admin portal: a list page with searc
 ### 2.2 `GET /api/students/stats` — Aggregated stats
 
 **Response:**
+
 ```json
 {
   "total": 150,
@@ -65,6 +67,7 @@ Build the student management module for the admin portal: a list page with searc
 ### 2.3 `GET /api/students/[id]` — Student detail
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -116,6 +119,7 @@ Build the student management module for the admin portal: a list page with searc
 ### 2.4 `PATCH /api/students/[id]` — Update student profile
 
 **Request body** (zod-validated):
+
 ```json
 {
   "firstName": "string (optional)",
@@ -145,11 +149,13 @@ Build the student management module for the admin portal: a list page with searc
 ### 3.1 List Page — `/admin/students`
 
 **Server component** pattern (matching applicants page):
+
 1. `requireRole('admin', 'super_admin')`
 2. Fetch reference data (classes, grade levels) from DB for dropdown filters
 3. Render `<StudentTable>` client component with `classes`, `gradeLevels` as props
 
 **`<StudentTable>`** client component state (useState):
+
 - `students: StudentRow[]`
 - `stats: { total, activeCount, byClass, byStatus } | null`
 - `loading: boolean`
@@ -162,6 +168,7 @@ Build the student management module for the admin portal: a list page with searc
 - `totalPages: number`
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ <PageHeader title="Students" description="...">      │
@@ -192,6 +199,7 @@ Build the student management module for the admin portal: a list page with searc
 ```
 
 **Interaction:**
+
 - Clicking a stat card filters by that status (sets `status` state, resets `page` to 1, re-fetches).
 - Select/Input changes trigger debounced re-fetch (300ms for search, immediate for selects).
 - `useEffect` watches filter states and calls `fetch('/api/students?...')`.
@@ -200,12 +208,14 @@ Build the student management module for the admin portal: a list page with searc
 ### 3.2 Detail Page — `/admin/students/[id]`
 
 **Server component** pattern (matching applicant detail):
+
 1. `requireRole('admin', 'super_admin')`
 2. Fetch student via `GET /api/students/[id]` (or direct DB query)
 3. Not found → `notFound()`
 4. Render client sub-components with serialized data
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ ← Back to Students  (Link to /admin/students)       │
@@ -244,12 +254,14 @@ Build the student management module for the admin portal: a list page with searc
 ### 3.3 Edit Page — `/admin/students/[id]/edit`
 
 **Server component:**
+
 1. `requireRole('admin', 'super_admin')`
 2. Fetch student data from DB
 3. Not found → `notFound()`
 4. Render `<EditStudentForm student={...} />`
 
 **`<EditStudentForm>`** — client component using `react-hook-form` + `zodResolver`:
+
 - Fields: firstName, lastName, otherNames, gender (select), dateOfBirth (date), placeOfBirth, nationality, religion, address (textarea), phone, email, bloodGroup (select), medicalNotes (textarea)
 - Pre-filled from student prop
 - On submit: `PATCH /api/students/[id]`
@@ -264,10 +276,13 @@ Build the student management module for the admin portal: a list page with searc
 **File:** `apps/web/components/layouts/admin-sidebar.tsx`
 
 Change Students nav item from:
+
 ```tsx
 { href: '/admin/students/new', label: 'Students', icon: Users },
 ```
+
 To:
+
 ```tsx
 { href: '/admin/students', label: 'Students', icon: Users },
 ```
@@ -300,11 +315,11 @@ apps/web/components/admin/students/
 
 ## 6. Testing
 
-| Test file | Coverage |
-|---|---|
-| `tests/app/api/students/list.test.ts` | GET /api/students — search, filter by class/status, pagination, stats endpoint, tenant isolation |
-| `tests/app/api/students/detail.test.ts` | GET /api/students/:id — returns full detail, 404 for wrong school, 404 for non-existent |
-| `tests/app/api/students/update.test.ts` | PATCH /api/students/:id — partial update, full update, validation, 404 for wrong school |
+| Test file                               | Coverage                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `tests/app/api/students/list.test.ts`   | GET /api/students — search, filter by class/status, pagination, stats endpoint, tenant isolation |
+| `tests/app/api/students/detail.test.ts` | GET /api/students/:id — returns full detail, 404 for wrong school, 404 for non-existent          |
+| `tests/app/api/students/update.test.ts` | PATCH /api/students/:id — partial update, full update, validation, 404 for wrong school          |
 
 All tests follow existing patterns (`vi.mock` for `next/headers`, `requireRole`, etc.)
 

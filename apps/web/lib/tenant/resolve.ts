@@ -1,18 +1,18 @@
-import { eq } from 'drizzle-orm';
-import { db } from '@/lib/db/client';
-import { schools } from '@edunexus/database';
-import { tenantCache } from './cache';
-import { parseHostname, isSuperAdminHost } from './host';
-import type { TenantInfo } from './host';
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { schools } from "@edunexus/database";
+import { tenantCache } from "./cache";
+import { parseHostname, isSuperAdminHost } from "./host";
+import type { TenantInfo } from "./host";
 
 function isDevLocalhost(hostname: string): boolean {
-  if (process.env.NODE_ENV !== 'development') return false;
-  const host = hostname?.replace(/:\d+$/, '').toLowerCase() ?? '';
-  return host === 'localhost' || host === '127.0.0.1';
+  if (process.env.NODE_ENV !== "development") return false;
+  const host = hostname?.replace(/:\d+$/, "").toLowerCase() ?? "";
+  return host === "localhost" || host === "127.0.0.1";
 }
 
 async function resolveDefaultSchool(): Promise<TenantInfo> {
-  const cacheKey = '__dev_default_school__';
+  const cacheKey = "__dev_default_school__";
   const cached = tenantCache.get<TenantInfo>(cacheKey);
   if (cached) return cached;
 
@@ -26,7 +26,7 @@ async function resolveDefaultSchool(): Promise<TenantInfo> {
           .then((rows) => rows[0] ?? { slug: null });
 
     if (!slug) {
-      console.warn('[TenantResolver] No schools found for dev fallback');
+      console.warn("[TenantResolver] No schools found for dev fallback");
       return { schoolId: null, slug: null, name: null, isSuperAdmin: false };
     }
 
@@ -47,7 +47,7 @@ async function resolveDefaultSchool(): Promise<TenantInfo> {
       return info;
     }
   } catch (error) {
-    console.error('[TenantResolver] Default school query failed:', error);
+    console.error("[TenantResolver] Default school query failed:", error);
   }
 
   return { schoolId: null, slug: null, name: null, isSuperAdmin: false };
@@ -91,7 +91,7 @@ export async function resolveTenant(hostname: string): Promise<TenantInfo> {
       return info;
     }
   } catch (error) {
-    console.error('[TenantResolver] DB query failed:', error);
+    console.error("[TenantResolver] DB query failed:", error);
   }
 
   return { schoolId: null, slug: null, name: null, isSuperAdmin: false };

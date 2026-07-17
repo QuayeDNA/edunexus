@@ -1,5 +1,5 @@
-import type { IPaymentProvider } from './types';
-import { PaystackProvider } from './providers/paystack';
+import type { IPaymentProvider } from "./types";
+import { PaystackProvider } from "./providers/paystack";
 
 let provider: IPaymentProvider | null = null;
 

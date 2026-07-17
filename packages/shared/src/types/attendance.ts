@@ -6,7 +6,7 @@ export interface AttendanceRecord {
   academic_year_id: string;
   term_id: string;
   date: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: "present" | "absent" | "late" | "excused";
   check_in_time?: string | null;
   check_out_time?: string | null;
   remarks?: string | null;
@@ -20,7 +20,7 @@ export interface StaffAttendance {
   school_id: string;
   staff_id: string;
   date: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: "present" | "absent" | "late" | "excused";
   check_in_time?: string | null;
   check_out_time?: string | null;
   remarks?: string | null;

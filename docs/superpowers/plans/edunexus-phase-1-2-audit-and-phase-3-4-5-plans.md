@@ -21,6 +21,7 @@ Meanwhile, **Phase 2's actual claimed deliverables mostly don't exist in code**:
 **In plain terms: the project went wide on schema (all 10 future phases) instead of deep on Phase 2 (the phase actually in progress).** This is exactly the "scope creep" you're worried about — it already happened, just in the data layer instead of the feature layer, which is why it wasn't obvious from using the app. It also explains the gap between what `AGENTS.md`/`ROADMAP.md` marked "✅ Complete" and what's actually running.
 
 This changes how Phases 1–2 need to be closed and how 3a–5 need to be planned:
+
 - **Don't schedule new schema work for Phases 3–5 without auditing what's already there first** — you likely already have most of the tables you need, but they were designed speculatively, before the actual admissions/attendance/grading business logic was worked out, so field-level correctness isn't guaranteed.
 - **Phase 2 needs to be reopened, not "refactored"** — there's no existing implementation to restructure, there's a shell to build out.
 - **Going forward, schema and features need to move in lockstep, gated by the same phase.**
@@ -29,39 +30,44 @@ This changes how Phases 1–2 need to be closed and how 3a–5 need to be planne
 
 ## 2. Phase 1 — Foundation: Actual State vs Claimed
 
-| Claimed (AGENTS.md/ROADMAP.md) | Actual state found in repo |
-|---|---|
-| Turborepo + pnpm workspaces (4 packages) | ✅ Confirmed — `turbo.json`, `pnpm-workspace.yaml`, `apps/web` + `packages/database` + `packages/shared` present |
-| Next.js 16 App Router, Turbopack, TS strict, Tailwind v4 | ✅ Confirmed — `next.config.ts`, `postcss.config.mjs`, `tsconfig.json` present |
-| Drizzle ORM schema (43 tables) | ✅ Confirmed, but see §1 — table count matches, scope does not (Phase 3–11 tables mixed in) |
-| Auth.js v5, JWT sessions, scrypt hashing | ✅ Confirmed — `lib/auth/auth.config.ts`, `auth.guard.ts`, `auth.utils.ts`, scrypt logic visible in `seed.ts` |
-| Multi-tenant proxy (subdomain → school_id) | ✅ Confirmed — `proxy.ts`, `lib/tenant/{cache,host,resolve}.ts` present |
-| Role-based route protection, 5 role layouts | 🟡 Partial — route groups and `layout.tsx` exist per role, but `requireRole()` in `auth.guard.ts` is a **page-level redirect guard only**; there is no equivalent API-route guard that returns a structured JSON error (needed for Phase 3+ API routes) |
-| Dexie offline schema + sync service | ✅ Confirmed — `dexie/schema.ts`, `dexie/sync-service.ts` present (not verified against real writes — no UI calls it yet) |
-| GitHub Actions CI + Vercel deploy workflow | 🟡 Workflow files exist and look correct, **but have never run** — zero recorded runs on the repo. "CI passes on every PR" is unverified, not proven |
-| Seed script (demo school + superadmin) | 🟡 Partial — creates 1 school, 1 academic year, 3 terms, 11 grade levels, 1 superadmin. **Does not seed a demo admin/teacher/student/parent account**, despite 5 role layouts existing to demo |
-| `profiles.school_id` nullable | ✅ Confirmed in `seed.ts` (`schoolId: null` for super_admin) |
-| `docker compose up` full dev environment | ❌ Not what's built — `docker-compose.yml` only runs **infra** (postgres, redis, minio, mailpit). The Next.js app itself is not containerized; you still run `pnpm dev` locally. This matches the roadmap's own "pending" flag — it's honestly labeled already, just worth confirming the fix scope (containerize infra-only vs. full app) before "closing" it |
-| Two subdomains resolve to separate tenant data | ⬜ Genuinely untestable without DNS/local host entries — no evidence either way, correctly flagged pending |
+| Claimed (AGENTS.md/ROADMAP.md)                           | Actual state found in repo                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Turborepo + pnpm workspaces (4 packages)                 | ✅ Confirmed — `turbo.json`, `pnpm-workspace.yaml`, `apps/web` + `packages/database` + `packages/shared` present                                                                                                                                                                                                                                               |
+| Next.js 16 App Router, Turbopack, TS strict, Tailwind v4 | ✅ Confirmed — `next.config.ts`, `postcss.config.mjs`, `tsconfig.json` present                                                                                                                                                                                                                                                                                 |
+| Drizzle ORM schema (43 tables)                           | ✅ Confirmed, but see §1 — table count matches, scope does not (Phase 3–11 tables mixed in)                                                                                                                                                                                                                                                                    |
+| Auth.js v5, JWT sessions, scrypt hashing                 | ✅ Confirmed — `lib/auth/auth.config.ts`, `auth.guard.ts`, `auth.utils.ts`, scrypt logic visible in `seed.ts`                                                                                                                                                                                                                                                  |
+| Multi-tenant proxy (subdomain → school_id)               | ✅ Confirmed — `proxy.ts`, `lib/tenant/{cache,host,resolve}.ts` present                                                                                                                                                                                                                                                                                        |
+| Role-based route protection, 5 role layouts              | 🟡 Partial — route groups and `layout.tsx` exist per role, but `requireRole()` in `auth.guard.ts` is a **page-level redirect guard only**; there is no equivalent API-route guard that returns a structured JSON error (needed for Phase 3+ API routes)                                                                                                        |
+| Dexie offline schema + sync service                      | ✅ Confirmed — `dexie/schema.ts`, `dexie/sync-service.ts` present (not verified against real writes — no UI calls it yet)                                                                                                                                                                                                                                      |
+| GitHub Actions CI + Vercel deploy workflow               | 🟡 Workflow files exist and look correct, **but have never run** — zero recorded runs on the repo. "CI passes on every PR" is unverified, not proven                                                                                                                                                                                                           |
+| Seed script (demo school + superadmin)                   | 🟡 Partial — creates 1 school, 1 academic year, 3 terms, 11 grade levels, 1 superadmin. **Does not seed a demo admin/teacher/student/parent account**, despite 5 role layouts existing to demo                                                                                                                                                                 |
+| `profiles.school_id` nullable                            | ✅ Confirmed in `seed.ts` (`schoolId: null` for super_admin)                                                                                                                                                                                                                                                                                                   |
+| `docker compose up` full dev environment                 | ❌ Not what's built — `docker-compose.yml` only runs **infra** (postgres, redis, minio, mailpit). The Next.js app itself is not containerized; you still run `pnpm dev` locally. This matches the roadmap's own "pending" flag — it's honestly labeled already, just worth confirming the fix scope (containerize infra-only vs. full app) before "closing" it |
+| Two subdomains resolve to separate tenant data           | ⬜ Genuinely untestable without DNS/local host entries — no evidence either way, correctly flagged pending                                                                                                                                                                                                                                                     |
 
 ### Phase 1 Closeout Plan
 
 **[1-CLOSE.1] ✅ Add an API-route auth guard, distinct from the page guard**
+
 - **✅ Done (verified 2026-07-10):** Implemented as `apps/web/lib/api/require-role.ts`
 - AC: Given an unauthenticated request to any `/api/*` route requiring a role, when the guard runs, then it returns a JSON 401/403 response, never a redirect.
 
 **[1-CLOSE.2] ✅ Seed a full demo account set, one per role**
+
 - **✅ Done (2026-07-10):** seed.ts extended with admin/teacher/student/parent profiles + student_guardians link. Idempotent upsert pattern. Commit `d87ef13`.
 - AC: `pnpm db:seed` runs without error; logging in as each of the 5 accounts reaches that role's dashboard.
 
 **[1-CLOSE.3] ⬜ Skipped**
+
 - CI workflow not yet exercised — deferred to Phase 10. No impact on current phase delivery.
 
 **[1-CLOSE.4] ✅ Decide and document `docker-compose.yml` scope**
+
 - **✅ Done (2026-07-10):** Chose option (a) — infra services containerized (PostgreSQL, Redis, MinIO, Mailpit); app runs via `pnpm dev`. `ROADMAP.md` [10.8] updated to match. Commit `db785da`.
 - AC: ROADMAP.md Phase 1 exit criterion wording matches what `docker-compose.yml` actually does.
 
 **[1-CLOSE.5] ✅ Confirm subdomain tenant isolation with a real test**
+
 - **✅ Done (2026-07-10):** 22 Vitest unit tests verify `parseHostname()` (school slug extraction, super admin host detection, localhost fallback, port stripping), `isSuperAdminHost()`, and `tenantCache` (store/retrieve, TTL expiry, clear). Test file: `apps/web/tests/lib/tenant/host.test.ts`. Commit `a354e59`.
 - AC: 22 tests pass in CI, closing the "two subdomains resolve to separate tenant data" exit criterion with evidence instead of a DNS-dependent manual check.
 
@@ -71,22 +77,22 @@ This changes how Phases 1–2 need to be closed and how 3a–5 need to be planne
 
 ## 3. Phase 2 — Super Admin Portal: Actual State vs Claimed
 
-> **Phase 2 Completion Note (2026-07-10):** Since this audit was written, all Phase 2 epics have been implemented. API routes, UI pages, billing schema, email service, payment provider, shared API layer, audit log viewer, and all CRUD operations are built and verified. The 24 corresponding GitHub issues (#4–#27) are closed. The analysis below reflects the state *at the time of the audit* — refer to the codebase for the current state if reading after this date.
+> **Phase 2 Completion Note (2026-07-10):** Since this audit was written, all Phase 2 epics have been implemented. API routes, UI pages, billing schema, email service, payment provider, shared API layer, audit log viewer, and all CRUD operations are built and verified. The 24 corresponding GitHub issues (#4–#27) are closed. The analysis below reflects the state _at the time of the audit_ — refer to the codebase for the current state if reading after this date.
 
-| Claimed | Actual state found in repo |
-|---|---|
-| shadcn/ui v4 Nova, 14+ core components | ❌ Only 7 basic components exist: `avatar`, `badge`, `button`, `card`, `input`, `label`, `skeleton`. No `dialog`, `table`, `select`, `tabs`, `dropdown-menu`, `sonner`/toast, `form` |
-| Billing schema: school_plans, subscriptions, invoices | ❌ Not found anywhere in `packages/database/src/schema/` — no `billing.ts` file, no such exports in `schema/index.ts` |
+| Claimed                                                                                      | Actual state found in repo                                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| shadcn/ui v4 Nova, 14+ core components                                                       | ❌ Only 7 basic components exist: `avatar`, `badge`, `button`, `card`, `input`, `label`, `skeleton`. No `dialog`, `table`, `select`, `tabs`, `dropdown-menu`, `sonner`/toast, `form`                                |
+| Billing schema: school_plans, subscriptions, invoices                                        | ❌ Not found anywhere in `packages/database/src/schema/` — no `billing.ts` file, no such exports in `schema/index.ts`                                                                                               |
 | Shared API infra: response helpers, error classes, require-role guard, TanStack Query client | 🟡 `@tanstack/react-query` is installed and `providers.tsx` exists (likely wraps `QueryClientProvider`), but no `lib/api/response.ts`-style helpers or error classes found; no API-layer role guard (see 1-CLOSE.1) |
-| Shared UI: data-table, confirm-dialog, empty-state, page-header, stat-card | ❌ None of these exist as components. The dashboard's "stat cards" are hand-built inline JSX in the page file, not a reusable component |
-| Shared hooks: use-pagination, use-filters, use-debounce, use-payment | ❌ Only `use-session.ts` exists |
-| Email service: Resend wrapper + template | ❌ No Resend dependency installed, no `lib/email` or `services/email` directory |
-| Payment infra: IPaymentProvider, Paystack provider, webhook | ❌ No Paystack dependency installed, no payment-related files found |
-| Super admin dashboard: real stats from DB | ❌ Hardcoded `0`, `0`, `"Healthy"` — confirmed by direct read of the page source |
-| School management CRUD | ❌ No pages beyond `dashboard/page.tsx` and `layout.tsx` under `app/(super-admin)/` |
-| User management CRUD | ❌ Not found |
-| Audit log viewer | ❌ Not found — the `audit_logs` table schema exists and is well-formed (school/user/action/table/old-new-data/IP/user-agent), but nothing reads or writes to it yet |
-| Billing management (plans/subscriptions) | ❌ Not found, consistent with missing billing schema |
+| Shared UI: data-table, confirm-dialog, empty-state, page-header, stat-card                   | ❌ None of these exist as components. The dashboard's "stat cards" are hand-built inline JSX in the page file, not a reusable component                                                                             |
+| Shared hooks: use-pagination, use-filters, use-debounce, use-payment                         | ❌ Only `use-session.ts` exists                                                                                                                                                                                     |
+| Email service: Resend wrapper + template                                                     | ❌ No Resend dependency installed, no `lib/email` or `services/email` directory                                                                                                                                     |
+| Payment infra: IPaymentProvider, Paystack provider, webhook                                  | ❌ No Paystack dependency installed, no payment-related files found                                                                                                                                                 |
+| Super admin dashboard: real stats from DB                                                    | ❌ Hardcoded `0`, `0`, `"Healthy"` — confirmed by direct read of the page source                                                                                                                                    |
+| School management CRUD                                                                       | ❌ No pages beyond `dashboard/page.tsx` and `layout.tsx` under `app/(super-admin)/`                                                                                                                                 |
+| User management CRUD                                                                         | ❌ Not found                                                                                                                                                                                                        |
+| Audit log viewer                                                                             | ❌ Not found — the `audit_logs` table schema exists and is well-formed (school/user/action/table/old-new-data/IP/user-agent), but nothing reads or writes to it yet                                                 |
+| Billing management (plans/subscriptions)                                                     | ❌ Not found, consistent with missing billing schema                                                                                                                                                                |
 
 **Bottom line: Phase 2 is a route-group shell with a static dashboard. Essentially none of its described feature work exists.** This isn't a criticism of effort — schema-first is a legitimate way to work — but the status label needs to change from ✅ to 🟡/⬜ immediately so Phase 3 doesn't get built on an assumption of infrastructure (shared UI kit, API helpers, email/payment services) that isn't there.
 
@@ -95,6 +101,7 @@ This changes how Phases 1–2 need to be closed and how 3a–5 need to be planne
 Using the Small-Task Workflow already defined in `AGENTS.md` — one task, one typecheck/test gate, commit, move on. Ordered so each task's dependency actually exists before it starts.
 
 **Epic 2.1 — Shared UI kit (blocks everything else)**
+
 - [2.1.1] Install and configure `@tanstack/react-table`; build `data-table.tsx` (sortable, paginated, generic over row type)
   - AC: A story/demo page renders a table of ≥20 mock rows with working sort and page-size controls.
 - [2.1.2] Add Radix `dialog` primitive; build `confirm-dialog.tsx` (title, description, confirm/cancel, danger variant)
@@ -105,43 +112,52 @@ Using the Small-Task Workflow already defined in `AGENTS.md` — one task, one t
   - AC: Dashboard page is refactored to use `<StatCard>` three times with identical visual output to today.
 
 **Epic 2.2 — API layer infrastructure**
+
 - [2.2.1] `lib/api/response.ts` — `ok()`/`fail()` JSON response helpers, consistent shape `{data}`/`{error, code}`
 - [2.2.2] `lib/api/errors.ts` — `ApiError` class hierarchy (`NotFoundError`, `ForbiddenError`, `ValidationError`)
 - [2.2.3] API-route `requireRole` guard — see [1-CLOSE.1], do this here if not already done
 - [2.2.4] TanStack Query setup audit — confirm `providers.tsx` wraps a real `QueryClient` with sane defaults (staleTime, retry); add a `lib/query/keys.ts` convention file for query key factories before any hooks get written
 
 **Epic 2.3 — Billing schema (net-new)**
+
 - [2.3.1] `packages/database/src/schema/billing.ts` — `schoolPlans`, `schoolSubscriptions`, `invoices`, plus `domain`/`customDomain` columns added to `schools` (check current `schools.ts` first — **not present today**, contradicting the original Phase 2 notes)
   - AC: Migration applies cleanly against a fresh DB; `schema/index.ts` exports the three new tables.
 
 **Epic 2.4 — Email service**
+
 - [2.4.1] Install `resend`; `lib/email/client.ts` wrapper + `lib/email/templates/welcome-admin.tsx`
   - AC: A test script sends a real email via a Resend test/sandbox key and logs a message ID.
 
 **Epic 2.5 — Payment infrastructure**
+
 - [2.5.1] `lib/payments/provider.interface.ts` — `IPaymentProvider` (initialize, verify, webhook-handle)
 - [2.5.2] `lib/payments/paystack.provider.ts` — implements the interface against Paystack's API
 - [2.5.3] `app/api/webhooks/paystack/route.ts` — signature verification + idempotent transaction recording (tie to `ROADMAP.md [6.3]` AC on idempotency, even though payments UI is Phase 6 — the webhook plumbing belongs here since it's shared infra)
 
 **Epic 2.6 — School management CRUD**
+
 - [2.6.1] List page — `data-table` over `schools`, search/filter by `isActive`/`region`
 - [2.6.2] Create — form (needs `react-hook-form`, not yet installed — add it) + seed logic (create year/terms/grade-levels on school creation, reusing `seed.ts`'s pattern rather than duplicating it — extract a shared `createSchoolDefaults()` helper both seed script and this route can call)
 - [2.6.3] Detail page with tabs (overview, users, billing)
 - [2.6.4] Edit
 
 **Epic 2.7 — User management CRUD**
+
 - [2.7.1] Create admin per school, auto-generate password, send welcome email (Epic 2.4 dependency)
 - [2.7.2] List/edit/deactivate
 
 **Epic 2.8 — Audit log viewer**
+
 - [2.8.1] List page reading `auditLogs`, filterable by action/date/school — schema is ready, this is pure read-side UI work
 - [2.8.2] Wire write-side: every mutation added in 2.6/2.7 must insert an `auditLogs` row (userId + schoolId populated, per the existing SQL convention in `AGENTS.md`)
 
 **Epic 2.9 — Billing management UI**
+
 - [2.9.1] Plans CRUD (depends on 2.3.1)
 - [2.9.2] Subscriptions list, joined to schools/plans
 
 **Definition of Done for Phase 2 (do not mark ✅ again without this):**
+
 - Every epic above merged with passing tests
 - Super admin dashboard renders real counts from the DB, not hardcoded values
 - A fresh clone + `pnpm install && pnpm db:migrate && pnpm db:seed && pnpm dev` lets someone create a school, create its admin, view the audit trail of both actions, and see a real (even if test-mode) Paystack charge succeed

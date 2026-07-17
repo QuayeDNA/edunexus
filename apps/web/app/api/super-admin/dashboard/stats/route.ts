@@ -1,13 +1,20 @@
-import { db } from '@/lib/db';
-import { schools, profiles, auditLogs, schoolSubscriptions, schoolPlans } from '@edunexus/database/src/schema';
-import { sql, count, gte, desc, eq } from 'drizzle-orm';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess } from '@/lib/api/response';
+import { db } from "@/lib/db";
+import {
+  schools,
+  profiles,
+  auditLogs,
+  schoolSubscriptions,
+  schoolPlans,
+} from "@edunexus/database";
+import { sql, count, gte, desc, eq } from "drizzle-orm";
+import { routeHandler } from "@/lib/api/handler";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess } from "@/lib/api/response";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const { error } = await requireRole('super_admin');
+export const GET = routeHandler(async () => {
+  const { error } = await requireRole("super_admin");
   if (error) return error;
 
   const [schoolStats] = await db
@@ -17,9 +24,7 @@ export async function GET() {
     })
     .from(schools);
 
-  const [userStats] = await db
-    .select({ total: count() })
-    .from(profiles);
+  const [userStats] = await db.select({ total: count() }).from(profiles);
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const [newSignups] = await db
@@ -38,7 +43,7 @@ export async function GET() {
   const [subscriptionStats] = await db
     .select({ total: count() })
     .from(schoolSubscriptions)
-    .where(eq(schoolSubscriptions.status, 'active'));
+    .where(eq(schoolSubscriptions.status, "active"));
 
   const [mrrResult] = await db
     .select({
@@ -46,7 +51,7 @@ export async function GET() {
     })
     .from(schoolSubscriptions)
     .leftJoin(schoolPlans, eq(schoolSubscriptions.planId, schoolPlans.id))
-    .where(eq(schoolSubscriptions.status, 'active'));
+    .where(eq(schoolSubscriptions.status, "active"));
 
   const recentActivity = await db
     .select({
@@ -68,6 +73,6 @@ export async function GET() {
     monthlyRecurringRevenue: Number(mrrResult.total),
     usersByRole,
     recentActivity,
-    systemStatus: 'healthy',
+    systemStatus: "healthy",
   });
-}
+});

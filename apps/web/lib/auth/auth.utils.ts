@@ -1,5 +1,5 @@
-import { auth } from './auth.config';
-import type { UserRole } from '@edunexus/shared';
+import { auth } from "./auth.config";
+import type { UserRole } from "@edunexus/shared";
 
 export interface AuthUser {
   id: string;

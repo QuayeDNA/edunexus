@@ -1,11 +1,11 @@
 export type EntityType =
-  | 'school'
-  | 'profile'
-  | 'applicant'
-  | 'student'
-  | 'staff'
-  | 'library'
-  | 'expense';
+  | "school"
+  | "profile"
+  | "applicant"
+  | "student"
+  | "staff"
+  | "library"
+  | "expense";
 
 export interface MediaFile {
   id: string;
@@ -15,7 +15,7 @@ export interface MediaFile {
   fileName: string;
   mimeType: string;
   size: number;
-  storageProvider: 's3' | 'cloudinary' | 'local';
+  storageProvider: "s3" | "cloudinary" | "local";
   storagePath: string;
   checksum?: string;
   uploadedBy: string;
@@ -31,7 +31,11 @@ export interface UploadResult {
 
 export interface StorageProvider {
   readonly name: string;
-  upload(file: Uint8Array, path: string, mimeType: string): Promise<UploadResult>;
+  upload(
+    file: Uint8Array,
+    path: string,
+    mimeType: string,
+  ): Promise<UploadResult>;
   getSignedUrl(path: string, expiresIn?: number): Promise<string>;
   delete(path: string): Promise<void>;
   copy(sourcePath: string, destPath: string): Promise<string>;

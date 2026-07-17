@@ -7,7 +7,7 @@ export interface InitializePaymentParams {
 }
 
 export interface PaymentVerificationResult {
-  status: 'success' | 'failed' | 'pending';
+  status: "success" | "failed" | "pending";
   reference: string;
   amount: number;
   paidAt?: string;
@@ -22,5 +22,7 @@ export interface IPaymentProvider {
     error?: string;
   }>;
   verifyPayment(reference: string): Promise<PaymentVerificationResult>;
-  handleWebhook(payload: unknown): Promise<{ event: string; reference?: string; status?: string }>;
+  handleWebhook(
+    payload: unknown,
+  ): Promise<{ event: string; reference?: string; status?: string }>;
 }

@@ -4,7 +4,11 @@ interface AcceptedParams {
   schoolName: string;
 }
 
-export function applicationAcceptedEmail({ guardianName, studentName, schoolName }: AcceptedParams): string {
+export function applicationAcceptedEmail({
+  guardianName,
+  studentName,
+  schoolName,
+}: AcceptedParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>

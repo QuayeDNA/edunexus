@@ -24,34 +24,36 @@
 
 ## File Map
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Modify | `packages/database/src/schema/applicants.ts` | Add 3a.1.3 columns + target_class_id |
-| Modify | `apps/web/app/api/applicants/route.ts` | Extended POST schema, enhanced GET filters |
-| Modify | `apps/web/app/api/applicants/[id]/route.ts` | Extended PATCH for new fields + education fields editing |
-| Create | `apps/web/app/api/applicants/stats/route.ts` | Status count endpoint for queue header |
-| Create | `apps/web/app/api/applicants/[id]/accept/route.ts` | Accept with capacity check + class selection |
-| Modify | `apps/web/components/apply/application-form.tsx` | Add 3a.1.3 fields (medical, emergency contacts, etc.) |
-| Create | `apps/web/app/(school)/admin/applicants/page.tsx` | Review queue list page |
-| Create | `apps/web/app/(school)/admin/applicants/[id]/page.tsx` | Detail page with actions |
-| Create | `apps/web/components/admin/applicants/applicant-stats-bar.tsx` | Count cards by status |
-| Create | `apps/web/components/admin/applicants/applicant-table.tsx` | Filterable data table |
-| Create | `apps/web/components/admin/applicants/applicant-detail-info.tsx` | Detail information panels |
-| Create | `apps/web/components/admin/applicants/applicant-documents.tsx` | Document viewer/links |
-| Create | `apps/web/components/admin/applicants/applicant-actions.tsx` | Action buttons (accept/reject/waitlist) |
-| Create | `apps/web/components/admin/applicants/accept-applicant-dialog.tsx` | Accept dialog with class picker + capacity check |
-| Create | `apps/web/components/admin/applicants/capacity-warning-dialog.tsx` | Override confirmation dialog |
-| Create | `apps/web/components/admin/applicants/applicant-audit-log.tsx` | Status change timeline |
-| Modify | `apps/web/app/(school)/admin/dashboard/page.tsx` | Add link to admissions review queue |
+| Action | File                                                               | Responsibility                                           |
+| ------ | ------------------------------------------------------------------ | -------------------------------------------------------- |
+| Modify | `packages/database/src/schema/applicants.ts`                       | Add 3a.1.3 columns + target_class_id                     |
+| Modify | `apps/web/app/api/applicants/route.ts`                             | Extended POST schema, enhanced GET filters               |
+| Modify | `apps/web/app/api/applicants/[id]/route.ts`                        | Extended PATCH for new fields + education fields editing |
+| Create | `apps/web/app/api/applicants/stats/route.ts`                       | Status count endpoint for queue header                   |
+| Create | `apps/web/app/api/applicants/[id]/accept/route.ts`                 | Accept with capacity check + class selection             |
+| Modify | `apps/web/components/apply/application-form.tsx`                   | Add 3a.1.3 fields (medical, emergency contacts, etc.)    |
+| Create | `apps/web/app/(school)/admin/applicants/page.tsx`                  | Review queue list page                                   |
+| Create | `apps/web/app/(school)/admin/applicants/[id]/page.tsx`             | Detail page with actions                                 |
+| Create | `apps/web/components/admin/applicants/applicant-stats-bar.tsx`     | Count cards by status                                    |
+| Create | `apps/web/components/admin/applicants/applicant-table.tsx`         | Filterable data table                                    |
+| Create | `apps/web/components/admin/applicants/applicant-detail-info.tsx`   | Detail information panels                                |
+| Create | `apps/web/components/admin/applicants/applicant-documents.tsx`     | Document viewer/links                                    |
+| Create | `apps/web/components/admin/applicants/applicant-actions.tsx`       | Action buttons (accept/reject/waitlist)                  |
+| Create | `apps/web/components/admin/applicants/accept-applicant-dialog.tsx` | Accept dialog with class picker + capacity check         |
+| Create | `apps/web/components/admin/applicants/capacity-warning-dialog.tsx` | Override confirmation dialog                             |
+| Create | `apps/web/components/admin/applicants/applicant-audit-log.tsx`     | Status change timeline                                   |
+| Modify | `apps/web/app/(school)/admin/dashboard/page.tsx`                   | Add link to admissions review queue                      |
 
 ---
 
 ### Task 1: Schema migration — add 3a.1.3 columns to applicants
 
 **Files:**
+
 - Modify: `packages/database/src/schema/applicants.ts`
 
 **Interfaces:**
+
 - Produces: Updated `applicants` table with new nullable columns for enhanced data + `target_class_id`
 
 - [ ] **Step 1: Update the schema file**
@@ -59,49 +61,75 @@
 Read current `packages/database/src/schema/applicants.ts` first, then edit to add the new columns after `birthCertificateFileId`:
 
 ```typescript
-import { pgTable, uuid, text, timestamp, varchar, date, boolean, jsonb, index } from 'drizzle-orm/pg-core';
-import { schools } from './schools';
-import { gradeLevels } from './grade-levels';
-import { classes } from './classes';
-import { mediaFiles } from './media-files';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  varchar,
+  date,
+  boolean,
+  jsonb,
+  index,
+} from "drizzle-orm/pg-core";
+import { schools } from "./schools";
+import { gradeLevels } from "./grade-levels";
+import { classes } from "./classes";
+import { mediaFiles } from "./media-files";
 
-export const applicants = pgTable('applicants', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  schoolId: uuid('school_id').notNull().references(() => schools.id),
-  firstName: varchar('first_name', { length: 100 }).notNull(),
-  lastName: varchar('last_name', { length: 100 }).notNull(),
-  dateOfBirth: date('date_of_birth').notNull(),
-  gender: varchar('gender', { length: 10 }).notNull(),
-  guardianName: varchar('guardian_name', { length: 200 }).notNull(),
-  guardianEmail: varchar('guardian_email', { length: 255 }).notNull(),
-  guardianPhone: varchar('guardian_phone', { length: 20 }),
-  guardianAddress: text('guardian_address'),
-  guardianOccupation: varchar('guardian_occupation', { length: 100 }),
-  guardianEmployer: varchar('guardian_employer', { length: 200 }),
-  gradeLevelId: uuid('grade_level_id').notNull().references(() => gradeLevels.id),
-  targetClassId: uuid('target_class_id').references(() => classes.id),
-  previousSchool: varchar('previous_school', { length: 255 }),
-  birthCertificateFileId: uuid('birth_certificate_file_id').references(() => mediaFiles.id),
-  priorReportCardFileId: uuid('prior_report_card_file_id').references(() => mediaFiles.id),
-  photoFileId: uuid('photo_file_id').references(() => mediaFiles.id),
-  medicalAllergies: text('medical_allergies'),
-  medicalConditions: text('medical_conditions'),
-  medicalMedications: text('medical_medications'),
-  doctorName: varchar('doctor_name', { length: 200 }),
-  doctorPhone: varchar('doctor_phone', { length: 20 }),
-  emergencyContacts: jsonb('emergency_contacts'),
-  siblingsEnrolled: boolean('siblings_enrolled').default(false),
-  siblingDetails: text('sibling_details'),
-  status: varchar('status', { length: 20 }).default('submitted').notNull(),
-  adminNotes: text('admin_notes'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => [
-  index('idx_applicants_school_id').on(table.schoolId),
-  index('idx_applicants_status').on(table.status),
-  index('idx_applicants_school_status').on(table.schoolId, table.status),
-  index('idx_applicants_target_class').on(table.targetClassId),
-]);
+export const applicants = pgTable(
+  "applicants",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id),
+    firstName: varchar("first_name", { length: 100 }).notNull(),
+    lastName: varchar("last_name", { length: 100 }).notNull(),
+    dateOfBirth: date("date_of_birth").notNull(),
+    gender: varchar("gender", { length: 10 }).notNull(),
+    guardianName: varchar("guardian_name", { length: 200 }).notNull(),
+    guardianEmail: varchar("guardian_email", { length: 255 }).notNull(),
+    guardianPhone: varchar("guardian_phone", { length: 20 }),
+    guardianAddress: text("guardian_address"),
+    guardianOccupation: varchar("guardian_occupation", { length: 100 }),
+    guardianEmployer: varchar("guardian_employer", { length: 200 }),
+    gradeLevelId: uuid("grade_level_id")
+      .notNull()
+      .references(() => gradeLevels.id),
+    targetClassId: uuid("target_class_id").references(() => classes.id),
+    previousSchool: varchar("previous_school", { length: 255 }),
+    birthCertificateFileId: uuid("birth_certificate_file_id").references(
+      () => mediaFiles.id,
+    ),
+    priorReportCardFileId: uuid("prior_report_card_file_id").references(
+      () => mediaFiles.id,
+    ),
+    photoFileId: uuid("photo_file_id").references(() => mediaFiles.id),
+    medicalAllergies: text("medical_allergies"),
+    medicalConditions: text("medical_conditions"),
+    medicalMedications: text("medical_medications"),
+    doctorName: varchar("doctor_name", { length: 200 }),
+    doctorPhone: varchar("doctor_phone", { length: 20 }),
+    emergencyContacts: jsonb("emergency_contacts"),
+    siblingsEnrolled: boolean("siblings_enrolled").default(false),
+    siblingDetails: text("sibling_details"),
+    status: varchar("status", { length: 20 }).default("submitted").notNull(),
+    adminNotes: text("admin_notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("idx_applicants_school_id").on(table.schoolId),
+    index("idx_applicants_status").on(table.status),
+    index("idx_applicants_school_status").on(table.schoolId, table.status),
+    index("idx_applicants_target_class").on(table.targetClassId),
+  ],
+);
 ```
 
 - [ ] **Step 2: Run typecheck**
@@ -109,6 +137,7 @@ export const applicants = pgTable('applicants', {
 ```bash
 cd packages/database && pnpm build
 ```
+
 Expected: compiles without errors.
 
 - [ ] **Step 3: Apply migration**
@@ -137,9 +166,11 @@ git commit -m "feat(3a.1.3): add enhanced applicant data columns"
 ### Task 2: Extend POST route — accept new fields
 
 **Files:**
+
 - Modify: `apps/web/app/api/applicants/route.ts`
 
 **Interfaces:**
+
 - Consumes: Updated `applicants` schema from Task 1
 - Produces: Extended POST handler that accepts all 3a.1.3 fields
 
@@ -151,31 +182,38 @@ Edit `apps/web/app/api/applicants/route.ts`. Add to the `createApplicantSchema`:
 const createApplicantSchema = z.object({
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
-  gender: z.enum(['male', 'female']),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
+  gender: z.enum(["male", "female"]),
   guardianName: z.string().min(1).max(200),
   guardianEmail: z.string().email(),
-  guardianPhone: z.string().max(20).optional().or(z.literal('')),
-  guardianAddress: z.string().optional().or(z.literal('')),
-  guardianOccupation: z.string().max(100).optional().or(z.literal('')),
-  guardianEmployer: z.string().max(200).optional().or(z.literal('')),
+  guardianPhone: z.string().max(20).optional().or(z.literal("")),
+  guardianAddress: z.string().optional().or(z.literal("")),
+  guardianOccupation: z.string().max(100).optional().or(z.literal("")),
+  guardianEmployer: z.string().max(200).optional().or(z.literal("")),
   gradeLevelId: z.string().uuid(),
-  previousSchool: z.string().max(255).optional().or(z.literal('')),
+  previousSchool: z.string().max(255).optional().or(z.literal("")),
   birthCertificateFileId: z.string().uuid().optional().nullable(),
   priorReportCardFileId: z.string().uuid().optional().nullable(),
   photoFileId: z.string().uuid().optional().nullable(),
-  medicalAllergies: z.string().optional().or(z.literal('')),
-  medicalConditions: z.string().optional().or(z.literal('')),
-  medicalMedications: z.string().optional().or(z.literal('')),
-  doctorName: z.string().max(200).optional().or(z.literal('')),
-  doctorPhone: z.string().max(20).optional().or(z.literal('')),
-  emergencyContacts: z.array(z.object({
-    name: z.string().min(1).max(200),
-    phone: z.string().min(1).max(20),
-    relationship: z.string().min(1).max(50),
-  })).optional().default([]),
+  medicalAllergies: z.string().optional().or(z.literal("")),
+  medicalConditions: z.string().optional().or(z.literal("")),
+  medicalMedications: z.string().optional().or(z.literal("")),
+  doctorName: z.string().max(200).optional().or(z.literal("")),
+  doctorPhone: z.string().max(20).optional().or(z.literal("")),
+  emergencyContacts: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(200),
+        phone: z.string().min(1).max(20),
+        relationship: z.string().min(1).max(50),
+      }),
+    )
+    .optional()
+    .default([]),
   siblingsEnrolled: z.boolean().optional(),
-  siblingDetails: z.string().optional().or(z.literal('')),
+  siblingDetails: z.string().optional().or(z.literal("")),
 });
 ```
 
@@ -184,24 +222,30 @@ const createApplicantSchema = z.object({
 Replace the insert values to include new fields:
 
 ```typescript
-const [applicant] = await db.insert(applicants).values({
-  schoolId,
-  ...parsed.data,
-  dateOfBirth: parsed.data.dateOfBirth,
-  guardianPhone: parsed.data.guardianPhone || null,
-  guardianAddress: parsed.data.guardianAddress || null,
-  guardianOccupation: parsed.data.guardianOccupation || null,
-  guardianEmployer: parsed.data.guardianEmployer || null,
-  previousSchool: parsed.data.previousSchool || null,
-  medicalAllergies: parsed.data.medicalAllergies || null,
-  medicalConditions: parsed.data.medicalConditions || null,
-  medicalMedications: parsed.data.medicalMedications || null,
-  doctorName: parsed.data.doctorName || null,
-  doctorPhone: parsed.data.doctorPhone || null,
-  emergencyContacts: parsed.data.emergencyContacts.length > 0 ? parsed.data.emergencyContacts : null,
-  siblingsEnrolled: parsed.data.siblingsEnrolled ?? false,
-  siblingDetails: parsed.data.siblingDetails || null,
-}).returning();
+const [applicant] = await db
+  .insert(applicants)
+  .values({
+    schoolId,
+    ...parsed.data,
+    dateOfBirth: parsed.data.dateOfBirth,
+    guardianPhone: parsed.data.guardianPhone || null,
+    guardianAddress: parsed.data.guardianAddress || null,
+    guardianOccupation: parsed.data.guardianOccupation || null,
+    guardianEmployer: parsed.data.guardianEmployer || null,
+    previousSchool: parsed.data.previousSchool || null,
+    medicalAllergies: parsed.data.medicalAllergies || null,
+    medicalConditions: parsed.data.medicalConditions || null,
+    medicalMedications: parsed.data.medicalMedications || null,
+    doctorName: parsed.data.doctorName || null,
+    doctorPhone: parsed.data.doctorPhone || null,
+    emergencyContacts:
+      parsed.data.emergencyContacts.length > 0
+        ? parsed.data.emergencyContacts
+        : null,
+    siblingsEnrolled: parsed.data.siblingsEnrolled ?? false,
+    siblingDetails: parsed.data.siblingDetails || null,
+  })
+  .returning();
 ```
 
 Also add media file linking for the new file fields:
@@ -214,14 +258,17 @@ const fileIds = [
 ].filter(Boolean) as string[];
 
 if (fileIds.length > 0) {
-  await db.update(mediaFiles).set({ entityId: applicant.id })
+  await db
+    .update(mediaFiles)
+    .set({ entityId: applicant.id })
     .where(inArray(mediaFiles.id, fileIds));
 }
 ```
 
 Add the `inArray` import:
+
 ```typescript
-import { eq, and, desc, count, inArray } from 'drizzle-orm';
+import { eq, and, desc, count, inArray } from "drizzle-orm";
 ```
 
 - [ ] **Step 3: Build to typecheck**
@@ -229,6 +276,7 @@ import { eq, and, desc, count, inArray } from 'drizzle-orm';
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
+
 Expected: compiles without type errors.
 
 - [ ] **Step 4: Commit**
@@ -243,9 +291,11 @@ git commit -m "feat(3a.1.3): extend POST route with enhanced applicant fields"
 ### Task 3: Extend PATCH route — allow editing new fields
 
 **Files:**
+
 - Modify: `apps/web/app/api/applicants/[id]/route.ts`
 
 **Interfaces:**
+
 - Consumes: Updated `applicants` schema from Task 1
 - Produces: PATCH handler that accepts all 3a.1.3 fields for admin editing
 
@@ -254,23 +304,25 @@ git commit -m "feat(3a.1.3): extend POST route with enhanced applicant fields"
 Read the current file, then expand the `updateStatusSchema` to `updateApplicantSchema`:
 
 ```typescript
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { applicants, auditLogs } from '@edunexus/database';
-import { eq, and } from 'drizzle-orm';
-import { z } from 'zod';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { applicants, auditLogs } from "@edunexus/database";
+import { eq, and } from "drizzle-orm";
+import { z } from "zod";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
 
 const validTransitions: Record<string, string[]> = {
-  submitted: ['under_review', 'rejected'],
-  under_review: ['accepted', 'rejected', 'waitlisted'],
-  waitlisted: ['accepted', 'rejected'],
+  submitted: ["under_review", "rejected"],
+  under_review: ["accepted", "rejected", "waitlisted"],
+  waitlisted: ["accepted", "rejected"],
 };
 
 const updateApplicantSchema = z.object({
-  status: z.enum(['under_review', 'accepted', 'rejected', 'waitlisted']).optional(),
+  status: z
+    .enum(["under_review", "accepted", "rejected", "waitlisted"])
+    .optional(),
   adminNotes: z.string().optional(),
   guardianName: z.string().min(1).max(200).optional(),
   guardianEmail: z.string().email().optional(),
@@ -284,56 +336,72 @@ const updateApplicantSchema = z.object({
   medicalMedications: z.string().optional(),
   doctorName: z.string().max(200).optional(),
   doctorPhone: z.string().max(20).optional(),
-  emergencyContacts: z.array(z.object({
-    name: z.string().min(1).max(200),
-    phone: z.string().min(1).max(20),
-    relationship: z.string().min(1).max(50),
-  })).optional(),
+  emergencyContacts: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(200),
+        phone: z.string().min(1).max(20),
+        relationship: z.string().min(1).max(50),
+      }),
+    )
+    .optional(),
   siblingsEnrolled: z.boolean().optional(),
   siblingDetails: z.string().optional(),
 });
 
 async function resolveSchoolId(request: NextRequest): Promise<string | null> {
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   return tenant.schoolId;
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
   const schoolId = await resolveSchoolId(request);
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
-  const [applicant] = await db.select().from(applicants).where(and(
-    eq(applicants.id, id),
-    eq(applicants.schoolId, schoolId),
-  )).limit(1);
+  const [applicant] = await db
+    .select()
+    .from(applicants)
+    .where(and(eq(applicants.id, id), eq(applicants.schoolId, schoolId)))
+    .limit(1);
 
-  if (!applicant) return apiError(404, 'Applicant not found');
+  if (!applicant) return apiError(404, "Applicant not found");
   return apiSuccess(applicant);
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
-  const { error: authError, user } = await requireRole('admin', 'super_admin');
+  const { error: authError, user } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
   const schoolId = await resolveSchoolId(request);
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
-  const [existing] = await db.select().from(applicants).where(and(
-    eq(applicants.id, id),
-    eq(applicants.schoolId, schoolId),
-  )).limit(1);
-  if (!existing) return apiError(404, 'Applicant not found');
+  const [existing] = await db
+    .select()
+    .from(applicants)
+    .where(and(eq(applicants.id, id), eq(applicants.schoolId, schoolId)))
+    .limit(1);
+  if (!existing) return apiError(404, "Applicant not found");
 
   const body = await request.json();
   const parsed = updateApplicantSchema.safeParse(body);
   if (!parsed.success) {
-    return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    return apiError(
+      422,
+      "Validation failed",
+      parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    );
   }
 
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
@@ -341,17 +409,31 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (parsed.data.status) {
     const allowed = validTransitions[existing.status];
     if (!allowed || !allowed.includes(parsed.data.status)) {
-      return apiError(422, `Cannot transition from '${existing.status}' to '${parsed.data.status}'`);
+      return apiError(
+        422,
+        `Cannot transition from '${existing.status}' to '${parsed.data.status}'`,
+      );
     }
     updateData.status = parsed.data.status;
   }
 
   const editableFields = [
-    'adminNotes', 'guardianName', 'guardianEmail', 'guardianPhone',
-    'guardianAddress', 'guardianOccupation', 'guardianEmployer',
-    'previousSchool', 'medicalAllergies', 'medicalConditions',
-    'medicalMedications', 'doctorName', 'doctorPhone',
-    'emergencyContacts', 'siblingsEnrolled', 'siblingDetails',
+    "adminNotes",
+    "guardianName",
+    "guardianEmail",
+    "guardianPhone",
+    "guardianAddress",
+    "guardianOccupation",
+    "guardianEmployer",
+    "previousSchool",
+    "medicalAllergies",
+    "medicalConditions",
+    "medicalMedications",
+    "doctorName",
+    "doctorPhone",
+    "emergencyContacts",
+    "siblingsEnrolled",
+    "siblingDetails",
   ] as const;
 
   for (const field of editableFields) {
@@ -360,7 +442,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
   }
 
-  const [updated] = await db.update(applicants)
+  const [updated] = await db
+    .update(applicants)
     .set(updateData)
     .where(eq(applicants.id, id))
     .returning();
@@ -369,8 +452,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     await db.insert(auditLogs).values({
       schoolId,
       userId: user!.id,
-      action: 'applicant.status_changed',
-      tableName: 'applicants',
+      action: "applicant.status_changed",
+      tableName: "applicants",
       recordId: id,
       oldData: { status: existing.status },
       newData: { status: parsed.data.status },
@@ -381,8 +464,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     await db.insert(auditLogs).values({
       schoolId,
       userId: user!.id,
-      action: 'applicant.updated',
-      tableName: 'applicants',
+      action: "applicant.updated",
+      tableName: "applicants",
       recordId: id,
       oldData: {},
       newData: updateData,
@@ -398,6 +481,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
+
 Expected: compiles without type errors.
 
 - [ ] **Step 3: Commit**
@@ -412,29 +496,36 @@ git commit -m "feat(3a.1.2): extend PATCH route for status changes and field edi
 ### Task 4: Stats endpoint
 
 **Files:**
+
 - Create: `apps/web/app/api/applicants/stats/route.ts`
 
 - [ ] **Step 1: Create the stats route**
 
 ```typescript
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { applicants } from '@edunexus/database';
-import { eq, count, sql } from 'drizzle-orm';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { applicants } from "@edunexus/database";
+import { eq, count, sql } from "drizzle-orm";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
 
 export async function GET(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
-  const statuses = ['submitted', 'under_review', 'accepted', 'rejected', 'waitlisted'] as const;
+  const statuses = [
+    "submitted",
+    "under_review",
+    "accepted",
+    "rejected",
+    "waitlisted",
+  ] as const;
 
   const counts = await db
     .select({
@@ -465,6 +556,7 @@ export async function GET(request: NextRequest) {
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
+
 Expected: compiles without type errors.
 
 - [ ] **Step 3: Commit**
@@ -479,19 +571,20 @@ git commit -m "feat(3a.1.2): add applicant stats endpoint"
 ### Task 5: Accept endpoint with capacity check
 
 **Files:**
+
 - Create: `apps/web/app/api/applicants/[id]/accept/route.ts`
 
 - [ ] **Step 1: Create the accept route**
 
 ```typescript
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { applicants, classes, auditLogs } from '@edunexus/database';
-import { eq, and, count } from 'drizzle-orm';
-import { z } from 'zod';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { applicants, classes, auditLogs } from "@edunexus/database";
+import { eq, and, count } from "drizzle-orm";
+import { z } from "zod";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
 
 const acceptSchema = z.object({
   targetClassId: z.string().uuid(),
@@ -500,62 +593,88 @@ const acceptSchema = z.object({
   override: z.boolean().default(false),
 });
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
-  const { error: authError, user } = await requireRole('admin', 'super_admin');
+  const { error: authError, user } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
-  const [existing] = await db.select().from(applicants).where(and(
-    eq(applicants.id, id),
-    eq(applicants.schoolId, schoolId),
-  )).limit(1);
-  if (!existing) return apiError(404, 'Applicant not found');
+  const [existing] = await db
+    .select()
+    .from(applicants)
+    .where(and(eq(applicants.id, id), eq(applicants.schoolId, schoolId)))
+    .limit(1);
+  if (!existing) return apiError(404, "Applicant not found");
 
-  if (existing.status !== 'under_review' && existing.status !== 'waitlisted') {
-    return apiError(422, `Cannot accept from '${existing.status}' — must be 'under_review' or 'waitlisted'`);
+  if (existing.status !== "under_review" && existing.status !== "waitlisted") {
+    return apiError(
+      422,
+      `Cannot accept from '${existing.status}' — must be 'under_review' or 'waitlisted'`,
+    );
   }
 
   const body = await request.json();
   const parsed = acceptSchema.safeParse(body);
   if (!parsed.success) {
-    return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    return apiError(
+      422,
+      "Validation failed",
+      parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    );
   }
 
-  const [targetClass] = await db.select().from(classes).where(and(
-    eq(classes.id, parsed.data.targetClassId),
-    eq(classes.schoolId, schoolId),
-  )).limit(1);
-  if (!targetClass) return apiError(404, 'Target class not found');
+  const [targetClass] = await db
+    .select()
+    .from(classes)
+    .where(
+      and(
+        eq(classes.id, parsed.data.targetClassId),
+        eq(classes.schoolId, schoolId),
+      ),
+    )
+    .limit(1);
+  if (!targetClass) return apiError(404, "Target class not found");
 
   if (targetClass.gradeLevelId !== existing.gradeLevelId) {
-    return apiError(422, 'Target class does not match applicant\'s grade level');
+    return apiError(422, "Target class does not match applicant's grade level");
   }
 
   const [acceptedResult] = await db
     .select({ count: count() })
     .from(applicants)
-    .where(and(
-      eq(applicants.targetClassId, parsed.data.targetClassId),
-      eq(applicants.status, 'accepted'),
-    ));
+    .where(
+      and(
+        eq(applicants.targetClassId, parsed.data.targetClassId),
+        eq(applicants.status, "accepted"),
+      ),
+    );
   const acceptedCount = Number(acceptedResult.count);
   const capacity = targetClass.capacity ?? 999;
   const available = capacity - acceptedCount;
 
   if (available <= 0 && !parsed.data.override) {
-    return apiError(409, `Class '${targetClass.name}' is at capacity (${acceptedCount}/${capacity}). Please select a different class or enable override to confirm.`);
+    return apiError(
+      409,
+      `Class '${targetClass.name}' is at capacity (${acceptedCount}/${capacity}). Please select a different class or enable override to confirm.`,
+    );
   }
 
-  const [updated] = await db.update(applicants)
+  const [updated] = await db
+    .update(applicants)
     .set({
-      status: 'accepted',
+      status: "accepted",
       targetClassId: parsed.data.targetClassId,
-      adminNotes: parsed.data.adminNotes !== undefined ? parsed.data.adminNotes : existing.adminNotes,
+      adminNotes:
+        parsed.data.adminNotes !== undefined
+          ? parsed.data.adminNotes
+          : existing.adminNotes,
       updatedAt: new Date(),
     })
     .where(eq(applicants.id, id))
@@ -564,11 +683,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   await db.insert(auditLogs).values({
     schoolId,
     userId: user!.id,
-    action: 'applicant.accepted',
-    tableName: 'applicants',
+    action: "applicant.accepted",
+    tableName: "applicants",
     recordId: id,
     oldData: { status: existing.status },
-    newData: { status: 'accepted', targetClassId: parsed.data.targetClassId },
+    newData: { status: "accepted", targetClassId: parsed.data.targetClassId },
   });
 
   if (parsed.data.sendEmail) {
@@ -585,6 +704,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
+
 Expected: compiles without type errors.
 
 - [ ] **Step 3: Commit**
@@ -599,9 +719,11 @@ git commit -m "feat(3a.1.2): add accept endpoint with class capacity check"
 ### Task 6: Extended application form with 3a.1.3 fields
 
 **Files:**
+
 - Modify: `apps/web/components/apply/application-form.tsx`
 
 **Interfaces:**
+
 - Consumes: Extended POST schema from Task 2
 - Produces: Client form with all enhanced fields
 
@@ -611,23 +733,26 @@ Read `apps/web/components/apply/application-form.tsx`. Replace the `formSchema` 
 
 ```typescript
 const emergencyContactSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200),
-  phone: z.string().min(1, 'Phone is required').max(20),
-  relationship: z.string().min(1, 'Relationship is required').max(50),
+  name: z.string().min(1, "Name is required").max(200),
+  phone: z.string().min(1, "Phone is required").max(20),
+  relationship: z.string().min(1, "Relationship is required").max(50),
 });
 
 const formSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').max(100),
-  lastName: z.string().min(1, 'Last name is required').max(100),
-  dateOfBirth: z.string().min(1, 'Date of birth is required').regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD'),
-  gender: z.enum(['male', 'female'], { required_error: 'Gender is required' }),
-  guardianName: z.string().min(1, 'Guardian name is required').max(200),
-  guardianEmail: z.string().email('Valid email is required'),
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  dateOfBirth: z
+    .string()
+    .min(1, "Date of birth is required")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+  gender: z.enum(["male", "female"], { required_error: "Gender is required" }),
+  guardianName: z.string().min(1, "Guardian name is required").max(200),
+  guardianEmail: z.string().email("Valid email is required"),
   guardianPhone: z.string().optional(),
   guardianAddress: z.string().optional(),
   guardianOccupation: z.string().optional(),
   guardianEmployer: z.string().optional(),
-  gradeLevelId: z.string().min(1, 'Grade level is required'),
+  gradeLevelId: z.string().min(1, "Grade level is required"),
   previousSchool: z.string().optional(),
   medicalAllergies: z.string().optional(),
   medicalConditions: z.string().optional(),
@@ -644,8 +769,14 @@ const formSchema = z.object({
 In the component, add state:
 
 ```typescript
-const [emergencyContacts, setEmergencyContacts] = useState<Array<{name: string; phone: string; relationship: string}>>([]);
-const [newContact, setNewContact] = useState({ name: '', phone: '', relationship: '' });
+const [emergencyContacts, setEmergencyContacts] = useState<
+  Array<{ name: string; phone: string; relationship: string }>
+>([]);
+const [newContact, setNewContact] = useState({
+  name: "",
+  phone: "",
+  relationship: "",
+});
 ```
 
 Add handlers:
@@ -653,12 +784,12 @@ Add handlers:
 ```typescript
 const addEmergencyContact = () => {
   if (!newContact.name || !newContact.phone || !newContact.relationship) return;
-  setEmergencyContacts(prev => [...prev, newContact]);
-  setNewContact({ name: '', phone: '', relationship: '' });
+  setEmergencyContacts((prev) => [...prev, newContact]);
+  setNewContact({ name: "", phone: "", relationship: "" });
 };
 
 const removeEmergencyContact = (index: number) => {
-  setEmergencyContacts(prev => prev.filter((_, i) => i !== index));
+  setEmergencyContacts((prev) => prev.filter((_, i) => i !== index));
 };
 ```
 
@@ -667,20 +798,22 @@ const removeEmergencyContact = (index: number) => {
 After the "Guardian Information" section, add:
 
 **Guardian Occupation section:**
+
 ```tsx
 <div className="grid gap-4 sm:grid-cols-2">
   <div className="space-y-2">
     <Label htmlFor="guardianOccupation">Occupation</Label>
-    <Input id="guardianOccupation" {...register('guardianOccupation')} />
+    <Input id="guardianOccupation" {...register("guardianOccupation")} />
   </div>
   <div className="space-y-2">
     <Label htmlFor="guardianEmployer">Employer</Label>
-    <Input id="guardianEmployer" {...register('guardianEmployer')} />
+    <Input id="guardianEmployer" {...register("guardianEmployer")} />
   </div>
 </div>
 ```
 
 **Medical Information section (after Documents):**
+
 ```tsx
 <CardHeader className="px-0 pt-4">
   <CardTitle>Medical Information</CardTitle>
@@ -726,6 +859,7 @@ After the "Guardian Information" section, add:
 ```
 
 **Emergency Contacts section:**
+
 ```tsx
 <CardHeader className="px-0 pt-4">
   <CardTitle>Emergency Contacts</CardTitle>
@@ -780,6 +914,7 @@ After the "Guardian Information" section, add:
 ```
 
 **Siblings section:**
+
 ```tsx
 <CardHeader className="px-0 pt-4">
   <CardTitle>Siblings</CardTitle>
@@ -813,18 +948,19 @@ In `onSubmit`, change the fetch body to include all form data plus emergency con
 
 ```typescript
 const onSubmit = async (data: FormValues) => {
-  setSubmitState('submitting');
-  setServerError('');
+  setSubmitState("submitting");
+  setServerError("");
 
   try {
     const fileIds: Record<string, string | null> = {};
-    if (birthCertificateFileId) fileIds.birthCertificateFileId = birthCertificateFileId;
+    if (birthCertificateFileId)
+      fileIds.birthCertificateFileId = birthCertificateFileId;
     if (reportCardFileId) fileIds.priorReportCardFileId = reportCardFileId;
     if (photoFileId) fileIds.photoFileId = photoFileId;
 
-    const res = await fetch('/api/applicants', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/applicants", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...data,
         emergencyContacts,
@@ -836,22 +972,25 @@ const onSubmit = async (data: FormValues) => {
     const json = await res.json();
 
     if (!res.ok) {
-      setServerError(json.error || 'Submission failed');
-      setSubmitState('error');
+      setServerError(json.error || "Submission failed");
+      setSubmitState("error");
       return;
     }
 
-    setSubmitState('success');
+    setSubmitState("success");
   } catch {
-    setServerError('Network error. Please try again.');
-    setSubmitState('error');
+    setServerError("Network error. Please try again.");
+    setSubmitState("error");
   }
 };
 ```
 
 Also add state for new file uploads:
+
 ```typescript
-const [birthCertificateFileId, setBirthCertificateFileId] = useState<string | null>(null);
+const [birthCertificateFileId, setBirthCertificateFileId] = useState<
+  string | null
+>(null);
 const [reportCardFileId, setReportCardFileId] = useState<string | null>(null);
 const [photoFileId, setPhotoFileId] = useState<string | null>(null);
 ```
@@ -863,6 +1002,7 @@ Add file input for report card and photo alongside existing birth certificate up
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
+
 Expected: compiles without type errors.
 
 - [ ] **Step 6: Commit**
@@ -877,6 +1017,7 @@ git commit -m "feat(3a.1.3): add enhanced fields to application form"
 ### Task 7: Admin review queue list page
 
 **Files:**
+
 - Create: `apps/web/app/(school)/admin/applicants/page.tsx`
 - Create: `apps/web/components/admin/applicants/applicant-stats-bar.tsx`
 - Create: `apps/web/components/admin/applicants/applicant-table.tsx`
@@ -886,10 +1027,10 @@ git commit -m "feat(3a.1.3): add enhanced fields to application form"
 `apps/web/components/admin/applicants/applicant-stats-bar.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import type { ApplicantStats } from '@/types/applicant';
-import { Card, CardContent } from '@/components/ui/card';
+import type { ApplicantStats } from "@/types/applicant";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface StatsBarProps {
   stats: ApplicantStats;
@@ -898,20 +1039,39 @@ interface StatsBarProps {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  submitted: { label: 'Submitted', color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-  under_review: { label: 'Under Review', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  accepted: { label: 'Accepted', color: 'bg-green-50 text-green-700 border-green-200' },
-  rejected: { label: 'Rejected', color: 'bg-red-50 text-red-700 border-red-200' },
-  waitlisted: { label: 'Waitlisted', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  submitted: {
+    label: "Submitted",
+    color: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  },
+  under_review: {
+    label: "Under Review",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  accepted: {
+    label: "Accepted",
+    color: "bg-green-50 text-green-700 border-green-200",
+  },
+  rejected: {
+    label: "Rejected",
+    color: "bg-red-50 text-red-700 border-red-200",
+  },
+  waitlisted: {
+    label: "Waitlisted",
+    color: "bg-purple-50 text-purple-700 border-purple-200",
+  },
 };
 
-export function ApplicantStatsBar({ stats, activeStatus, onStatusChange }: StatsBarProps) {
+export function ApplicantStatsBar({
+  stats,
+  activeStatus,
+  onStatusChange,
+}: StatsBarProps) {
   const allActive = activeStatus === null;
 
   return (
     <div className="grid grid-cols-6 gap-3">
       <Card
-        className={`cursor-pointer transition-shadow hover:shadow-md ${allActive ? 'ring-2 ring-primary' : ''}`}
+        className={`cursor-pointer transition-shadow hover:shadow-md ${allActive ? "ring-2 ring-primary" : ""}`}
         onClick={() => onStatusChange(null)}
       >
         <CardContent className="p-4 text-center">
@@ -924,11 +1084,13 @@ export function ApplicantStatsBar({ stats, activeStatus, onStatusChange }: Stats
         return (
           <Card
             key={key}
-            className={`cursor-pointer transition-shadow hover:shadow-md ${isActive ? 'ring-2 ring-primary' : ''}`}
+            className={`cursor-pointer transition-shadow hover:shadow-md ${isActive ? "ring-2 ring-primary" : ""}`}
             onClick={() => onStatusChange(key)}
           >
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold">{stats[key as keyof ApplicantStats]}</p>
+              <p className="text-2xl font-bold">
+                {stats[key as keyof ApplicantStats]}
+              </p>
               <p className="text-xs text-muted-foreground">{config.label}</p>
             </CardContent>
           </Card>
@@ -972,32 +1134,38 @@ export interface ApplicantListItem {
 `apps/web/components/admin/applicants/applicant-table.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { ApplicantStatsBar } from './applicant-stats-bar';
-import type { ApplicantStats, ApplicantListItem } from '@/types/applicant';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { ApplicantStatsBar } from "./applicant-stats-bar";
+import type { ApplicantStats, ApplicantListItem } from "@/types/applicant";
 
 const statusBadge: Record<string, string> = {
-  submitted: 'bg-yellow-100 text-yellow-800',
-  under_review: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  waitlisted: 'bg-purple-100 text-purple-800',
+  submitted: "bg-yellow-100 text-yellow-800",
+  under_review: "bg-blue-100 text-blue-800",
+  accepted: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
+  waitlisted: "bg-purple-100 text-purple-800",
 };
 
 const statusLabel: Record<string, string> = {
-  submitted: 'Submitted',
-  under_review: 'Under Review',
-  accepted: 'Accepted',
-  rejected: 'Rejected',
-  waitlisted: 'Waitlisted',
+  submitted: "Submitted",
+  under_review: "Under Review",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  waitlisted: "Waitlisted",
 };
 
 interface ApplicantTableProps {
@@ -1009,8 +1177,8 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
   const [stats, setStats] = useState<ApplicantStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
-  const [gradeLevelId, setGradeLevelId] = useState<string>('');
-  const [search, setSearch] = useState('');
+  const [gradeLevelId, setGradeLevelId] = useState<string>("");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -1019,15 +1187,15 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (status) params.set('status', status);
-      if (gradeLevelId) params.set('gradeLevelId', gradeLevelId);
-      if (search) params.set('search', search);
-      params.set('page', String(page));
-      params.set('pageSize', '20');
+      if (status) params.set("status", status);
+      if (gradeLevelId) params.set("gradeLevelId", gradeLevelId);
+      if (search) params.set("search", search);
+      params.set("page", String(page));
+      params.set("pageSize", "20");
 
       const [applicantsRes, statsRes] = await Promise.all([
         fetch(`/api/applicants?${params}`),
-        fetch('/api/applicants/stats'),
+        fetch("/api/applicants/stats"),
       ]);
 
       if (applicantsRes.ok) {
@@ -1057,7 +1225,11 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
   return (
     <div className="space-y-6">
       {stats && (
-        <ApplicantStatsBar stats={stats} activeStatus={status} onStatusChange={setStatus} />
+        <ApplicantStatsBar
+          stats={stats}
+          activeStatus={status}
+          onStatusChange={setStatus}
+        />
       )}
 
       <div className="flex flex-wrap gap-3">
@@ -1068,8 +1240,10 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">All grades</SelectItem>
-              {gradeLevels.map(g => (
-                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+              {gradeLevels.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  {g.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1078,11 +1252,15 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
           <Input
             placeholder="Search by name or guardian..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') fetchData(); }}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") fetchData();
+            }}
           />
         </div>
-        <Button variant="outline" onClick={fetchData}>Refresh</Button>
+        <Button variant="outline" onClick={fetchData}>
+          Refresh
+        </Button>
       </div>
 
       {loading ? (
@@ -1101,33 +1279,53 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Guardian</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Date Applied</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">
+                    Guardian
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">
+                    Date Applied
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-medium">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {applicants.map(a => (
-                  <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
+                {applicants.map((a) => (
+                  <tr
+                    key={a.id}
+                    className="border-b last:border-0 hover:bg-muted/30"
+                  >
                     <td className="px-4 py-3">
-                      <Link href={`/admin/applicants/${a.id}`} className="font-medium hover:underline">
+                      <Link
+                        href={`/admin/applicants/${a.id}`}
+                        className="font-medium hover:underline"
+                      >
                         {a.firstName} {a.lastName}
                       </Link>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge className={statusBadge[a.status] ?? ''}>
+                      <Badge className={statusBadge[a.status] ?? ""}>
                         {statusLabel[a.status] ?? a.status}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{a.guardianName}</td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {new Date(a.createdAt).toLocaleDateString('en-GH')}
+                      {a.guardianName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {new Date(a.createdAt).toLocaleDateString("en-GH")}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link href={`/admin/applicants/${a.id}`}>
-                        <Button variant="ghost" size="sm">View</Button>
+                        <Button variant="ghost" size="sm">
+                          View
+                        </Button>
                       </Link>
                     </td>
                   </tr>
@@ -1143,7 +1341,7 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
                 variant="outline"
                 size="sm"
                 disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
+                onClick={() => setPage((p) => p - 1)}
               >
                 Previous
               </Button>
@@ -1151,7 +1349,7 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
                 variant="outline"
                 size="sm"
                 disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
+                onClick={() => setPage((p) => p + 1)}
               >
                 Next
               </Button>
@@ -1169,18 +1367,19 @@ export function ApplicantTable({ gradeLevels }: ApplicantTableProps) {
 `apps/web/app/(school)/admin/applicants/page.tsx`:
 
 ```tsx
-import { db } from '@/lib/db';
-import { gradeLevels } from '@edunexus/database';
-import { eq } from 'drizzle-orm';
-import { requireRole } from '@/lib/auth/auth.guard';
-import { ApplicantTable } from '@/components/admin/applicants/applicant-table';
+import { db } from "@/lib/db";
+import { gradeLevels } from "@edunexus/database";
+import { eq } from "drizzle-orm";
+import { requireRole } from "@/lib/auth/auth.guard";
+import { ApplicantTable } from "@/components/admin/applicants/applicant-table";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function ApplicantsPage() {
-  const session = await requireRole('admin', 'super_admin');
+  const session = await requireRole("admin", "super_admin");
   const schoolGrades = session.user.schoolId
-    ? await db.select()
+    ? await db
+        .select()
         .from(gradeLevels)
         .where(eq(gradeLevels.schoolId, session.user.schoolId))
         .orderBy(gradeLevels.sortOrder)
@@ -1205,6 +1404,7 @@ export default async function ApplicantsPage() {
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
+
 Expected: compiles without type errors.
 
 - [ ] **Step 6: Commit**
@@ -1219,6 +1419,7 @@ git commit -m "feat(3a.1.2): add applicants review queue list page"
 ### Task 8: Applicant detail page with actions
 
 **Files:**
+
 - Create: `apps/web/app/(school)/admin/applicants/[id]/page.tsx`
 - Create: `apps/web/components/admin/applicants/applicant-detail-info.tsx`
 - Create: `apps/web/components/admin/applicants/applicant-documents.tsx`
@@ -1232,7 +1433,7 @@ git commit -m "feat(3a.1.2): add applicants review queue list page"
 `apps/web/components/admin/applicants/applicant-detail-info.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
 interface EmergencyContact {
   name: string;
@@ -1280,11 +1481,15 @@ export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Name</dt>
-              <dd className="font-medium">{applicant.firstName} {applicant.lastName}</dd>
+              <dd className="font-medium">
+                {applicant.firstName} {applicant.lastName}
+              </dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Date of Birth</dt>
-              <dd>{new Date(applicant.dateOfBirth).toLocaleDateString('en-GH')}</dd>
+              <dd>
+                {new Date(applicant.dateOfBirth).toLocaleDateString("en-GH")}
+              </dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Gender</dt>
@@ -1292,7 +1497,7 @@ export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Previous School</dt>
-              <dd>{applicant.previousSchool ?? '—'}</dd>
+              <dd>{applicant.previousSchool ?? "—"}</dd>
             </div>
           </dl>
         </div>
@@ -1312,19 +1517,19 @@ export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Phone</dt>
-              <dd>{applicant.guardianPhone ?? '—'}</dd>
+              <dd>{applicant.guardianPhone ?? "—"}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Address</dt>
-              <dd>{applicant.guardianAddress ?? '—'}</dd>
+              <dd>{applicant.guardianAddress ?? "—"}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Occupation</dt>
-              <dd>{applicant.guardianOccupation ?? '—'}</dd>
+              <dd>{applicant.guardianOccupation ?? "—"}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Employer</dt>
-              <dd>{applicant.guardianEmployer ?? '—'}</dd>
+              <dd>{applicant.guardianEmployer ?? "—"}</dd>
             </div>
           </dl>
         </div>
@@ -1336,19 +1541,23 @@ export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
           <dl className="space-y-2 text-sm">
             <div>
               <dt className="text-muted-foreground">Allergies</dt>
-              <dd>{applicant.medicalAllergies || 'None recorded'}</dd>
+              <dd>{applicant.medicalAllergies || "None recorded"}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Conditions</dt>
-              <dd>{applicant.medicalConditions || 'None recorded'}</dd>
+              <dd>{applicant.medicalConditions || "None recorded"}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Medications</dt>
-              <dd>{applicant.medicalMedications || 'None recorded'}</dd>
+              <dd>{applicant.medicalMedications || "None recorded"}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Doctor</dt>
-              <dd>{applicant.doctorName ? `${applicant.doctorName} (${applicant.doctorPhone ?? '—'})` : '—'}</dd>
+              <dd>
+                {applicant.doctorName
+                  ? `${applicant.doctorName} (${applicant.doctorPhone ?? "—"})`
+                  : "—"}
+              </dd>
             </div>
           </dl>
         </div>
@@ -1359,17 +1568,22 @@ export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Emergency Contacts
           </h3>
-          {applicant.emergencyContacts && applicant.emergencyContacts.length > 0 ? (
+          {applicant.emergencyContacts &&
+          applicant.emergencyContacts.length > 0 ? (
             <ul className="space-y-2">
               {applicant.emergencyContacts.map((c, i) => (
                 <li key={i} className="rounded-md bg-muted px-3 py-2 text-sm">
                   <p className="font-medium">{c.name}</p>
-                  <p className="text-muted-foreground">{c.relationship} — {c.phone}</p>
+                  <p className="text-muted-foreground">
+                    {c.relationship} — {c.phone}
+                  </p>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No emergency contacts</p>
+            <p className="text-sm text-muted-foreground">
+              No emergency contacts
+            </p>
           )}
         </div>
 
@@ -1379,11 +1593,13 @@ export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
           </h3>
           <p className="text-sm">
             {applicant.siblingsEnrolled
-              ? 'Has siblings enrolled'
-              : 'No siblings enrolled'}
+              ? "Has siblings enrolled"
+              : "No siblings enrolled"}
           </p>
           {applicant.siblingDetails && (
-            <p className="mt-1 text-sm text-muted-foreground">{applicant.siblingDetails}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {applicant.siblingDetails}
+            </p>
           )}
         </div>
       </div>
@@ -1397,7 +1613,7 @@ export function ApplicantDetailInfo({ applicant }: DetailInfoProps) {
 `apps/web/components/admin/applicants/applicant-documents.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
 interface ApplicantDocumentsProps {
   birthCertificateFileId: string | null;
@@ -1405,12 +1621,16 @@ interface ApplicantDocumentsProps {
   photoFileId: string | null;
 }
 
-export function ApplicantDocuments({ birthCertificateFileId, priorReportCardFileId, photoFileId }: ApplicantDocumentsProps) {
+export function ApplicantDocuments({
+  birthCertificateFileId,
+  priorReportCardFileId,
+  photoFileId,
+}: ApplicantDocumentsProps) {
   const docs = [
-    { label: 'Birth Certificate', id: birthCertificateFileId },
-    { label: 'Prior Report Card', id: priorReportCardFileId },
-    { label: 'Applicant Photo', id: photoFileId },
-  ].filter(d => d.id);
+    { label: "Birth Certificate", id: birthCertificateFileId },
+    { label: "Prior Report Card", id: priorReportCardFileId },
+    { label: "Applicant Photo", id: photoFileId },
+  ].filter((d) => d.id);
 
   if (docs.length === 0) {
     return (
@@ -1429,7 +1649,7 @@ export function ApplicantDocuments({ birthCertificateFileId, priorReportCardFile
         Documents
       </h3>
       <ul className="space-y-2">
-        {docs.map(doc => (
+        {docs.map((doc) => (
           <li key={doc.id}>
             <a
               href={`/api/media/${doc.id}`}
@@ -1452,9 +1672,9 @@ export function ApplicantDocuments({ birthCertificateFileId, priorReportCardFile
 `apps/web/components/admin/applicants/applicant-audit-log.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 interface AuditEntry {
   id: string;
@@ -1474,8 +1694,8 @@ export function ApplicantAuditLog({ applicantId }: AuditLogProps) {
 
   useEffect(() => {
     fetch(`/api/audit-logs?tableName=applicants&recordId=${applicantId}`)
-      .then(res => res.ok ? res.json() : { data: [] })
-      .then(data => setEntries(data.data ?? []))
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((data) => setEntries(data.data ?? []))
       .finally(() => setLoading(false));
   }, [applicantId]);
 
@@ -1498,17 +1718,18 @@ export function ApplicantAuditLog({ applicantId }: AuditLogProps) {
         Activity Log
       </h3>
       <div className="space-y-3">
-        {entries.map(entry => (
+        {entries.map((entry) => (
           <div key={entry.id} className="flex items-start gap-3 text-sm">
             <div className="mt-1 h-2 w-2 rounded-full bg-muted-foreground/30 shrink-0" />
             <div>
-              <p className="font-medium">{entry.action.replace(/_/g, ' ')}</p>
+              <p className="font-medium">{entry.action.replace(/_/g, " ")}</p>
               <p className="text-xs text-muted-foreground">
-                {new Date(entry.createdAt).toLocaleString('en-GH')}
+                {new Date(entry.createdAt).toLocaleString("en-GH")}
               </p>
               {entry.newData?.status && (
                 <p className="text-xs text-muted-foreground">
-                  Status → {(entry.newData as Record<string, unknown>).status as string}
+                  Status →{" "}
+                  {(entry.newData as Record<string, unknown>).status as string}
                 </p>
               )}
             </div>
@@ -1525,10 +1746,10 @@ export function ApplicantAuditLog({ applicantId }: AuditLogProps) {
 `apps/web/components/admin/applicants/accept-applicant-dialog.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -1536,10 +1757,16 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AlertTriangle } from "lucide-react";
 
 interface ClassOption {
   id: string;
@@ -1557,9 +1784,16 @@ interface AcceptDialogProps {
   onError: (msg: string) => void;
 }
 
-export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLevelId, onSuccess, onError }: AcceptDialogProps) {
+export function AcceptApplicantDialog({
+  open,
+  onOpenChange,
+  applicantId,
+  gradeLevelId,
+  onSuccess,
+  onError,
+}: AcceptDialogProps) {
   const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [capacityWarning, setCapacityWarning] = useState<string | null>(null);
   const [override, setOverride] = useState(false);
@@ -1567,9 +1801,9 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
   useEffect(() => {
     if (open) {
       fetch(`/api/classes?gradeLevelId=${gradeLevelId}`)
-        .then(res => res.ok ? res.json() : { data: [] })
-        .then(data => setClasses(data.data ?? []));
-      setSelectedClassId('');
+        .then((res) => (res.ok ? res.json() : { data: [] }))
+        .then((data) => setClasses(data.data ?? []));
+      setSelectedClassId("");
       setCapacityWarning(null);
       setOverride(false);
     }
@@ -1581,8 +1815,8 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
 
     try {
       const res = await fetch(`/api/applicants/${applicantId}/accept`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           targetClassId: selectedClassId,
           override,
@@ -1597,7 +1831,7 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
       }
 
       if (!res.ok) {
-        onError(body.error ?? 'Failed to accept applicant');
+        onError(body.error ?? "Failed to accept applicant");
         return;
       }
 
@@ -1626,9 +1860,9 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
                 <SelectValue placeholder="Select a class" />
               </SelectTrigger>
               <SelectContent>
-                {classes.map(c => (
+                {classes.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.name} ({c.code}) — Capacity: {c.capacity ?? 'Unlimited'}
+                    {c.name} ({c.code}) — Capacity: {c.capacity ?? "Unlimited"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1640,12 +1874,14 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-amber-800">{capacityWarning}</p>
+                  <p className="text-sm font-medium text-amber-800">
+                    {capacityWarning}
+                  </p>
                   <label className="mt-2 flex items-center gap-2 text-sm text-amber-700">
                     <input
                       type="checkbox"
                       checked={override}
-                      onChange={e => setOverride(e.target.checked)}
+                      onChange={(e) => setOverride(e.target.checked)}
                       className="h-4 w-4 rounded border-amber-300"
                     />
                     Override — accept despite capacity limit
@@ -1657,9 +1893,14 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleAccept} disabled={!selectedClassId || submitting}>
-            {submitting ? 'Accepting...' : 'Accept'}
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAccept}
+            disabled={!selectedClassId || submitting}
+          >
+            {submitting ? "Accepting..." : "Accept"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1673,11 +1914,11 @@ export function AcceptApplicantDialog({ open, onOpenChange, applicantId, gradeLe
 `apps/web/components/admin/applicants/applicant-actions.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { AcceptApplicantDialog } from './accept-applicant-dialog';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { AcceptApplicantDialog } from "./accept-applicant-dialog";
 
 interface ActionsProps {
   applicantId: string;
@@ -1687,44 +1928,49 @@ interface ActionsProps {
 }
 
 const validActions: Record<string, string[]> = {
-  submitted: ['under_review', 'rejected'],
-  under_review: ['accepted', 'rejected', 'waitlisted'],
-  waitlisted: ['accepted', 'rejected'],
+  submitted: ["under_review", "rejected"],
+  under_review: ["accepted", "rejected", "waitlisted"],
+  waitlisted: ["accepted", "rejected"],
 };
 
 const actionLabels: Record<string, string> = {
-  under_review: 'Mark Under Review',
-  accepted: 'Accept',
-  rejected: 'Reject',
-  waitlisted: 'Waitlist',
+  under_review: "Mark Under Review",
+  accepted: "Accept",
+  rejected: "Reject",
+  waitlisted: "Waitlist",
 };
 
-export function ApplicantActions({ applicantId, status, gradeLevelId, onStatusChange }: ActionsProps) {
+export function ApplicantActions({
+  applicantId,
+  status,
+  gradeLevelId,
+  onStatusChange,
+}: ActionsProps) {
   const [acceptOpen, setAcceptOpen] = useState(false);
   const [submitting, setSubmitting] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const allowed = validActions[status] ?? [];
 
   const handleAction = async (newStatus: string) => {
-    if (newStatus === 'accepted') {
+    if (newStatus === "accepted") {
       setAcceptOpen(true);
       return;
     }
 
     setSubmitting(newStatus);
-    setError('');
+    setError("");
 
     try {
       const res = await fetch(`/api/applicants/${applicantId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
 
       if (!res.ok) {
         const body = await res.json();
-        setError(body.error ?? 'Failed to update status');
+        setError(body.error ?? "Failed to update status");
         return;
       }
 
@@ -1738,14 +1984,22 @@ export function ApplicantActions({ applicantId, status, gradeLevelId, onStatusCh
     <>
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2">
-          {allowed.map(action => (
+          {allowed.map((action) => (
             <Button
               key={action}
-              variant={action === 'rejected' ? 'destructive' : action === 'accepted' ? 'default' : 'outline'}
+              variant={
+                action === "rejected"
+                  ? "destructive"
+                  : action === "accepted"
+                    ? "default"
+                    : "outline"
+              }
               onClick={() => handleAction(action)}
               disabled={submitting !== null}
             >
-              {submitting === action ? 'Processing...' : actionLabels[action] ?? action}
+              {submitting === action
+                ? "Processing..."
+                : (actionLabels[action] ?? action)}
             </Button>
           ))}
         </div>
@@ -1770,47 +2024,54 @@ export function ApplicantActions({ applicantId, status, gradeLevelId, onStatusCh
 `apps/web/app/(school)/admin/applicants/[id]/page.tsx`:
 
 ```tsx
-import { db } from '@/lib/db';
-import { applicants, gradeLevels } from '@edunexus/database';
-import { eq, and } from 'drizzle-orm';
-import { requireRole } from '@/lib/auth/auth.guard';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ApplicantDetailInfo } from '@/components/admin/applicants/applicant-detail-info';
-import { ApplicantDocuments } from '@/components/admin/applicants/applicant-documents';
-import { ApplicantActions } from '@/components/admin/applicants/applicant-actions';
-import { ApplicantAuditLog } from '@/components/admin/applicants/applicant-audit-log';
+import { db } from "@/lib/db";
+import { applicants, gradeLevels } from "@edunexus/database";
+import { eq, and } from "drizzle-orm";
+import { requireRole } from "@/lib/auth/auth.guard";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ApplicantDetailInfo } from "@/components/admin/applicants/applicant-detail-info";
+import { ApplicantDocuments } from "@/components/admin/applicants/applicant-documents";
+import { ApplicantActions } from "@/components/admin/applicants/applicant-actions";
+import { ApplicantAuditLog } from "@/components/admin/applicants/applicant-audit-log";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const statusBadge: Record<string, string> = {
-  submitted: 'bg-yellow-100 text-yellow-800',
-  under_review: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  waitlisted: 'bg-purple-100 text-purple-800',
+  submitted: "bg-yellow-100 text-yellow-800",
+  under_review: "bg-blue-100 text-blue-800",
+  accepted: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
+  waitlisted: "bg-purple-100 text-purple-800",
 };
 
 const statusLabel: Record<string, string> = {
-  submitted: 'Submitted',
-  under_review: 'Under Review',
-  accepted: 'Accepted',
-  rejected: 'Rejected',
-  waitlisted: 'Waitlisted',
+  submitted: "Submitted",
+  under_review: "Under Review",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  waitlisted: "Waitlisted",
 };
 
-export default async function ApplicantDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ApplicantDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
-  const session = await requireRole('admin', 'super_admin');
+  const session = await requireRole("admin", "super_admin");
 
-  const [applicant] = await db.select()
+  const [applicant] = await db
+    .select()
     .from(applicants)
-    .where(and(
-      eq(applicants.id, id),
-      eq(applicants.schoolId, session.user.schoolId!),
-    ))
+    .where(
+      and(
+        eq(applicants.id, id),
+        eq(applicants.schoolId, session.user.schoolId!),
+      ),
+    )
     .limit(1);
 
   if (!applicant) notFound();
@@ -1818,7 +2079,10 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/admin/applicants" className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          href="/admin/applicants"
+          className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to queue
         </Link>
@@ -1830,12 +2094,17 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
             <h1 className="text-2xl font-semibold">
               {applicant.firstName} {applicant.lastName}
             </h1>
-            <Badge className={statusBadge[applicant.status] ?? ''}>
+            <Badge className={statusBadge[applicant.status] ?? ""}>
               {statusLabel[applicant.status] ?? applicant.status}
             </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Applied {new Date(applicant.createdAt).toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' })}
+            Applied{" "}
+            {new Date(applicant.createdAt).toLocaleDateString("en-GH", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </p>
         </div>
       </div>
@@ -1856,7 +2125,11 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
       <ApplicantDetailInfo
         applicant={{
           ...applicant,
-          emergencyContacts: applicant.emergencyContacts as Array<{name: string; phone: string; relationship: string}> | null,
+          emergencyContacts: applicant.emergencyContacts as Array<{
+            name: string;
+            phone: string;
+            relationship: string;
+          }> | null,
         }}
       />
 
@@ -1871,6 +2144,7 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
 ```bash
 cd apps/web && npx next build 2>&1 | tail -30
 ```
+
 Expected: compiles without type errors.
 
 - [ ] **Step 8: Commit**
@@ -1885,6 +2159,7 @@ git commit -m "feat(3a.1.2): add applicant detail page with actions and accept f
 ### Task 9: Add admin dashboard link
 
 **Files:**
+
 - Modify: `apps/web/app/(school)/admin/dashboard/page.tsx`
 
 - [ ] **Step 1: Add link to admissions queue**
@@ -1899,7 +2174,9 @@ In the Quick Actions section, add an admissions review card after "Add New Stude
         <GraduationCap className="h-5 w-5 text-brand-600" />
       </div>
       <div>
-        <CardTitle className="text-sm font-medium">Review Applications</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Review Applications
+        </CardTitle>
         <CardDescription>Process admission applications</CardDescription>
       </div>
     </CardContent>
@@ -1926,6 +2203,7 @@ git commit -m "feat(3a.1.2): add link to admissions review queue from admin dash
 ```bash
 pnpm build
 ```
+
 Expected: all packages compile, TypeScript passes, all routes listed including the new `/admin/applicants` pages and `/api/applicants/stats` and `/api/applicants/[id]/accept` endpoints.
 
 - [ ] **Step 2: Commit any final fixes**
@@ -1983,6 +2261,7 @@ Depends on: 3a.1.1" \
 ```
 
 To find issue IDs:
+
 ```bash
 gh issue list --label "Phase 3a" --json number,title
 ```

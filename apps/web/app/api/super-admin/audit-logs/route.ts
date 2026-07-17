@@ -1,21 +1,22 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { auditLogs } from '@edunexus/database/src/schema';
-import { desc, eq, and, gte, lte, count } from 'drizzle-orm';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess } from '@/lib/api/response';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { auditLogs } from "@edunexus/database";
+import { desc, eq, and, gte, lte, count } from "drizzle-orm";
+import { routeHandler } from "@/lib/api/handler";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess } from "@/lib/api/response";
 
-export async function GET(request: NextRequest) {
-  const { error } = await requireRole('super_admin');
+export const GET = routeHandler(async (request: NextRequest) => {
+  const { error } = await requireRole("super_admin");
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
-  const action = searchParams.get('action');
-  const schoolId = searchParams.get('schoolId');
-  const dateFrom = searchParams.get('dateFrom');
-  const dateTo = searchParams.get('dateTo');
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '20');
+  const action = searchParams.get("action");
+  const schoolId = searchParams.get("schoolId");
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
+  const page = parseInt(searchParams.get("page") || "1");
+  const pageSize = parseInt(searchParams.get("pageSize") || "20");
 
   const conditions = and(
     action ? eq(auditLogs.action, action) : undefined,
@@ -38,8 +39,9 @@ export async function GET(request: NextRequest) {
     .offset((page - 1) * pageSize);
 
   return apiSuccess(logs, {
-    page, pageSize,
+    page,
+    pageSize,
     total: Number(total.count),
     totalPages: Math.ceil(Number(total.count) / pageSize),
   });
-}
+});

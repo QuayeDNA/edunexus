@@ -9,8 +9,8 @@ export function parseHostname(hostname: string): {
   subdomain: string | null;
   slug: string | null;
 } {
-  const host = hostname?.replace(/:\d+$/, '').toLowerCase() ?? '';
-  const parts = host.split('.');
+  const host = hostname?.replace(/:\d+$/, "").toLowerCase() ?? "";
+  const parts = host.split(".");
 
   if (parts.length < 3) {
     return { subdomain: null, slug: null };
@@ -18,7 +18,7 @@ export function parseHostname(hostname: string): {
 
   const subdomain = parts[0];
 
-  const superAdminDomains = ['console', 'app', 'www'];
+  const superAdminDomains = ["console", "app", "www"];
   if (superAdminDomains.includes(subdomain)) {
     return { subdomain, slug: null };
   }
@@ -27,12 +27,12 @@ export function parseHostname(hostname: string): {
 }
 
 export function isSuperAdminHost(hostname: string): boolean {
-  const host = hostname?.replace(/:\d+$/, '').toLowerCase() ?? '';
-  const parts = host.split('.');
+  const host = hostname?.replace(/:\d+$/, "").toLowerCase() ?? "";
+  const parts = host.split(".");
 
   if (parts.length < 3) return true;
 
   const subdomain = parts[0];
-  const superAdminDomains = ['console', 'app', 'www'];
+  const superAdminDomains = ["console", "app", "www"];
   return superAdminDomains.includes(subdomain);
 }
