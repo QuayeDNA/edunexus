@@ -135,3 +135,19 @@ describe('POST /api/terms/[id]/toggle-lock', () => {
     expect(body.data.locked).toBe(true);
   });
 });
+
+describe('POST /api/terms/[id]/set-current', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('sets the term as current', async () => {
+    const { db } = await import('@/lib/db');
+    db.limit.mockResolvedValue([{ id: 't1', schoolId, academicYearId: 'y1' }]);
+
+    const req = new NextRequest('http://localhost/api/terms/t1/set-current', { method: 'POST' });
+    req.headers.set('host', 'demo.edunexus.com');
+    const res = await setCurrentPOST(req, { params: Promise.resolve({ id: 't1' }) });
+    const body = await res.json();
+
+    expect(body.success).toBe(true);
+  });
+});
