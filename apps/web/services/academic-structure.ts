@@ -1,6 +1,10 @@
 import { academicYears, terms } from '@edunexus/database';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { AppError } from '@/lib/api/errors';
+import type { DatabaseClient } from '@edunexus/database';
+
+export { AppError };
 
 export const createAcademicYearSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -42,12 +46,8 @@ const GHANA_TERM_DEFAULTS = [
 ];
 
 interface ServiceContext {
-  db: any;
+  db: DatabaseClient;
   schoolId: string;
-}
-
-function ensureSchoolScope(conditions: any[], schoolId: string, table: any) {
-  return [...conditions, eq(table.schoolId, schoolId)];
 }
 
 function getTermDate(yearStart: Date, yearEnd: Date, termIndex: number): { start: Date; end: Date } {
@@ -67,7 +67,7 @@ function validateDateOrder(startDate: string, endDate: string, label: string): v
   const start = new Date(startDate);
   const end = new Date(endDate);
   if (start >= end) {
-    throw new AppError(400, `${label}: start date must be before end date`);
+    throw new AppError(`${label}: start date must be before end date`, 400);
   }
 }
 
@@ -77,14 +77,7 @@ function validateTermInYear(termStart: string, termEnd: string, yearStart: strin
   const ys = new Date(yearStart);
   const ye = new Date(yearEnd);
   if (ts < ys || te > ye) {
-    throw new AppError(400, 'Term dates must fall within the academic year date range');
-  }
-}
-
-export class AppError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-    this.name = 'AppError';
+    throw new AppError('Term dates must fall within the academic year date range', 400);
   }
 }
 
@@ -98,7 +91,7 @@ export async function createAcademicYear(ctx: ServiceContext, data: z.infer<type
     .limit(1);
 
   if (existing) {
-    throw new AppError(409, 'An academic year with this name already exists');
+    throw new AppError('An academic year with this name already exists', 409);
   }
 
   const [year] = await ctx.db.insert(academicYears).values({
@@ -160,7 +153,7 @@ export async function updateAcademicYear(ctx: ServiceContext, id: string, data: 
     .where(and(eq(academicYears.id, id), eq(academicYears.schoolId, ctx.schoolId)))
     .returning();
 
-  if (!updated) throw new AppError(404, 'Academic year not found');
+  if (!updated) throw new AppError('Academic year not found', 404);
   return updated;
 }
 
@@ -170,14 +163,14 @@ export async function deleteAcademicYear(ctx: ServiceContext, id: string) {
     .where(and(eq(terms.academicYearId, id), eq(terms.schoolId, ctx.schoolId)));
 
   if (Number(termCount.count) > 0) {
-    throw new AppError(409, 'Cannot delete academic year with existing terms. Delete the terms first.');
+    throw new AppError('Cannot delete academic year with existing terms. Delete the terms first.', 409);
   }
 
   const [deleted] = await ctx.db.delete(academicYears)
     .where(and(eq(academicYears.id, id), eq(academicYears.schoolId, ctx.schoolId)))
     .returning({ id: academicYears.id });
 
-  if (!deleted) throw new AppError(404, 'Academic year not found');
+  if (!deleted) throw new AppError('Academic year not found', 404);
   return { deleted: true };
 }
 
@@ -186,7 +179,7 @@ export async function setCurrentAcademicYear(ctx: ServiceContext, id: string) {
     .where(and(eq(academicYears.id, id), eq(academicYears.schoolId, ctx.schoolId)))
     .limit(1);
 
-  if (!target) throw new AppError(404, 'Academic year not found');
+  if (!target) throw new AppError('Academic year not found', 404);
 
   await ctx.db.transaction(async (tx: any) => {
     await tx.update(academicYears).set({ isCurrent: false, updatedAt: new Date() })
@@ -212,7 +205,7 @@ export async function getAcademicYear(ctx: ServiceContext, id: string) {
     .where(and(eq(academicYears.id, id), eq(academicYears.schoolId, ctx.schoolId)))
     .limit(1);
 
-  if (!year) throw new AppError(404, 'Academic year not found');
+  if (!year) throw new AppError('Academic year not found', 404);
 
   const termRows = await ctx.db.select().from(terms)
     .where(and(eq(terms.academicYearId, id), eq(terms.schoolId, ctx.schoolId)))
@@ -226,7 +219,7 @@ export async function createTerm(ctx: ServiceContext, data: z.infer<typeof creat
     .where(and(eq(academicYears.id, data.academicYearId), eq(academicYears.schoolId, ctx.schoolId)))
     .limit(1);
 
-  if (!year) throw new AppError(404, 'Academic year not found');
+  if (!year) throw new AppError('Academic year not found', 404);
 
   validateDateOrder(data.startDate, data.endDate, 'Term');
   validateTermInYear(data.startDate, data.endDate, year.startDate.toISOString().split('T')[0], year.endDate.toISOString().split('T')[0]);
@@ -239,7 +232,7 @@ export async function createTerm(ctx: ServiceContext, data: z.infer<typeof creat
     ))
     .limit(1);
 
-  if (existing) throw new AppError(409, `Term ${data.termNumber} already exists in this academic year`);
+  if (existing) throw new AppError(`Term ${data.termNumber} already exists in this academic year`, 409);
 
   const [overlap] = await ctx.db.select({ id: terms.id }).from(terms)
     .where(and(
@@ -250,7 +243,7 @@ export async function createTerm(ctx: ServiceContext, data: z.infer<typeof creat
     ))
     .limit(1);
 
-  if (overlap) throw new AppError(409, 'Term dates overlap with an existing term in this academic year');
+  if (overlap) throw new AppError('Term dates overlap with an existing term in this academic year', 409);
 
   const [term] = await ctx.db.insert(terms).values({
     schoolId: ctx.schoolId,
@@ -271,7 +264,7 @@ export async function updateTerm(ctx: ServiceContext, id: string, data: z.infer<
     .where(and(eq(terms.id, id), eq(terms.schoolId, ctx.schoolId)))
     .limit(1);
 
-  if (!existing) throw new AppError(404, 'Term not found');
+  if (!existing) throw new AppError('Term not found', 404);
 
   if (data.startDate && data.endDate) {
     validateDateOrder(data.startDate, data.endDate, 'Term');
@@ -305,7 +298,7 @@ export async function deleteTerm(ctx: ServiceContext, id: string) {
     .where(and(eq(terms.id, id), eq(terms.schoolId, ctx.schoolId)))
     .limit(1);
 
-  if (!existing) throw new AppError(404, 'Term not found');
+  if (!existing) throw new AppError('Term not found', 404);
 
   const [deleted] = await ctx.db.delete(terms)
     .where(and(eq(terms.id, id), eq(terms.schoolId, ctx.schoolId)))
@@ -319,7 +312,7 @@ export async function toggleTermLock(ctx: ServiceContext, id: string) {
     .where(and(eq(terms.id, id), eq(terms.schoolId, ctx.schoolId)))
     .limit(1);
 
-  if (!existing) throw new AppError(404, 'Term not found');
+  if (!existing) throw new AppError('Term not found', 404);
 
   const [updated] = await ctx.db.update(terms)
     .set({ locked: !existing.locked, updatedAt: new Date() })
@@ -334,7 +327,7 @@ export async function setCurrentTerm(ctx: ServiceContext, id: string) {
     .where(and(eq(terms.id, id), eq(terms.schoolId, ctx.schoolId)))
     .limit(1);
 
-  if (!target) throw new AppError(404, 'Term not found');
+  if (!target) throw new AppError('Term not found', 404);
 
   await ctx.db.transaction(async (tx: any) => {
     await tx.update(terms).set({ isCurrent: false, updatedAt: new Date() })
@@ -364,6 +357,6 @@ export async function getTerm(ctx: ServiceContext, id: string) {
     .where(and(eq(terms.id, id), eq(terms.schoolId, ctx.schoolId)))
     .limit(1);
 
-  if (!term) throw new AppError(404, 'Term not found');
+  if (!term) throw new AppError('Term not found', 404);
   return term;
 }
