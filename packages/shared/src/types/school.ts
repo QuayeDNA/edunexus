@@ -19,28 +19,27 @@ export interface School {
 
 export interface AcademicYear {
   id: string;
-  school_id: string;
+  schoolId: string;
   name: string;
-  start_date: string;
-  end_date: string;
-  is_current: boolean;
-  status: Status;
-  created_at: string;
-  updated_at: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Term {
   id: string;
-  school_id: string;
-  academic_year_id: string;
+  schoolId: string;
+  academicYearId: string;
+  termNumber: string;
   name: string;
-  term_number: number;
-  start_date: string;
-  end_date: string;
-  is_current: boolean;
-  status: Status;
-  created_at: string;
-  updated_at: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+  locked: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SchoolConfig {
