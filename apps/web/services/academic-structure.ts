@@ -1,10 +1,17 @@
 import { academicYears, terms } from '@edunexus/database';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { AppError } from '@/lib/api/errors';
 import type { DatabaseClient } from '@edunexus/database';
 
-export { AppError };
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number = 500,
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
 
 export const createAcademicYearSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
