@@ -33,6 +33,13 @@ const TERMS = [
   { termNumber: '3', name: 'Third Term', startDate: '2025-04-28', endDate: '2025-07-18' },
 ];
 
+const ACADEMIC_YEAR_2_NAME = '2025/2026';
+const TERMS_2 = [
+  { termNumber: '1', name: 'First Term', startDate: '2025-09-08', endDate: '2025-12-12' },
+  { termNumber: '2', name: 'Second Term', startDate: '2026-01-05', endDate: '2026-04-10' },
+  { termNumber: '3', name: 'Third Term', startDate: '2026-04-27', endDate: '2026-07-17' },
+];
+
 const GRADE_LEVELS = [
   { code: 'KG1', name: 'Kindergarten 1', level: 3, category: 'kindergarten', sortOrder: 3 },
   { code: 'KG2', name: 'Kindergarten 2', level: 4, category: 'kindergarten', sortOrder: 4 },
@@ -115,6 +122,38 @@ async function main() {
     }
   }
   console.log(`   Terms: ${TERMS.length} ensured`);
+
+  console.log('Creating 2025/2026 academic year...');
+  const existingYear2 = await db.select({ id: academicYears.id }).from(academicYears)
+    .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.name, ACADEMIC_YEAR_2_NAME)))
+    .then((r) => r[0] ?? null);
+
+  if (existingYear2) {
+    console.log(`   Found existing: ${ACADEMIC_YEAR_2_NAME}`);
+  } else {
+    const [year2] = await db.insert(academicYears).values({
+      schoolId,
+      name: ACADEMIC_YEAR_2_NAME,
+      startDate: new Date('2025-09-08'),
+      endDate: new Date('2026-07-17'),
+      isCurrent: false,
+    }).returning({ id: academicYears.id });
+    console.log(`   Created: ${ACADEMIC_YEAR_2_NAME}`);
+
+    for (const term of TERMS_2) {
+      await db.insert(terms).values({
+        schoolId,
+        academicYearId: year2.id,
+        termNumber: term.termNumber,
+        name: term.name,
+        startDate: new Date(term.startDate),
+        endDate: new Date(term.endDate),
+        isCurrent: false,
+        locked: false,
+      });
+    }
+    console.log(`   Terms for ${ACADEMIC_YEAR_2_NAME}: 3 created`);
+  }
 
   console.log('Creating grade levels...');
   for (const gl of GRADE_LEVELS) {
