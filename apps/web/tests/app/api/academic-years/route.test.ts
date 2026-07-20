@@ -102,3 +102,70 @@ describe('GET /api/academic-years/[id]', () => {
     expect(body.data.id).toBe('y1');
   });
 });
+
+describe('PATCH /api/academic-years/[id]', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('updates an academic year', async () => {
+    const { db } = await import('@/lib/db');
+    db.returning.mockResolvedValue([{ id: 'y1', name: '2025/2026 Updated', schoolId }]);
+
+    const req = new NextRequest('http://localhost/api/academic-years/y1', {
+      method: 'PATCH',
+      body: JSON.stringify({ name: '2025/2026 Updated' }),
+    });
+    req.headers.set('host', 'demo.edunexus.com');
+    req.headers.set('content-type', 'application/json');
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'y1' }) });
+    const body = await res.json();
+
+    expect(body.success).toBe(true);
+    expect(body.data.name).toBe('2025/2026 Updated');
+  });
+
+  it('returns 400 for invalid data', async () => {
+    const req = new NextRequest('http://localhost/api/academic-years/y1', {
+      method: 'PATCH',
+      body: JSON.stringify({ startDate: 'invalid' }),
+    });
+    req.headers.set('host', 'demo.edunexus.com');
+    req.headers.set('content-type', 'application/json');
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'y1' }) });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('DELETE /api/academic-years/[id]', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('deletes an academic year', async () => {
+    const { db } = await import('@/lib/db');
+    db.where.mockResolvedValueOnce([{ count: '0' }]);
+    db.returning.mockResolvedValue([{ id: 'y1' }]);
+
+    const req = new NextRequest('http://localhost/api/academic-years/y1', { method: 'DELETE' });
+    req.headers.set('host', 'demo.edunexus.com');
+    const res = await DELETE(req, { params: Promise.resolve({ id: 'y1' }) });
+    const body = await res.json();
+
+    expect(body.success).toBe(true);
+    expect(body.data.deleted).toBe(true);
+  });
+});
+
+describe('POST /api/academic-years/[id]/set-current', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('sets the year as current', async () => {
+    const { db } = await import('@/lib/db');
+    db.limit.mockResolvedValue([{ id: 'y1', name: '2024/2025', schoolId, startDate: new Date(), endDate: new Date() }]);
+
+    const req = new NextRequest('http://localhost/api/academic-years/y1/set-current', { method: 'POST' });
+    req.headers.set('host', 'demo.edunexus.com');
+    const res = await setCurrentPOST(req, { params: Promise.resolve({ id: 'y1' }) });
+    const body = await res.json();
+
+    expect(body.success).toBe(true);
+    expect(body.data.isCurrent).toBe(true);
+  });
+});
