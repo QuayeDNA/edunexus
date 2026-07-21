@@ -140,6 +140,33 @@ export async function updateAcademicYear(ctx: ServiceContext, id: string, data: 
     validateDateOrder(data.startDate, data.endDate, 'Academic year');
   }
 
+  const [existing] = await ctx.db.select().from(academicYears)
+    .where(and(eq(academicYears.id, id), eq(academicYears.schoolId, ctx.schoolId)))
+    .limit(1);
+
+  if (!existing) throw new NotFoundError('Academic year');
+
+  if (data.isCurrent === true && !existing.isCurrent) {
+    const [currentYear] = await ctx.db.select().from(academicYears)
+      .where(and(eq(academicYears.schoolId, ctx.schoolId), eq(academicYears.isCurrent, true)))
+      .limit(1);
+
+    if (currentYear && new Date(existing.startDate) < new Date(currentYear.startDate)) {
+      throw new AppError('Cannot roll back to an earlier academic year', 400);
+    }
+
+    await ctx.db.update(academicYears).set({ isCurrent: false, updatedAt: new Date() })
+      .where(and(eq(academicYears.schoolId, ctx.schoolId), eq(academicYears.isCurrent, true)));
+
+    if (currentYear) {
+      await ctx.db.update(terms).set({ isCurrent: false, locked: true, updatedAt: new Date() })
+        .where(and(
+          eq(terms.schoolId, ctx.schoolId),
+          eq(terms.academicYearId, currentYear.id),
+        ));
+    }
+  }
+
   const [updated] = await ctx.db.update(academicYears)
     .set({
       ...(data.name !== undefined && { name: data.name }),
@@ -151,7 +178,6 @@ export async function updateAcademicYear(ctx: ServiceContext, id: string, data: 
     .where(and(eq(academicYears.id, id), eq(academicYears.schoolId, ctx.schoolId)))
     .returning();
 
-  if (!updated) throw new NotFoundError('Academic year');
   return updated;
 }
 
@@ -179,11 +205,30 @@ export async function setCurrentAcademicYear(ctx: ServiceContext, id: string) {
 
   if (!target) throw new NotFoundError('Academic year');
 
+  const [currentYear] = await ctx.db.select().from(academicYears)
+    .where(and(eq(academicYears.schoolId, ctx.schoolId), eq(academicYears.isCurrent, true)))
+    .limit(1);
+
+  if (target.isCurrent) return { ...target, isCurrent: true };
+
+  if (currentYear && new Date(target.startDate) < new Date(currentYear.startDate)) {
+    throw new AppError('Cannot roll back to an earlier academic year', 400);
+  }
+
   await ctx.db.transaction(async (tx: any) => {
     await tx.update(academicYears).set({ isCurrent: false, updatedAt: new Date() })
       .where(and(eq(academicYears.schoolId, ctx.schoolId), eq(academicYears.isCurrent, true)));
+
     await tx.update(academicYears).set({ isCurrent: true, updatedAt: new Date() })
       .where(eq(academicYears.id, id));
+
+    if (currentYear) {
+      await tx.update(terms).set({ isCurrent: false, locked: true, updatedAt: new Date() })
+        .where(and(
+          eq(terms.schoolId, ctx.schoolId),
+          eq(terms.academicYearId, currentYear.id),
+        ));
+    }
   });
 
   return { ...target, isCurrent: true };
@@ -264,6 +309,10 @@ export async function updateTerm(ctx: ServiceContext, id: string, data: z.infer<
 
   if (!existing) throw new NotFoundError('Term');
 
+  if (existing.locked) {
+    throw new AppError('Cannot edit a locked term. Unlock it first.', 409);
+  }
+
   if (data.startDate && data.endDate) {
     validateDateOrder(data.startDate, data.endDate, 'Term');
     if (existing.academicYearId) {
@@ -312,6 +361,10 @@ export async function deleteTerm(ctx: ServiceContext, id: string) {
 
   if (!existing) throw new NotFoundError('Term');
 
+  if (existing.locked) {
+    throw new AppError('Cannot delete a locked term. Unlock it first.', 409);
+  }
+
   await ctx.db.delete(terms)
     .where(and(eq(terms.id, id), eq(terms.schoolId, ctx.schoolId)))
     .returning({ id: terms.id });
@@ -340,6 +393,15 @@ export async function setCurrentTerm(ctx: ServiceContext, id: string) {
     .limit(1);
 
   if (!target) throw new NotFoundError('Term');
+
+  if (target.academicYearId) {
+    const [year] = await ctx.db.select({ isCurrent: academicYears.isCurrent }).from(academicYears)
+      .where(and(eq(academicYears.id, target.academicYearId), eq(academicYears.schoolId, ctx.schoolId)))
+      .limit(1);
+    if (!year?.isCurrent) {
+      throw new AppError('Cannot set a term as current when its academic year is not current. Set the academic year as current first.', 400);
+    }
+  }
 
   await ctx.db.transaction(async (tx: any) => {
     await tx.update(terms).set({ isCurrent: false, updatedAt: new Date() })

@@ -12,7 +12,13 @@ const schoolId = 'school-1';
 const mockYear = {
   id: 'year-1', schoolId, name: '2024/2025',
   startDate: new Date('2024-09-09'), endDate: new Date('2025-07-18'),
-  isCurrent: true, createdAt: new Date(), updatedAt: new Date(),
+  isCurrent: false, createdAt: new Date(), updatedAt: new Date(),
+};
+
+const mockCurrentYear = {
+  ...mockYear, id: 'year-2', name: '2025/2026',
+  startDate: new Date('2025-09-08'), endDate: new Date('2026-07-17'),
+  isCurrent: true,
 };
 
 const mockTerm = {
@@ -125,6 +131,7 @@ describe('AcademicStructureService', () => {
   describe('updateAcademicYear', () => {
     it('updates year name', async () => {
       const mockDb2 = createMockDb();
+      mockDb2.limit.mockResolvedValue([{ ...mockYear, isCurrent: false }]);
       mockDb2.returning.mockResolvedValue([{ ...mockYear, name: '2025/2026' }]);
 
       const result = await updateAcademicYear({ db: mockDb2, schoolId }, 'year-1', { name: '2025/2026' });
@@ -134,13 +141,40 @@ describe('AcademicStructureService', () => {
 
     it('rejects start date after end date', async () => {
       const mockDb2 = createMockDb();
+      mockDb2.limit.mockResolvedValue([mockYear]);
 
       await expect(updateAcademicYear({ db: mockDb2, schoolId }, 'year-1', { startDate: '2026-01-01', endDate: '2025-01-01' }))
         .rejects.toThrow(AppError);
     });
 
+    it('rejects rollback when setting isCurrent via PATCH', async () => {
+      const mockDb2 = createMockDb();
+      const earlierYear = { ...mockYear, startDate: new Date('2023-09-04') };
+      mockDb2.limit
+        .mockResolvedValueOnce([earlierYear])
+        .mockResolvedValueOnce([mockCurrentYear]);
+
+      await expect(updateAcademicYear({ db: mockDb2, schoolId }, 'year-1', { isCurrent: true }))
+        .rejects.toThrow(AppError);
+    });
+
+    it('locks old year terms when setting isCurrent via PATCH', async () => {
+      const mockDb2 = createMockDb();
+      const nextYear = { ...mockYear, id: 'year-3', name: '2026/2027', startDate: new Date('2026-09-07'), isCurrent: false };
+      mockDb2.limit
+        .mockResolvedValueOnce([nextYear])
+        .mockResolvedValueOnce([mockCurrentYear]);
+      mockDb2.returning.mockResolvedValue([{ ...nextYear, isCurrent: true }]);
+
+      const result = await updateAcademicYear({ db: mockDb2, schoolId }, 'year-3', { isCurrent: true });
+
+      expect(result.isCurrent).toBe(true);
+      expect(mockDb2.update).toHaveBeenCalled();
+    });
+
     it('throws 404 if year not found', async () => {
       const mockDb2 = createMockDb();
+      mockDb2.limit.mockResolvedValue([]);
       mockDb2.returning.mockResolvedValue([]);
 
       await expect(updateAcademicYear({ db: mockDb2, schoolId }, 'missing', { name: 'Test' }))
@@ -150,13 +184,62 @@ describe('AcademicStructureService', () => {
 
   describe('setCurrentAcademicYear', () => {
     it('unsets all years then sets target in a transaction', async () => {
-      mockDb.limit.mockResolvedValue([mockYear]);
-      mockDb.returning.mockResolvedValue([mockYear]);
+      const nextYear = { ...mockYear, id: 'year-3', name: '2026/2027', startDate: new Date('2026-09-07'), isCurrent: false };
+      mockDb.limit
+        .mockResolvedValueOnce([nextYear])
+        .mockResolvedValueOnce([mockCurrentYear]);
+      mockDb.returning.mockResolvedValue([nextYear]);
 
-      const result = await setCurrentAcademicYear(ctx, 'year-1');
+      const result = await setCurrentAcademicYear(ctx, 'year-3');
 
       expect(mockDb.transaction).toHaveBeenCalledOnce();
       expect(result.isCurrent).toBe(true);
+    });
+
+    it('returns early if year is already current', async () => {
+      mockDb.limit
+        .mockResolvedValueOnce([mockCurrentYear])
+        .mockResolvedValueOnce([mockCurrentYear]);
+
+      const result = await setCurrentAcademicYear(ctx, 'year-2');
+
+      expect(mockDb.transaction).not.toHaveBeenCalled();
+      expect(result.isCurrent).toBe(true);
+    });
+
+    it('rejects rollback to an earlier academic year', async () => {
+      const earlierYear = { ...mockYear, id: 'year-0', name: '2023/2024', startDate: new Date('2023-09-04') };
+      mockDb.limit
+        .mockResolvedValueOnce([earlierYear])
+        .mockResolvedValueOnce([mockCurrentYear]);
+
+      await expect(setCurrentAcademicYear(ctx, 'year-0')).rejects.toThrow(AppError);
+    });
+
+    it('auto-locks old current year terms in transaction', async () => {
+      const nextYear = { ...mockYear, id: 'year-3', name: '2026/2027', startDate: new Date('2026-09-07'), isCurrent: false };
+      mockDb.limit
+        .mockResolvedValueOnce([nextYear])
+        .mockResolvedValueOnce([mockCurrentYear]);
+
+      const tx = createMockDb();
+      tx.select = vi.fn().mockReturnThis();
+      tx.from = vi.fn().mockReturnThis();
+      tx.where = vi.fn().mockReturnThis();
+      tx.limit = vi.fn().mockReturnThis();
+      tx.update = vi.fn().mockReturnThis();
+      tx.set = vi.fn().mockReturnThis();
+      tx.where = vi.fn().mockReturnThis();
+      tx.select.mockReturnThis();
+      tx.from.mockReturnThis();
+      tx.limit.mockResolvedValue([{ id: 'term-1' }, { id: 'term-2' }]);
+      mockDb.transaction.mockImplementation(async (cb: any) => cb(tx));
+
+      await setCurrentAcademicYear(ctx, 'year-1');
+
+      expect(tx.update).toHaveBeenCalledWith(expect.anything());
+      const setCall = tx.set.mock.calls.find((c: any) => c[0]?.locked === true);
+      expect(setCall).toBeDefined();
     });
 
     it('throws 404 if year not found', async () => {
@@ -220,6 +303,14 @@ describe('AcademicStructureService', () => {
       expect(result.name).toBe('Renamed');
     });
 
+    it('rejects editing a locked term', async () => {
+      const mockDb2 = createMockDb();
+      mockDb2.limit.mockResolvedValue([{ ...mockTerm, locked: true }]);
+
+      await expect(updateTerm({ db: mockDb2, schoolId }, 'term-1', { name: 'Hack' }))
+        .rejects.toThrow(AppError);
+    });
+
     it('throws 404 if term not found', async () => {
       const mockDb2 = createMockDb();
       mockDb2.limit.mockResolvedValue([]);
@@ -238,6 +329,13 @@ describe('AcademicStructureService', () => {
       const result = await deleteTerm({ db: mockDb2, schoolId }, 'term-1');
 
       expect(result.deleted).toBe(true);
+    });
+
+    it('rejects deleting a locked term', async () => {
+      const mockDb2 = createMockDb();
+      mockDb2.limit.mockResolvedValue([{ ...mockTerm, locked: true }]);
+
+      await expect(deleteTerm({ db: mockDb2, schoolId }, 'term-1')).rejects.toThrow(AppError);
     });
 
     it('throws 404 if term not found', async () => {
@@ -269,12 +367,28 @@ describe('AcademicStructureService', () => {
 
   describe('setCurrentTerm', () => {
     it('unsets all terms in year then sets target', async () => {
-      mockDb.limit.mockResolvedValue([mockTerm]);
+      mockDb.limit
+        .mockResolvedValueOnce([mockTerm])
+        .mockResolvedValueOnce([{ isCurrent: true }]);
 
       const result = await setCurrentTerm(ctx, 'term-1');
 
       expect(mockDb.transaction).toHaveBeenCalledOnce();
       expect(result.isCurrent).toBe(true);
+    });
+
+    it('rejects if academic year is not current', async () => {
+      mockDb.limit
+        .mockResolvedValueOnce([mockTerm])
+        .mockResolvedValueOnce([{ isCurrent: false }]);
+
+      await expect(setCurrentTerm(ctx, 'term-1')).rejects.toThrow(AppError);
+    });
+
+    it('throws 404 if term not found', async () => {
+      mockDb.limit.mockResolvedValue([]);
+
+      await expect(setCurrentTerm(ctx, 'missing')).rejects.toThrow(AppError);
     });
   });
 
