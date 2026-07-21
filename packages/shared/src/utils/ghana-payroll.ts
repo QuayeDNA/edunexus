@@ -13,11 +13,11 @@ export interface GHANA_PAYE_BAND {
 export const GHANA_PAYE_BANDS: GHANA_PAYE_BAND[] = [
   { min: 0, max: 490, rate: 0, cumulative_base: 0 },
   { min: 490, max: 730, rate: 0.05, cumulative_base: 0 },
-  { min: 730, max: 1096, rate: 0.10, cumulative_base: 12 },
-  { min: 1096, max: 2000, rate: 0.175, cumulative_base: 48.60 },
-  { min: 2000, max: 3650, rate: 0.25, cumulative_base: 206.80 },
-  { min: 3650, max: 20000, rate: 0.30, cumulative_base: 619.30 },
-  { min: 20000, max: null, rate: 0.35, cumulative_base: 5524.30 },
+  { min: 730, max: 1096, rate: 0.1, cumulative_base: 12 },
+  { min: 1096, max: 2000, rate: 0.175, cumulative_base: 48.6 },
+  { min: 2000, max: 3650, rate: 0.25, cumulative_base: 206.8 },
+  { min: 3650, max: 20000, rate: 0.3, cumulative_base: 619.3 },
+  { min: 20000, max: null, rate: 0.35, cumulative_base: 5524.3 },
 ] as const;
 
 export function calculateGhanaPAYE(monthlyGross: number): number {

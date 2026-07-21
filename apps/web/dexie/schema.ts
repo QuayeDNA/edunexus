@@ -1,4 +1,4 @@
-import { Dexie, type EntityTable } from 'dexie';
+import { Dexie, type EntityTable } from "dexie";
 
 export interface DexieStudent {
   id: string;
@@ -6,10 +6,10 @@ export interface DexieStudent {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
-  gender: 'male' | 'female';
+  gender: "male" | "female";
   classId: string;
   admissionNumber: string;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   updatedAt: string;
 }
 
@@ -21,7 +21,7 @@ export interface DexieStaff {
   email: string;
   phone: string;
   role: string;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   updatedAt: string;
 }
 
@@ -31,7 +31,7 @@ export interface DexieClass {
   name: string;
   academicYearId: string;
   teacherId: string | null;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   updatedAt: string;
 }
 
@@ -40,8 +40,8 @@ export interface DexieAttendance {
   schoolId: string;
   studentId: string;
   date: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
-  syncStatus: 'pending' | 'synced' | 'error';
+  status: "present" | "absent" | "late" | "excused";
+  syncStatus: "pending" | "synced" | "error";
   updatedAt: string;
 }
 
@@ -54,7 +54,7 @@ export interface DexieAssessmentScore {
   academicYearId: string;
   score: number;
   maxScore: number;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   updatedAt: string;
 }
 
@@ -64,9 +64,9 @@ export interface DexiePayment {
   studentId: string;
   amount: number;
   feeType: string;
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  status: "pending" | "completed" | "failed" | "refunded";
   transactionRef: string | null;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   updatedAt: string;
 }
 
@@ -77,7 +77,7 @@ export interface DexieAnnouncement {
   content: string;
   audience: string;
   createdAt: string;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   updatedAt: string;
 }
 
@@ -89,13 +89,13 @@ export interface DexieNotification {
   body: string;
   read: boolean;
   createdAt: string;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   updatedAt: string;
 }
 
 export interface DexieSyncQueueItem {
   id?: number;
-  operation: 'create' | 'update' | 'delete';
+  operation: "create" | "update" | "delete";
   table: string;
   recordId: string;
   payload: string;
@@ -114,30 +114,31 @@ export interface DexieCachedQuery {
 }
 
 export class EduNexusDatabase extends Dexie {
-  students!: EntityTable<DexieStudent, 'id'>;
-  staff!: EntityTable<DexieStaff, 'id'>;
-  classes!: EntityTable<DexieClass, 'id'>;
-  attendance!: EntityTable<DexieAttendance, 'id'>;
-  assessmentScores!: EntityTable<DexieAssessmentScore, 'id'>;
-  payments!: EntityTable<DexiePayment, 'id'>;
-  announcements!: EntityTable<DexieAnnouncement, 'id'>;
-  notifications!: EntityTable<DexieNotification, 'id'>;
-  syncQueue!: EntityTable<DexieSyncQueueItem, 'id'>;
-  cachedQueries!: EntityTable<DexieCachedQuery, 'id'>;
+  students!: EntityTable<DexieStudent, "id">;
+  staff!: EntityTable<DexieStaff, "id">;
+  classes!: EntityTable<DexieClass, "id">;
+  attendance!: EntityTable<DexieAttendance, "id">;
+  assessmentScores!: EntityTable<DexieAssessmentScore, "id">;
+  payments!: EntityTable<DexiePayment, "id">;
+  announcements!: EntityTable<DexieAnnouncement, "id">;
+  notifications!: EntityTable<DexieNotification, "id">;
+  syncQueue!: EntityTable<DexieSyncQueueItem, "id">;
+  cachedQueries!: EntityTable<DexieCachedQuery, "id">;
 
   constructor() {
-    super('EduNexusV2');
+    super("EduNexusV2");
     this.version(1).stores({
-      students: 'id, schoolId, classId, syncStatus, updatedAt',
-      staff: 'id, schoolId, syncStatus, updatedAt',
-      classes: 'id, schoolId, syncStatus, updatedAt',
-      attendance: 'id, schoolId, studentId, date, syncStatus, updatedAt',
-      assessmentScores: 'id, schoolId, studentId, subjectId, syncStatus, updatedAt',
-      payments: 'id, schoolId, studentId, status, syncStatus, updatedAt',
-      announcements: 'id, schoolId, syncStatus, updatedAt',
-      notifications: 'id, userId, schoolId, read, syncStatus, updatedAt',
-      syncQueue: '++id, createdAt',
-      cachedQueries: '++id, key, expiresAt',
+      students: "id, schoolId, classId, syncStatus, updatedAt",
+      staff: "id, schoolId, syncStatus, updatedAt",
+      classes: "id, schoolId, syncStatus, updatedAt",
+      attendance: "id, schoolId, studentId, date, syncStatus, updatedAt",
+      assessmentScores:
+        "id, schoolId, studentId, subjectId, syncStatus, updatedAt",
+      payments: "id, schoolId, studentId, status, syncStatus, updatedAt",
+      announcements: "id, schoolId, syncStatus, updatedAt",
+      notifications: "id, userId, schoolId, read, syncStatus, updatedAt",
+      syncQueue: "++id, createdAt",
+      cachedQueries: "++id, key, expiresAt",
     });
   }
 }

@@ -11,11 +11,11 @@
 
 ### `enrollments` table — new columns
 
-| Column | Type | Nullable | Default | Description |
-|---|---|---|---|---|
-| `end_date` | `date` | Yes | `null` | Set on withdraw/transfer/graduate |
-| `transfer_reason` | `varchar(255)` | Yes | `null` | Admin-provided reason |
-| `transfer_school_name` | `varchar(200)` | Yes | `null` | Target school name (free-text; inter-system data migration deferred) |
+| Column                 | Type           | Nullable | Default | Description                                                          |
+| ---------------------- | -------------- | -------- | ------- | -------------------------------------------------------------------- |
+| `end_date`             | `date`         | Yes      | `null`  | Set on withdraw/transfer/graduate                                    |
+| `transfer_reason`      | `varchar(255)` | Yes      | `null`  | Admin-provided reason                                                |
+| `transfer_school_name` | `varchar(200)` | Yes      | `null`  | Target school name (free-text; inter-system data migration deferred) |
 
 No new tables. Existing `enrollments.status` (`varchar(20)`, default `'active'`) already supports the new values: `active`, `withdrawn`, `transferred_out`, `graduated`.
 
@@ -34,11 +34,13 @@ All endpoints are `admin`/`super_admin` role-gated. No parent/student-facing end
 Transition `active` → `withdrawn`.
 
 **Request body:**
+
 ```json
 { "reason": "Family relocation" }
 ```
 
 **Logic:**
+
 - Validate enrollment exists, has `status = active`
 - Update `enrollment.status = 'withdrawn'`, set `endDate = today`, `transferReason = reason`
 - Update `student.status = 'withdrawn'` if no other active enrollments
@@ -50,11 +52,13 @@ Transition `active` → `withdrawn`.
 Transition `active` → `transferred_out`.
 
 **Request body:**
+
 ```json
 { "reason": "Moved to Accra Academy", "targetSchoolName": "Accra Academy" }
 ```
 
 **Logic:**
+
 - Same as withdraw, but sets `status = 'transferred_out'` and `transferSchoolName`
 - Generates a transfer certificate PDF (jsPDF), stores to S3/MinIO, returns download URL
 
@@ -65,11 +69,13 @@ Transition `active` → `transferred_out`.
 Transition `active` → `graduated`.
 
 **Request body:**
+
 ```json
 {}
 ```
 
 **Logic:**
+
 - Same as withdraw, but sets `status = 'graduated'`
 - No PDF generated in this issue (future: certificate generation in Epic 3.2)
 
@@ -80,11 +86,13 @@ Transition `active` → `graduated`.
 Creates a **new** enrollment for a previously inactive student.
 
 **Request body:**
+
 ```json
 { "classId": "uuid", "academicYearId": "uuid" }
 ```
 
 **Logic:**
+
 - Validate student exists with `status` in `['withdrawn', 'transferred_out']`
 - Validate class and academic year exist for this school
 - Insert new `Enrollment` with `status = 'active'`, new `classId`, new `academicYearId`
@@ -98,6 +106,7 @@ Creates a **new** enrollment for a previously inactive student.
 **Query params:** `?search=John&status=withdrawn`
 
 **Logic:**
+
 - Return students with `status IN ('withdrawn', 'transferred_out')`
 - Optional text search on `firstName`, `lastName`, `studentIdNumber`
 - Include most recent enrollment info for context
@@ -117,14 +126,14 @@ Creates a **new** enrollment for a previously inactive student.
 
 ## 4. Error Handling & Validation
 
-| Scenario | Status | Message |
-|---|---|---|
-| Enrollment not found | 404 | Enrollment not found |
-| Enrollment not active | 422 | Cannot withdraw a non-active enrollment |
-| Student not inactive (re-admit) | 422 | Student is already active |
-| Class not found (re-admit) | 404 | Class not found |
-| Academic year not found (re-admit) | 404 | Academic year not found |
-| Missing reason (withdraw/transfer) | 422 | Reason is required |
+| Scenario                           | Status | Message                                 |
+| ---------------------------------- | ------ | --------------------------------------- |
+| Enrollment not found               | 404    | Enrollment not found                    |
+| Enrollment not active              | 422    | Cannot withdraw a non-active enrollment |
+| Student not inactive (re-admit)    | 422    | Student is already active               |
+| Class not found (re-admit)         | 404    | Class not found                         |
+| Academic year not found (re-admit) | 404    | Academic year not found                 |
+| Missing reason (withdraw/transfer) | 422    | Reason is required                      |
 
 ---
 

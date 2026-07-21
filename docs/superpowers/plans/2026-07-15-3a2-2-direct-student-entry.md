@@ -25,32 +25,34 @@
 
 ## File Map
 
-| Path | Purpose |
-|---|---|
-| `apps/web/services/student-creation.ts` | **Shared service** — `createStudentFromData()` does the atomic transaction |
-| `apps/web/app/api/students/route.ts` | `POST /api/students` — manual entry handler |
-| `apps/web/components/admin/students/create-student-form.tsx` | Manual entry form (client component) |
-| `apps/web/app/(school)/admin/students/new/page.tsx` | Manual entry page (server component) |
-| `apps/web/app/api/students/import/preview/route.ts` | `POST .../import/preview` — parse CSV headers + sample rows |
-| `apps/web/app/api/students/import/validate/route.ts` | `POST .../import/validate` — validate all rows against schema |
-| `apps/web/app/api/students/import/execute/route.ts` | `POST .../import/execute` — import valid rows atomically |
-| `apps/web/components/admin/students/student-import-wizard.tsx` | Import stepper (client component) |
-| `apps/web/app/(school)/admin/students/import/page.tsx` | Import page (server component) |
-| `apps/web/services/student-id.ts` | Student ID generation (from [3a.2.1]) |
-| `apps/web/services/csv-parser.ts` | CSV parsing + auto-mapping utility |
-| `apps/web/tests/app/api/students/direct-entry.test.ts` | Integration tests for manual entry |
-| `apps/web/tests/app/api/students/bulk-import.test.ts` | Integration tests for CSV import |
+| Path                                                           | Purpose                                                                    |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `apps/web/services/student-creation.ts`                        | **Shared service** — `createStudentFromData()` does the atomic transaction |
+| `apps/web/app/api/students/route.ts`                           | `POST /api/students` — manual entry handler                                |
+| `apps/web/components/admin/students/create-student-form.tsx`   | Manual entry form (client component)                                       |
+| `apps/web/app/(school)/admin/students/new/page.tsx`            | Manual entry page (server component)                                       |
+| `apps/web/app/api/students/import/preview/route.ts`            | `POST .../import/preview` — parse CSV headers + sample rows                |
+| `apps/web/app/api/students/import/validate/route.ts`           | `POST .../import/validate` — validate all rows against schema              |
+| `apps/web/app/api/students/import/execute/route.ts`            | `POST .../import/execute` — import valid rows atomically                   |
+| `apps/web/components/admin/students/student-import-wizard.tsx` | Import stepper (client component)                                          |
+| `apps/web/app/(school)/admin/students/import/page.tsx`         | Import page (server component)                                             |
+| `apps/web/services/student-id.ts`                              | Student ID generation (from [3a.2.1])                                      |
+| `apps/web/services/csv-parser.ts`                              | CSV parsing + auto-mapping utility                                         |
+| `apps/web/tests/app/api/students/direct-entry.test.ts`         | Integration tests for manual entry                                         |
+| `apps/web/tests/app/api/students/bulk-import.test.ts`          | Integration tests for CSV import                                           |
 
 ---
 
 ### Task 1: Shared student creation service
 
 **Files:**
+
 - Create: `apps/web/services/student-creation.ts`
 - Depends on: `apps/web/services/student-id.ts` (from [3a.2.1])
 - Test: `apps/web/tests/services/student-creation.test.ts`
 
 **Interfaces:**
+
 - Consumes: `generateStudentId(db, schoolId): Promise<string>`, `db.transaction()`, `scryptSync`, `randomBytes` from `crypto`
 - Produces: `createStudentFromData(params): Promise<StudentCreationResult>`
 
@@ -60,7 +62,7 @@ interface StudentCreationParams {
   academicYearId: string;
   firstName: string;
   lastName: string;
-  gender: 'male' | 'female';
+  gender: "male" | "female";
   dateOfBirth: string;
   classId: string;
   guardianName: string;
@@ -68,7 +70,12 @@ interface StudentCreationParams {
 }
 
 interface StudentCreationResult {
-  student: { id: string; studentIdNumber: string; firstName: string; lastName: string };
+  student: {
+    id: string;
+    studentIdNumber: string;
+    firstName: string;
+    lastName: string;
+  };
   enrollment: { id: string };
   guardian: { id: string };
   credentials: { student: { email: string | null; password: string } };
@@ -78,8 +85,9 @@ interface StudentCreationResult {
 - [ ] **Step 1: Create test file with failing tests**
 
 Create `apps/web/tests/services/student-creation.test.ts`:
+
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockTx = {
   select: vi.fn().mockReturnThis(),
@@ -97,44 +105,66 @@ const mockDb = {
   transaction: vi.fn(async (cb: (tx: any) => Promise<any>) => cb(mockTx)),
 };
 
-vi.mock('@/lib/db', () => ({ db: mockDb }));
-vi.mock('@/services/student-id', () => ({ generateStudentId: vi.fn().mockResolvedValue('AABS20260001') }));
-vi.mock('crypto', () => ({
-  randomBytes: vi.fn(() => Buffer.from('00000000000000000000000000000000', 'hex')),
-  scryptSync: vi.fn(() => Buffer.from('a'.repeat(64))),
+vi.mock("@/lib/db", () => ({ db: mockDb }));
+vi.mock("@/services/student-id", () => ({
+  generateStudentId: vi.fn().mockResolvedValue("AABS20260001"),
+}));
+vi.mock("crypto", () => ({
+  randomBytes: vi.fn(() =>
+    Buffer.from("00000000000000000000000000000000", "hex"),
+  ),
+  scryptSync: vi.fn(() => Buffer.from("a".repeat(64))),
 }));
 
-const { createStudentFromData } = await import('@/services/student-creation');
+const { createStudentFromData } = await import("@/services/student-creation");
 
-describe('createStudentFromData', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+describe("createStudentFromData", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-  it('creates student, enrollment, guardian, studentGuardian, and profile in a transaction', async () => {
+  it("creates student, enrollment, guardian, studentGuardian, and profile in a transaction", async () => {
     mockTx.limit.mockResolvedValueOnce([]);
     const returning = mockTx.returning;
     returning
-      .mockResolvedValueOnce([{ id: 'student-1', studentIdNumber: 'AABS20260001', firstName: 'John', lastName: 'Doe' }])
-      .mockResolvedValueOnce([{ id: 'enrollment-1', classId: 'class-1', academicYearId: 'year-1' }])
-      .mockResolvedValueOnce([{ id: 'guardian-1', firstName: 'Jane', lastName: 'Doe', phone: '0205516734' }])
-      .mockResolvedValueOnce([{ id: 'sg-1' }])
-      .mockResolvedValueOnce([{ id: 'profile-1', email: 'john@school.com' }]);
+      .mockResolvedValueOnce([
+        {
+          id: "student-1",
+          studentIdNumber: "AABS20260001",
+          firstName: "John",
+          lastName: "Doe",
+        },
+      ])
+      .mockResolvedValueOnce([
+        { id: "enrollment-1", classId: "class-1", academicYearId: "year-1" },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: "guardian-1",
+          firstName: "Jane",
+          lastName: "Doe",
+          phone: "0205516734",
+        },
+      ])
+      .mockResolvedValueOnce([{ id: "sg-1" }])
+      .mockResolvedValueOnce([{ id: "profile-1", email: "john@school.com" }]);
 
     const result = await createStudentFromData({
-      schoolId: 'school-1',
-      academicYearId: 'year-1',
-      firstName: 'John',
-      lastName: 'Doe',
-      gender: 'male',
-      dateOfBirth: '2015-06-01',
-      classId: 'class-1',
-      guardianName: 'Jane Doe',
-      guardianPhone: '0205516734',
+      schoolId: "school-1",
+      academicYearId: "year-1",
+      firstName: "John",
+      lastName: "Doe",
+      gender: "male",
+      dateOfBirth: "2015-06-01",
+      classId: "class-1",
+      guardianName: "Jane Doe",
+      guardianPhone: "0205516734",
     });
 
-    expect(result.student.studentIdNumber).toBe('AABS20260001');
-    expect(result.enrollment.id).toBe('enrollment-1');
-    expect(result.guardian.id).toBe('guardian-1');
-    expect(result.credentials.student.email).toBe('john@school.com');
+    expect(result.student.studentIdNumber).toBe("AABS20260001");
+    expect(result.enrollment.id).toBe("enrollment-1");
+    expect(result.guardian.id).toBe("guardian-1");
+    expect(result.credentials.student.email).toBe("john@school.com");
   });
 });
 ```
@@ -145,19 +175,26 @@ Expected: FAIL — module not found
 - [ ] **Step 2: Write minimal implementation**
 
 Create `apps/web/services/student-creation.ts`:
+
 ```typescript
-import { db } from '@/lib/db';
-import { students, enrollments, guardians, studentGuardians, profiles } from '@edunexus/database';
-import { eq } from 'drizzle-orm';
-import { generateStudentId } from '@/services/student-id';
-import { scryptSync, randomBytes } from 'crypto';
+import { db } from "@/lib/db";
+import {
+  students,
+  enrollments,
+  guardians,
+  studentGuardians,
+  profiles,
+} from "@edunexus/database";
+import { eq } from "drizzle-orm";
+import { generateStudentId } from "@/services/student-id";
+import { scryptSync, randomBytes } from "crypto";
 
 export interface StudentCreationParams {
   schoolId: string;
   academicYearId: string;
   firstName: string;
   lastName: string;
-  gender: 'male' | 'female';
+  gender: "male" | "female";
   dateOfBirth: string;
   classId: string;
   guardianName: string;
@@ -165,77 +202,102 @@ export interface StudentCreationParams {
 }
 
 export interface StudentCreationResult {
-  student: { id: string; studentIdNumber: string; firstName: string; lastName: string };
+  student: {
+    id: string;
+    studentIdNumber: string;
+    firstName: string;
+    lastName: string;
+  };
   enrollment: { id: string };
   guardian: { id: string };
   credentials: { student: { email: string | null; password: string } };
 }
 
-export async function createStudentFromData(params: StudentCreationParams): Promise<StudentCreationResult> {
+export async function createStudentFromData(
+  params: StudentCreationParams,
+): Promise<StudentCreationResult> {
   return db.transaction(async (tx) => {
     const studentIdNumber = await generateStudentId(tx as any, params.schoolId);
 
-    const [student] = await tx.insert(students).values({
-      schoolId: params.schoolId,
-      studentIdNumber,
-      firstName: params.firstName,
-      lastName: params.lastName,
-      gender: params.gender,
-      dateOfBirth: params.dateOfBirth,
-      enrollmentDate: new Date().toISOString().split('T')[0],
-      status: 'active',
-    }).returning();
+    const [student] = await tx
+      .insert(students)
+      .values({
+        schoolId: params.schoolId,
+        studentIdNumber,
+        firstName: params.firstName,
+        lastName: params.lastName,
+        gender: params.gender,
+        dateOfBirth: params.dateOfBirth,
+        enrollmentDate: new Date().toISOString().split("T")[0],
+        status: "active",
+      })
+      .returning();
 
-    const [enrollment] = await tx.insert(enrollments).values({
-      schoolId: params.schoolId,
-      studentId: student.id,
-      classId: params.classId,
-      academicYearId: params.academicYearId,
-      status: 'active',
-      enrollmentDate: new Date(),
-    }).returning();
+    const [enrollment] = await tx
+      .insert(enrollments)
+      .values({
+        schoolId: params.schoolId,
+        studentId: student.id,
+        classId: params.classId,
+        academicYearId: params.academicYearId,
+        status: "active",
+        enrollmentDate: new Date(),
+      })
+      .returning();
 
     const nameParts = params.guardianName.trim().split(/\s+/);
     const guardianFirstName = nameParts[0] || params.guardianName;
-    const guardianLastName = nameParts.slice(1).join(' ') || '';
+    const guardianLastName = nameParts.slice(1).join(" ") || "";
 
-    const [guardian] = await tx.insert(guardians).values({
-      schoolId: params.schoolId,
-      firstName: guardianFirstName,
-      lastName: guardianLastName,
-      relationship: 'parent',
-      phone: params.guardianPhone,
-      isPrimary: true,
-    }).returning();
+    const [guardian] = await tx
+      .insert(guardians)
+      .values({
+        schoolId: params.schoolId,
+        firstName: guardianFirstName,
+        lastName: guardianLastName,
+        relationship: "parent",
+        phone: params.guardianPhone,
+        isPrimary: true,
+      })
+      .returning();
 
     await tx.insert(studentGuardians).values({
       studentId: student.id,
       guardianId: guardian.id,
-      relationship: 'parent',
+      relationship: "parent",
       isEmergency: false,
     });
 
     const studentEmail = `${studentIdNumber.toLowerCase()}@edunexus.com`;
-    const salt = randomBytes(32).toString('hex');
-    const hash = scryptSync('password123', salt, 64).toString('hex');
+    const salt = randomBytes(32).toString("hex");
+    const hash = scryptSync("password123", salt, 64).toString("hex");
     const passwordHash = `scrypt:${salt}:${hash}`;
 
-    const [profile] = await tx.insert(profiles).values({
-      schoolId: params.schoolId,
-      email: studentEmail,
-      passwordHash,
-      role: 'student',
-      firstName: params.firstName,
-      lastName: params.lastName,
-      isActive: true,
-    }).onConflictDoNothing().returning();
+    const [profile] = await tx
+      .insert(profiles)
+      .values({
+        schoolId: params.schoolId,
+        email: studentEmail,
+        passwordHash,
+        role: "student",
+        firstName: params.firstName,
+        lastName: params.lastName,
+        isActive: true,
+      })
+      .onConflictDoNothing()
+      .returning();
 
     return {
-      student: { id: student.id, studentIdNumber, firstName: student.firstName, lastName: student.lastName },
+      student: {
+        id: student.id,
+        studentIdNumber,
+        firstName: student.firstName,
+        lastName: student.lastName,
+      },
       enrollment: { id: enrollment.id },
       guardian: { id: guardian.id },
       credentials: {
-        student: { email: profile?.email ?? null, password: 'password123' },
+        student: { email: profile?.email ?? null, password: "password123" },
       },
     };
   });
@@ -259,18 +321,21 @@ git commit -m "feat(3a.2.2): add shared student creation service"
 ### Task 2: POST /api/students — manual entry endpoint
 
 **Files:**
+
 - Create: `apps/web/app/api/students/route.ts`
 - Test: `apps/web/tests/app/api/students/direct-entry.test.ts`
 
 **Interfaces:**
+
 - Consumes: `createStudentFromData(params)`, `requireRole('admin')`, `resolveTenant(host)`, `db.select()` to resolve academic year and class
 - Produces: `POST /api/students` → `StudentCreationResult`
 
 - [ ] **Step 1: Write the failing test**
 
 Create `apps/web/tests/app/api/students/direct-entry.test.ts`:
+
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockDb = {
   select: vi.fn().mockReturnThis(),
@@ -280,69 +345,102 @@ const mockDb = {
   orderBy: vi.fn().mockReturnThis(),
 };
 
-vi.mock('@/lib/db', () => ({ db: mockDb }));
-vi.mock('@/services/student-creation', () => ({
+vi.mock("@/lib/db", () => ({ db: mockDb }));
+vi.mock("@/services/student-creation", () => ({
   createStudentFromData: vi.fn().mockResolvedValue({
-    student: { id: 'student-1', studentIdNumber: 'AABS20260001', firstName: 'John', lastName: 'Doe' },
-    enrollment: { id: 'enrollment-1' },
-    guardian: { id: 'guardian-1' },
-    credentials: { student: { email: 'student@school.com', password: 'password123' } },
+    student: {
+      id: "student-1",
+      studentIdNumber: "AABS20260001",
+      firstName: "John",
+      lastName: "Doe",
+    },
+    enrollment: { id: "enrollment-1" },
+    guardian: { id: "guardian-1" },
+    credentials: {
+      student: { email: "student@school.com", password: "password123" },
+    },
   }),
 }));
-vi.mock('@/lib/api/require-role', () => ({
-  requireRole: vi.fn().mockResolvedValue({ error: null, user: { id: 'admin-1', role: 'admin' } }),
+vi.mock("@/lib/api/require-role", () => ({
+  requireRole: vi
+    .fn()
+    .mockResolvedValue({ error: null, user: { id: "admin-1", role: "admin" } }),
 }));
-vi.mock('@/lib/tenant/resolve', () => ({
-  resolveTenant: vi.fn().mockResolvedValue({ schoolId: 'school-1' }),
+vi.mock("@/lib/tenant/resolve", () => ({
+  resolveTenant: vi.fn().mockResolvedValue({ schoolId: "school-1" }),
 }));
 
-const { POST } = await import('@/app/api/students/route');
+const { POST } = await import("@/app/api/students/route");
 
-describe('POST /api/students', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+describe("POST /api/students", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-  it('creates a student with valid data', async () => {
+  it("creates a student with valid data", async () => {
     mockDb.limit
-      .mockResolvedValueOnce([{ id: 'year-1', isCurrent: true, schoolId: 'school-1' }])
-      .mockResolvedValueOnce([{ id: 'class-1', schoolId: 'school-1', gradeLevelId: 'grade-1' }]);
+      .mockResolvedValueOnce([
+        { id: "year-1", isCurrent: true, schoolId: "school-1" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "class-1", schoolId: "school-1", gradeLevelId: "grade-1" },
+      ]);
 
-    const res = await POST(new Request('http://localhost:3000/api/students', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
-      body: JSON.stringify({
-        firstName: 'John', lastName: 'Doe', gender: 'male', dateOfBirth: '2015-06-01',
-        classId: 'class-1', guardianName: 'Jane Doe', guardianPhone: '0205516734',
-      }),
-    }) as any);
+    const res = await POST(
+      new Request("http://localhost:3000/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", host: "localhost:3000" },
+        body: JSON.stringify({
+          firstName: "John",
+          lastName: "Doe",
+          gender: "male",
+          dateOfBirth: "2015-06-01",
+          classId: "class-1",
+          guardianName: "Jane Doe",
+          guardianPhone: "0205516734",
+        }),
+      }) as any,
+    );
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.data.student.studentIdNumber).toBe('AABS20260001');
+    expect(body.data.student.studentIdNumber).toBe("AABS20260001");
   });
 
-  it('returns 422 for missing fields', async () => {
-    const res = await POST(new Request('http://localhost:3000/api/students', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
-      body: JSON.stringify({ firstName: 'John' }),
-    }) as any);
+  it("returns 422 for missing fields", async () => {
+    const res = await POST(
+      new Request("http://localhost:3000/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", host: "localhost:3000" },
+        body: JSON.stringify({ firstName: "John" }),
+      }) as any,
+    );
 
     expect(res.status).toBe(422);
   });
 
-  it('returns 404 if class not found', async () => {
+  it("returns 404 if class not found", async () => {
     mockDb.limit
-      .mockResolvedValueOnce([{ id: 'year-1', isCurrent: true, schoolId: 'school-1' }])
+      .mockResolvedValueOnce([
+        { id: "year-1", isCurrent: true, schoolId: "school-1" },
+      ])
       .mockResolvedValueOnce([]);
 
-    const res = await POST(new Request('http://localhost:3000/api/students', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
-      body: JSON.stringify({
-        firstName: 'John', lastName: 'Doe', gender: 'male', dateOfBirth: '2015-06-01',
-        classId: 'class-1', guardianName: 'Jane Doe', guardianPhone: '0205516734',
-      }),
-    }) as any);
+    const res = await POST(
+      new Request("http://localhost:3000/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", host: "localhost:3000" },
+        body: JSON.stringify({
+          firstName: "John",
+          lastName: "Doe",
+          gender: "male",
+          dateOfBirth: "2015-06-01",
+          classId: "class-1",
+          guardianName: "Jane Doe",
+          guardianPhone: "0205516734",
+        }),
+      }) as any,
+    );
 
     expect(res.status).toBe(404);
   });
@@ -355,59 +453,68 @@ Expected: FAIL — module not found
 - [ ] **Step 2: Write minimal implementation**
 
 Create `apps/web/app/api/students/route.ts`:
+
 ```typescript
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { classes, academicYears } from '@edunexus/database';
-import { eq, and } from 'drizzle-orm';
-import { z } from 'zod';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
-import { createStudentFromData } from '@/services/student-creation';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { classes, academicYears } from "@edunexus/database";
+import { eq, and } from "drizzle-orm";
+import { z } from "zod";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
+import { createStudentFromData } from "@/services/student-creation";
 
 const createStudentSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').max(100),
-  lastName: z.string().min(1, 'Last name is required').max(100),
-  gender: z.enum(['male', 'female'], { required_error: 'Gender is required' }),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD'),
-  classId: z.string().uuid('Class is required'),
-  guardianName: z.string().min(1, 'Guardian name is required').max(200),
-  guardianPhone: z.string().min(1, 'Guardian phone is required').max(20),
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  gender: z.enum(["male", "female"], { required_error: "Gender is required" }),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+  classId: z.string().uuid("Class is required"),
+  guardianName: z.string().min(1, "Guardian name is required").max(200),
+  guardianPhone: z.string().min(1, "Guardian phone is required").max(20),
 });
 
 export async function POST(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
   const body = await request.json();
   const parsed = createStudentSchema.safeParse(body);
   if (!parsed.success) {
-    return apiError(422, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    return apiError(
+      422,
+      "Validation failed",
+      parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    );
   }
 
-  const [academicYear] = await db.select()
+  const [academicYear] = await db
+    .select()
     .from(academicYears)
-    .where(and(
-      eq(academicYears.schoolId, schoolId),
-      eq(academicYears.isCurrent, true),
-    ))
+    .where(
+      and(
+        eq(academicYears.schoolId, schoolId),
+        eq(academicYears.isCurrent, true),
+      ),
+    )
     .limit(1);
-  if (!academicYear) return apiError(500, 'No current academic year configured');
+  if (!academicYear)
+    return apiError(500, "No current academic year configured");
 
-  const [targetClass] = await db.select()
+  const [targetClass] = await db
+    .select()
     .from(classes)
-    .where(and(
-      eq(classes.id, parsed.data.classId),
-      eq(classes.schoolId, schoolId),
-    ))
+    .where(
+      and(eq(classes.id, parsed.data.classId), eq(classes.schoolId, schoolId)),
+    )
     .limit(1);
-  if (!targetClass) return apiError(404, 'Class not found');
+  if (!targetClass) return apiError(404, "Class not found");
 
   const result = await createStudentFromData({
     schoolId,
@@ -436,6 +543,7 @@ git commit -m "feat(3a.2.2): add POST /api/students manual entry endpoint"
 ### Task 3: Manual entry form UI
 
 **Files:**
+
 - Create: `apps/web/components/admin/students/create-student-form.tsx`
 - Create: `apps/web/app/(school)/admin/students/new/page.tsx`
 
@@ -444,6 +552,7 @@ git commit -m "feat(3a.2.2): add POST /api/students manual entry endpoint"
 - [ ] **Step 1: Create the server page**
 
 Create `apps/web/app/(school)/admin/students/new/page.tsx`:
+
 ```typescript
 import { db } from '@/lib/db';
 import { classes, academicYears, gradeLevels } from '@edunexus/database';
@@ -486,6 +595,7 @@ export default async function NewStudentPage() {
 - [ ] **Step 2: Create the client form**
 
 Create `apps/web/components/admin/students/create-student-form.tsx`:
+
 ```typescript
 'use client';
 
@@ -707,51 +817,62 @@ git commit -m "feat(3a.2.2): add manual student entry form UI"
 ### Task 4: CSV utility — parser + auto-mapper
 
 **Files:**
+
 - Create: `apps/web/services/csv-parser.ts`
 - Test: `apps/web/tests/services/csv-parser.test.ts`
 
 **Interfaces:**
+
 - Consumes: raw CSV text
 - Produces: `parseCSV(text): { headers: string[], rows: Record<string, string>[] }`, `autoMapHeaders(headers): Record<string, string>`
 
 - [ ] **Step 1: Write test**
 
 Create `apps/web/tests/services/csv-parser.test.ts`:
-```typescript
-import { describe, it, expect } from 'vitest';
-import { parseCSV, autoMapHeaders } from '@/services/csv-parser';
 
-describe('parseCSV', () => {
-  it('parses CSV with headers and rows', () => {
-    const csv = 'firstName,lastName,gender\nJohn,Doe,male\nJane,Smith,female';
+```typescript
+import { describe, it, expect } from "vitest";
+import { parseCSV, autoMapHeaders } from "@/services/csv-parser";
+
+describe("parseCSV", () => {
+  it("parses CSV with headers and rows", () => {
+    const csv = "firstName,lastName,gender\nJohn,Doe,male\nJane,Smith,female";
     const result = parseCSV(csv);
-    expect(result.headers).toEqual(['firstName', 'lastName', 'gender']);
+    expect(result.headers).toEqual(["firstName", "lastName", "gender"]);
     expect(result.rows).toHaveLength(2);
-    expect(result.rows[0].firstName).toBe('John');
+    expect(result.rows[0].firstName).toBe("John");
   });
 
-  it('handles quoted fields with commas', () => {
+  it("handles quoted fields with commas", () => {
     const csv = 'name,note\n"John, Doe","hello, world"';
     const result = parseCSV(csv);
-    expect(result.rows[0].name).toBe('John, Doe');
+    expect(result.rows[0].name).toBe("John, Doe");
   });
 });
 
-describe('autoMapHeaders', () => {
-  it('maps common header variations', () => {
-    const map = autoMapHeaders(['First Name', 'Last Name', 'DOB', 'Sex', 'Class', 'Parent/Guardian', 'Phone']);
-    expect(map['First Name']).toBe('firstName');
-    expect(map['Last Name']).toBe('lastName');
-    expect(map.DOB).toBe('dateOfBirth');
-    expect(map.Sex).toBe('gender');
-    expect(map.Class).toBe('classCode');
-    expect(map['Parent/Guardian']).toBe('guardianName');
-    expect(map.Phone).toBe('guardianPhone');
+describe("autoMapHeaders", () => {
+  it("maps common header variations", () => {
+    const map = autoMapHeaders([
+      "First Name",
+      "Last Name",
+      "DOB",
+      "Sex",
+      "Class",
+      "Parent/Guardian",
+      "Phone",
+    ]);
+    expect(map["First Name"]).toBe("firstName");
+    expect(map["Last Name"]).toBe("lastName");
+    expect(map.DOB).toBe("dateOfBirth");
+    expect(map.Sex).toBe("gender");
+    expect(map.Class).toBe("classCode");
+    expect(map["Parent/Guardian"]).toBe("guardianName");
+    expect(map.Phone).toBe("guardianPhone");
   });
 
-  it('returns null for unknown headers', () => {
-    const map = autoMapHeaders(['Unknown Column']);
-    expect(map['Unknown Column']).toBeNull();
+  it("returns null for unknown headers", () => {
+    const map = autoMapHeaders(["Unknown Column"]);
+    expect(map["Unknown Column"]).toBeNull();
   });
 });
 ```
@@ -762,48 +883,59 @@ Expected: FAIL — module not found
 - [ ] **Step 2: Write minimal implementation**
 
 Create `apps/web/services/csv-parser.ts`:
+
 ```typescript
 const HEADER_ALIASES: Record<string, string> = {
-  'first name': 'firstName',
-  'first_name': 'firstName',
-  'firstname': 'firstName',
-  'given name': 'firstName',
-  'last name': 'lastName',
-  'last_name': 'lastName',
-  'lastname': 'lastName',
-  'surname': 'lastName',
-  'family name': 'lastName',
-  'gender': 'gender',
-  'sex': 'gender',
-  'date of birth': 'dateOfBirth',
-  'date_of_birth': 'dateOfBirth',
-  'dob': 'dateOfBirth',
-  'birth date': 'dateOfBirth',
-  'class code': 'classCode',
-  'class_code': 'classCode',
-  'class': 'classCode',
-  'guardian name': 'guardianName',
-  'guardian_name': 'guardianName',
-  'parent name': 'guardianName',
-  'parent/guardian': 'guardianName',
-  'guardian phone': 'guardianPhone',
-  'guardian_phone': 'guardianPhone',
-  'parent phone': 'guardianPhone',
-  'phone': 'guardianPhone',
+  "first name": "firstName",
+  first_name: "firstName",
+  firstname: "firstName",
+  "given name": "firstName",
+  "last name": "lastName",
+  last_name: "lastName",
+  lastname: "lastName",
+  surname: "lastName",
+  "family name": "lastName",
+  gender: "gender",
+  sex: "gender",
+  "date of birth": "dateOfBirth",
+  date_of_birth: "dateOfBirth",
+  dob: "dateOfBirth",
+  "birth date": "dateOfBirth",
+  "class code": "classCode",
+  class_code: "classCode",
+  class: "classCode",
+  "guardian name": "guardianName",
+  guardian_name: "guardianName",
+  "parent name": "guardianName",
+  "parent/guardian": "guardianName",
+  "guardian phone": "guardianPhone",
+  guardian_phone: "guardianPhone",
+  "parent phone": "guardianPhone",
+  phone: "guardianPhone",
 };
 
-export function parseCSV(text: string): { headers: string[]; rows: Record<string, string>[] } {
-  const lines = text.trim().split('\n');
+export function parseCSV(text: string): {
+  headers: string[];
+  rows: Record<string, string>[];
+} {
+  const lines = text.trim().split("\n");
   if (lines.length < 2) return { headers: [], rows: [] };
 
   const parseLine = (line: string): string[] => {
     const result: string[] = [];
-    let current = '';
+    let current = "";
     let inQuotes = false;
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      if (char === '"') { inQuotes = !inQuotes; continue; }
-      if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; continue; }
+      if (char === '"') {
+        inQuotes = !inQuotes;
+        continue;
+      }
+      if (char === "," && !inQuotes) {
+        result.push(current.trim());
+        current = "";
+        continue;
+      }
       current += char;
     }
     result.push(current.trim());
@@ -811,17 +943,24 @@ export function parseCSV(text: string): { headers: string[]; rows: Record<string
   };
 
   const headers = parseLine(lines[0]);
-  const rows = lines.slice(1).filter(l => l.trim()).map(line => {
-    const values = parseLine(line);
-    const row: Record<string, string> = {};
-    headers.forEach((h, i) => { row[h] = values[i] ?? ''; });
-    return row;
-  });
+  const rows = lines
+    .slice(1)
+    .filter((l) => l.trim())
+    .map((line) => {
+      const values = parseLine(line);
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => {
+        row[h] = values[i] ?? "";
+      });
+      return row;
+    });
 
   return { headers, rows };
 }
 
-export function autoMapHeaders(headers: string[]): Record<string, string | null> {
+export function autoMapHeaders(
+  headers: string[],
+): Record<string, string | null> {
   const mapping: Record<string, string | null> = {};
   for (const header of headers) {
     const key = header.trim().toLowerCase();
@@ -848,6 +987,7 @@ git commit -m "feat(3a.2.2): add CSV parser and auto-header mapper"
 ### Task 5: CSV import API endpoints
 
 **Files:**
+
 - Create: `apps/web/app/api/students/import/preview/route.ts`
 - Create: `apps/web/app/api/students/import/validate/route.ts`
 - Create: `apps/web/app/api/students/import/execute/route.ts`
@@ -856,8 +996,9 @@ git commit -m "feat(3a.2.2): add CSV parser and auto-header mapper"
 - [ ] **Step 1: Write the failing test**
 
 Create `apps/web/tests/app/api/students/bulk-import.test.ts`:
+
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockDb = {
   select: vi.fn().mockReturnThis(),
@@ -867,62 +1008,94 @@ const mockDb = {
   orderBy: vi.fn().mockReturnThis(),
 };
 const mockCreateStudent = vi.fn().mockResolvedValue({
-  student: { id: 'student-1', studentIdNumber: 'AABS20260001', firstName: 'John', lastName: 'Doe' },
-  enrollment: { id: 'enrollment-1' },
-  guardian: { id: 'guardian-1' },
-  credentials: { student: { email: 's@e.com', password: 'pw' } },
+  student: {
+    id: "student-1",
+    studentIdNumber: "AABS20260001",
+    firstName: "John",
+    lastName: "Doe",
+  },
+  enrollment: { id: "enrollment-1" },
+  guardian: { id: "guardian-1" },
+  credentials: { student: { email: "s@e.com", password: "pw" } },
 });
 
-vi.mock('@/lib/db', () => ({ db: mockDb }));
-vi.mock('@/services/student-creation', () => ({ createStudentFromData: mockCreateStudent }));
-vi.mock('@/lib/api/require-role', () => ({
-  requireRole: vi.fn().mockResolvedValue({ error: null, user: { id: 'admin-1', role: 'admin' } }),
+vi.mock("@/lib/db", () => ({ db: mockDb }));
+vi.mock("@/services/student-creation", () => ({
+  createStudentFromData: mockCreateStudent,
 }));
-vi.mock('@/lib/tenant/resolve', () => ({
-  resolveTenant: vi.fn().mockResolvedValue({ schoolId: 'school-1' }),
+vi.mock("@/lib/api/require-role", () => ({
+  requireRole: vi
+    .fn()
+    .mockResolvedValue({ error: null, user: { id: "admin-1", role: "admin" } }),
+}));
+vi.mock("@/lib/tenant/resolve", () => ({
+  resolveTenant: vi.fn().mockResolvedValue({ schoolId: "school-1" }),
 }));
 
-describe('POST /api/students/import', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
-
-  it('preview returns headers and mapping', async () => {
-    const { POST } = await import('@/app/api/students/import/preview/route');
-    const res = await POST(new Request('http://localhost:3000/api/students/import/preview', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ csv: 'firstName,lastName\nJohn,Doe' }),
-    }) as any);
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.data.headers).toContain('firstName');
+describe("POST /api/students/import", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('validate returns per-row errors', async () => {
-    const { POST } = await import('@/app/api/students/import/validate/route');
-    const res = await POST(new Request('http://localhost:3000/api/students/import/validate', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        csv: 'firstName,lastName\nJohn,Doe\n,Smith',
-        mapping: { firstName: 'firstName', lastName: 'lastName' },
-      }),
-    }) as any);
+  it("preview returns headers and mapping", async () => {
+    const { POST } = await import("@/app/api/students/import/preview/route");
+    const res = await POST(
+      new Request("http://localhost:3000/api/students/import/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv: "firstName,lastName\nJohn,Doe" }),
+      }) as any,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.headers).toContain("firstName");
+  });
+
+  it("validate returns per-row errors", async () => {
+    const { POST } = await import("@/app/api/students/import/validate/route");
+    const res = await POST(
+      new Request("http://localhost:3000/api/students/import/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          csv: "firstName,lastName\nJohn,Doe\n,Smith",
+          mapping: { firstName: "firstName", lastName: "lastName" },
+        }),
+      }) as any,
+    );
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data.valid).toBeLessThan(body.data.total);
   });
 
-  it('execute imports valid rows and reports skipped', async () => {
+  it("execute imports valid rows and reports skipped", async () => {
     mockDb.limit
-      .mockResolvedValueOnce([{ id: 'year-1', isCurrent: true, schoolId: 'school-1' }])
-      .mockResolvedValueOnce([{ id: 'class-1', gradeLevelId: 'g-1', schoolId: 'school-1' }]);
+      .mockResolvedValueOnce([
+        { id: "year-1", isCurrent: true, schoolId: "school-1" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "class-1", gradeLevelId: "g-1", schoolId: "school-1" },
+      ]);
 
-    const { POST } = await import('@/app/api/students/import/execute/route');
-    const res = await POST(new Request('http://localhost:3000/api/students/import/execute', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        csv: 'firstName,lastName,gender,dateOfBirth,classCode,guardianName,guardianPhone\nJohn,Doe,male,2015-01-01,class-1,Jane Doe,0205516734\n,Smith,male,2015-01-01,class-1,Jane Doe,0205516734',
-        mapping: { firstName: 'firstName', lastName: 'lastName', gender: 'gender', dateOfBirth: 'dateOfBirth', classCode: 'classCode', guardianName: 'guardianName', guardianPhone: 'guardianPhone' },
-      }),
-    }) as any);
+    const { POST } = await import("@/app/api/students/import/execute/route");
+    const res = await POST(
+      new Request("http://localhost:3000/api/students/import/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          csv: "firstName,lastName,gender,dateOfBirth,classCode,guardianName,guardianPhone\nJohn,Doe,male,2015-01-01,class-1,Jane Doe,0205516734\n,Smith,male,2015-01-01,class-1,Jane Doe,0205516734",
+          mapping: {
+            firstName: "firstName",
+            lastName: "lastName",
+            gender: "gender",
+            dateOfBirth: "dateOfBirth",
+            classCode: "classCode",
+            guardianName: "guardianName",
+            guardianPhone: "guardianPhone",
+          },
+        }),
+      }) as any,
+    );
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data.imported).toBe(1);
@@ -937,44 +1110,55 @@ Expected: FAIL — modules not found
 - [ ] **Step 2: Create preview endpoint**
 
 Create `apps/web/app/api/students/import/preview/route.ts`:
+
 ```typescript
-import { NextRequest } from 'next/server';
-import { z } from 'zod';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { parseCSV, autoMapHeaders } from '@/services/csv-parser';
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { parseCSV, autoMapHeaders } from "@/services/csv-parser";
 
 const previewSchema = z.object({
   csv: z.string().min(1),
 });
 
 export async function POST(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
   const body = await request.json();
   const parsed = previewSchema.safeParse(body);
-  if (!parsed.success) return apiError(422, 'Invalid CSV data');
+  if (!parsed.success) return apiError(422, "Invalid CSV data");
 
   const { headers, rows } = parseCSV(parsed.data.csv);
-  if (headers.length === 0) return apiError(422, 'CSV must have a header row and at least one data row');
+  if (headers.length === 0)
+    return apiError(
+      422,
+      "CSV must have a header row and at least one data row",
+    );
 
   const suggestedMapping = autoMapHeaders(headers);
   const sampleRows = rows.slice(0, 10);
 
-  return apiSuccess({ headers, suggestedMapping, sampleRows, totalRows: rows.length });
+  return apiSuccess({
+    headers,
+    suggestedMapping,
+    sampleRows,
+    totalRows: rows.length,
+  });
 }
 ```
 
 - [ ] **Step 3: Create validate endpoint**
 
 Create `apps/web/app/api/students/import/validate/route.ts`:
+
 ```typescript
-import { NextRequest } from 'next/server';
-import { z } from 'zod';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { parseCSV } from '@/services/csv-parser';
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { parseCSV } from "@/services/csv-parser";
 
 const validateSchema = z.object({
   csv: z.string().min(1),
@@ -982,22 +1166,22 @@ const validateSchema = z.object({
 });
 
 const rowSchema = z.object({
-  firstName: z.string().min(1, 'Required'),
-  lastName: z.string().min(1, 'Required'),
-  gender: z.enum(['male', 'female'], { message: 'Must be male or female' }),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD'),
-  classCode: z.string().min(1, 'Required'),
-  guardianName: z.string().min(1, 'Required'),
-  guardianPhone: z.string().min(1, 'Required').max(20),
+  firstName: z.string().min(1, "Required"),
+  lastName: z.string().min(1, "Required"),
+  gender: z.enum(["male", "female"], { message: "Must be male or female" }),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+  classCode: z.string().min(1, "Required"),
+  guardianName: z.string().min(1, "Required"),
+  guardianPhone: z.string().min(1, "Required").max(20),
 });
 
 export async function POST(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
   const body = await request.json();
   const parsed = validateSchema.safeParse(body);
-  if (!parsed.success) return apiError(422, 'Invalid request');
+  if (!parsed.success) return apiError(422, "Invalid request");
 
   const { rows } = parseCSV(parsed.data.csv);
   const mapping = parsed.data.mapping;
@@ -1005,20 +1189,22 @@ export async function POST(request: NextRequest) {
   const results = rows.map((row, i) => {
     const mapped: Record<string, string> = {};
     for (const [csvHeader, fieldName] of Object.entries(mapping)) {
-      if (fieldName) mapped[fieldName] = row[csvHeader] ?? '';
+      if (fieldName) mapped[fieldName] = row[csvHeader] ?? "";
     }
 
     const validation = rowSchema.safeParse(mapped);
     return {
       rowNumber: i + 2,
-      firstName: mapped.firstName ?? '',
+      firstName: mapped.firstName ?? "",
       valid: validation.success,
-      errors: validation.success ? null : validation.error.flatten().fieldErrors,
+      errors: validation.success
+        ? null
+        : validation.error.flatten().fieldErrors,
     };
   });
 
-  const valid = results.filter(r => r.valid).length;
-  const invalid = results.filter(r => !r.valid).length;
+  const valid = results.filter((r) => r.valid).length;
+  const invalid = results.filter((r) => !r.valid).length;
 
   return apiSuccess({ total: rows.length, valid, invalid, rows: results });
 }
@@ -1027,17 +1213,18 @@ export async function POST(request: NextRequest) {
 - [ ] **Step 4: Create execute endpoint**
 
 Create `apps/web/app/api/students/import/execute/route.ts`:
+
 ```typescript
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { classes, academicYears } from '@edunexus/database';
-import { eq, and } from 'drizzle-orm';
-import { z } from 'zod';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
-import { parseCSV } from '@/services/csv-parser';
-import { createStudentFromData } from '@/services/student-creation';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { classes, academicYears } from "@edunexus/database";
+import { eq, and } from "drizzle-orm";
+import { z } from "zod";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
+import { parseCSV } from "@/services/csv-parser";
+import { createStudentFromData } from "@/services/student-creation";
 
 const executeSchema = z.object({
   csv: z.string().min(1),
@@ -1047,7 +1234,7 @@ const executeSchema = z.object({
 const rowSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  gender: z.enum(['male', 'female']),
+  gender: z.enum(["male", "female"]),
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   classCode: z.string().min(1),
   guardianName: z.string().min(1),
@@ -1055,49 +1242,72 @@ const rowSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
   const body = await request.json();
   const parsed = executeSchema.safeParse(body);
-  if (!parsed.success) return apiError(422, 'Invalid request');
+  if (!parsed.success) return apiError(422, "Invalid request");
 
   const { rows } = parseCSV(parsed.data.csv);
   const mapping = parsed.data.mapping;
 
-  const [academicYear] = await db.select()
+  const [academicYear] = await db
+    .select()
     .from(academicYears)
-    .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.isCurrent, true)))
+    .where(
+      and(
+        eq(academicYears.schoolId, schoolId),
+        eq(academicYears.isCurrent, true),
+      ),
+    )
     .limit(1);
-  if (!academicYear) return apiError(500, 'No current academic year configured');
+  if (!academicYear)
+    return apiError(500, "No current academic year configured");
 
-  const allClasses = await db.select()
+  const allClasses = await db
+    .select()
     .from(classes)
     .where(eq(classes.schoolId, schoolId));
 
-  const results: Array<{ rowNumber: number; status: 'imported' | 'failed'; studentId?: string; error?: string }> = [];
+  const results: Array<{
+    rowNumber: number;
+    status: "imported" | "failed";
+    studentId?: string;
+    error?: string;
+  }> = [];
 
   for (let i = 0; i < rows.length; i++) {
     const mapped: Record<string, string> = {};
     for (const [csvHeader, fieldName] of Object.entries(mapping)) {
-      if (fieldName) mapped[fieldName] = rows[i][csvHeader] ?? '';
+      if (fieldName) mapped[fieldName] = rows[i][csvHeader] ?? "";
     }
 
     const validation = rowSchema.safeParse(mapped);
     if (!validation.success) {
-      const msgs = Object.values(validation.error.flatten().fieldErrors).flat().join('; ');
-      results.push({ rowNumber: i + 2, status: 'failed', error: msgs });
+      const msgs = Object.values(validation.error.flatten().fieldErrors)
+        .flat()
+        .join("; ");
+      results.push({ rowNumber: i + 2, status: "failed", error: msgs });
       continue;
     }
 
-    const targetClass = allClasses.find(c => c.code === validation.data.classCode || c.id === validation.data.classCode);
+    const targetClass = allClasses.find(
+      (c) =>
+        c.code === validation.data.classCode ||
+        c.id === validation.data.classCode,
+    );
     if (!targetClass) {
-      results.push({ rowNumber: i + 2, status: 'failed', error: `Class '${validation.data.classCode}' not found` });
+      results.push({
+        rowNumber: i + 2,
+        status: "failed",
+        error: `Class '${validation.data.classCode}' not found`,
+      });
       continue;
     }
 
@@ -1108,14 +1318,22 @@ export async function POST(request: NextRequest) {
         ...validation.data,
         classId: targetClass.id,
       });
-      results.push({ rowNumber: i + 2, status: 'imported', studentId: result.student.studentIdNumber });
+      results.push({
+        rowNumber: i + 2,
+        status: "imported",
+        studentId: result.student.studentIdNumber,
+      });
     } catch (err: any) {
-      results.push({ rowNumber: i + 2, status: 'failed', error: err.message ?? 'Unknown error' });
+      results.push({
+        rowNumber: i + 2,
+        status: "failed",
+        error: err.message ?? "Unknown error",
+      });
     }
   }
 
-  const imported = results.filter(r => r.status === 'imported').length;
-  const failed = results.filter(r => r.status === 'failed').length;
+  const imported = results.filter((r) => r.status === "imported").length;
+  const failed = results.filter((r) => r.status === "failed").length;
 
   return apiSuccess({ imported, failed, total: rows.length, results });
 }
@@ -1138,6 +1356,7 @@ git commit -m "feat(3a.2.2): add CSV import preview/validate/execute endpoints"
 ### Task 6: CSV import wizard UI
 
 **Files:**
+
 - Create: `apps/web/components/admin/students/student-import-wizard.tsx`
 - Create: `apps/web/app/(school)/admin/students/import/page.tsx`
 
@@ -1146,6 +1365,7 @@ git commit -m "feat(3a.2.2): add CSV import preview/validate/execute endpoints"
 - [ ] **Step 1: Create the server page**
 
 Create `apps/web/app/(school)/admin/students/import/page.tsx`:
+
 ```typescript
 import { requireRole } from '@/lib/auth/auth.guard';
 import { StudentImportWizard } from '@/components/admin/students/student-import-wizard';
@@ -1172,6 +1392,7 @@ export default async function ImportStudentsPage() {
 - [ ] **Step 2: Create the import wizard component**
 
 Create `apps/web/components/admin/students/student-import-wizard.tsx`:
+
 ```typescript
 'use client';
 
@@ -1443,6 +1664,7 @@ git commit -m "feat(3a.2.2): add CSV import wizard UI"
 ```bash
 pnpm --filter web exec tsc --noEmit
 ```
+
 Expected: No errors
 
 - [ ] **Step 2: Run lint**
@@ -1450,6 +1672,7 @@ Expected: No errors
 ```bash
 pnpm run --filter web lint
 ```
+
 Expected: No warnings
 
 - [ ] **Step 3: Run full test suite**
@@ -1457,6 +1680,7 @@ Expected: No warnings
 ```bash
 pnpm --filter web exec vitest run
 ```
+
 Expected: 125+ tests pass (117 existing + new)
 
 - [ ] **Step 4: Final commit**

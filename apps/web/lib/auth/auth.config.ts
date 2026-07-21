@@ -1,12 +1,12 @@
-import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import { eq } from 'drizzle-orm';
-import { scryptSync, timingSafeEqual } from 'crypto';
-import { db } from '@/lib/db/client';
-import { profiles } from '@edunexus/database';
-import type { UserRole } from '@edunexus/shared';
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { eq } from "drizzle-orm";
+import { scryptSync, timingSafeEqual } from "crypto";
+import { db } from "@/lib/db/client";
+import { profiles } from "@edunexus/database";
+import type { UserRole } from "@edunexus/shared";
 
-declare module 'next-auth' {
+declare module "next-auth" {
   interface User {
     role: UserRole;
     schoolId: string | null;
@@ -23,21 +23,21 @@ declare module 'next-auth' {
 }
 
 function verifyPassword(password: string, stored: string): boolean {
-  const parts = stored.split(':');
-  if (parts.length !== 3 || parts[0] !== 'scrypt') return false;
+  const parts = stored.split(":");
+  if (parts.length !== 3 || parts[0] !== "scrypt") return false;
   const salt = parts[1];
   const hash = parts[2];
-  const inputHash = scryptSync(password, salt, 64).toString('hex');
+  const inputHash = scryptSync(password, salt, 64).toString("hex");
   return timingSafeEqual(Buffer.from(inputHash), Buffer.from(hash));
 }
 
 const nextAuthResult = NextAuth({
   providers: [
     Credentials({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -90,10 +90,10 @@ const nextAuthResult = NextAuth({
     },
   },
   pages: {
-    signIn: '/login',
+    signIn: "/login",
   },
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
 });
 
@@ -102,5 +102,9 @@ export const handlers = nextAuthResult.handlers as unknown as {
   GET: (req: Request) => Promise<Response>;
   POST: (req: Request) => Promise<Response>;
 };
-export const signIn = nextAuthResult.signIn as unknown as (...args: any[]) => any;
-export const signOut = nextAuthResult.signOut as unknown as (...args: any[]) => any;
+export const signIn = nextAuthResult.signIn as unknown as (
+  ...args: any[]
+) => any;
+export const signOut = nextAuthResult.signOut as unknown as (
+  ...args: any[]
+) => any;

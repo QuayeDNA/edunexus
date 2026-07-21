@@ -26,13 +26,13 @@ apps/web/components/shared    Reusable upload component
 
 ```typescript
 export type EntityType =
-  | 'school'
-  | 'profile'
-  | 'applicant'
-  | 'student'
-  | 'staff'
-  | 'library'
-  | 'expense';
+  | "school"
+  | "profile"
+  | "applicant"
+  | "student"
+  | "staff"
+  | "library"
+  | "expense";
 
 export interface MediaFile {
   id: string;
@@ -42,7 +42,7 @@ export interface MediaFile {
   fileName: string;
   mimeType: string;
   size: number;
-  storageProvider: 's3' | 'cloudinary' | 'local';
+  storageProvider: "s3" | "cloudinary" | "local";
   storagePath: string;
   checksum?: string;
   uploadedBy: string;
@@ -99,16 +99,19 @@ export function buildStoragePath(
 
 ```typescript
 export const ALLOWED_MIME_TYPES = new Set([
-  'image/jpeg', 'image/png', 'image/webp',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 ```
 
 **Extension points for future media-heavy types** (documented inline, not implemented):
+
 - `IMAGE_HEAVY_EXTENSIONS: 'image/gif', 'image/svg+xml'`
 - `VIDEO_EXTENSIONS: 'video/mp4', 'video/webm'`
 - `MEDIA_MAX_FILE_SIZE: 100 * 1024 * 1024`
@@ -118,36 +121,180 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 ```typescript
 export const STORAGE_PERMISSIONS: FilePermission[] = [
   // school logo
-  { entityType: 'school',    role: 'super_admin', canRead: true, canWrite: true,  canDelete: true  },
-  { entityType: 'school',    role: 'admin',       canRead: true, canWrite: true,  canDelete: true  },
+  {
+    entityType: "school",
+    role: "super_admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "school",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
   // profile avatar
-  { entityType: 'profile',   role: 'super_admin', canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'profile',   role: 'admin',       canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'profile',   role: 'teacher',     canRead: true, canWrite: true,  canDelete: true  },
-  { entityType: 'profile',   role: 'student',     canRead: true, canWrite: true,  canDelete: true  },
-  { entityType: 'profile',   role: 'parent',      canRead: true, canWrite: true,  canDelete: true  },
+  {
+    entityType: "profile",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "profile",
+    role: "admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "profile",
+    role: "teacher",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "profile",
+    role: "student",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "profile",
+    role: "parent",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
   // applicant docs
-  { entityType: 'applicant', role: 'super_admin', canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'applicant', role: 'admin',       canRead: true, canWrite: true,  canDelete: true  },
+  {
+    entityType: "applicant",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "applicant",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
   // student records
-  { entityType: 'student',   role: 'super_admin', canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'student',   role: 'admin',       canRead: true, canWrite: true,  canDelete: true  },
-  { entityType: 'student',   role: 'teacher',     canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'student',   role: 'student',     canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'student',   role: 'parent',      canRead: true, canWrite: false, canDelete: false },
+  {
+    entityType: "student",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "student",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "student",
+    role: "teacher",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "student",
+    role: "student",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "student",
+    role: "parent",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
   // staff records
-  { entityType: 'staff',     role: 'super_admin', canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'staff',     role: 'admin',       canRead: true, canWrite: true,  canDelete: true  },
-  { entityType: 'staff',     role: 'teacher',     canRead: true, canWrite: false, canDelete: false },
+  {
+    entityType: "staff",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "staff",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "staff",
+    role: "teacher",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
   // library files
-  { entityType: 'library',   role: 'super_admin', canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'library',   role: 'admin',       canRead: true, canWrite: true,  canDelete: true  },
-  { entityType: 'library',   role: 'teacher',     canRead: true, canWrite: true,  canDelete: true  },
-  { entityType: 'library',   role: 'student',     canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'library',   role: 'parent',      canRead: true, canWrite: false, canDelete: false },
+  {
+    entityType: "library",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "library",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "library",
+    role: "teacher",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
+  {
+    entityType: "library",
+    role: "student",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "library",
+    role: "parent",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
   // expense receipts
-  { entityType: 'expense',   role: 'super_admin', canRead: true, canWrite: false, canDelete: false },
-  { entityType: 'expense',   role: 'admin',       canRead: true, canWrite: true,  canDelete: true  },
+  {
+    entityType: "expense",
+    role: "super_admin",
+    canRead: true,
+    canWrite: false,
+    canDelete: false,
+  },
+  {
+    entityType: "expense",
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canDelete: true,
+  },
 ];
 ```
 
@@ -159,15 +306,15 @@ Plus a lookup helper:
 export function checkFilePermission(
   entityType: EntityType,
   role: string,
-  action: 'read' | 'write' | 'delete',
+  action: "read" | "write" | "delete",
 ): boolean {
   const perm = STORAGE_PERMISSIONS.find(
-    p => p.entityType === entityType && p.role === role,
+    (p) => p.entityType === entityType && p.role === role,
   );
   if (!perm) return false;
-  if (action === 'read') return perm.canRead;
-  if (action === 'write') return perm.canWrite;
-  if (action === 'delete') return perm.canDelete;
+  if (action === "read") return perm.canRead;
+  if (action === "write") return perm.canWrite;
+  if (action === "delete") return perm.canDelete;
   return false;
 }
 ```
@@ -175,6 +322,7 @@ export function checkFilePermission(
 ### Re-export
 
 Add to `packages/shared/src/index.ts`:
+
 - `StorageProvider`, `EntityType`, `MediaFile`, `UploadResult`, `FilePermission`
 - `buildStoragePath`, `ALLOWED_MIME_TYPES`, `MAX_FILE_SIZE`, `STORAGE_PERMISSIONS`, `checkFilePermission`
 
@@ -184,21 +332,21 @@ Add to `packages/shared/src/index.ts`:
 
 ### New file: `packages/database/src/schema/media-files.ts`
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `uuid pk default gen_random_uuid()` | |
-| `school_id` | `uuid references schools(id) not null` | Tenant-scoped |
-| `entity_type` | `varchar(50) not null` | `school`, `profile`, `applicant`, `student`, `staff`, `library`, `expense` |
-| `entity_id` | `uuid not null` | The record's ID in the entity table |
-| `file_name` | `varchar(255) not null` | Original filename |
-| `mime_type` | `varchar(100) not null` | MIME type from upload |
-| `size` | `integer not null` | Bytes |
-| `storage_provider` | `varchar(20) not null` | `s3`, `cloudinary`, `local` |
-| `storage_path` | `text not null` | Provider-relative path |
-| `checksum` | `varchar(64)` | SHA-256 hex |
-| `uploaded_by` | `uuid not null references profiles(id)` | Who uploaded |
-| `created_at` | `timestamptz default now() not null` | |
-| `deleted_at` | `timestamptz` | Soft delete |
+| Column             | Type                                    | Notes                                                                      |
+| ------------------ | --------------------------------------- | -------------------------------------------------------------------------- |
+| `id`               | `uuid pk default gen_random_uuid()`     |                                                                            |
+| `school_id`        | `uuid references schools(id) not null`  | Tenant-scoped                                                              |
+| `entity_type`      | `varchar(50) not null`                  | `school`, `profile`, `applicant`, `student`, `staff`, `library`, `expense` |
+| `entity_id`        | `uuid not null`                         | The record's ID in the entity table                                        |
+| `file_name`        | `varchar(255) not null`                 | Original filename                                                          |
+| `mime_type`        | `varchar(100) not null`                 | MIME type from upload                                                      |
+| `size`             | `integer not null`                      | Bytes                                                                      |
+| `storage_provider` | `varchar(20) not null`                  | `s3`, `cloudinary`, `local`                                                |
+| `storage_path`     | `text not null`                         | Provider-relative path                                                     |
+| `checksum`         | `varchar(64)`                           | SHA-256 hex                                                                |
+| `uploaded_by`      | `uuid not null references profiles(id)` | Who uploaded                                                               |
+| `created_at`       | `timestamptz default now() not null`    |                                                                            |
+| `deleted_at`       | `timestamptz`                           | Soft delete                                                                |
 
 Indexes: `(school_id)`, `(entity_type, entity_id)`, `(uploaded_by)`, composite `(school_id, entity_type, entity_id)`.
 
@@ -242,11 +390,14 @@ Each provider class implements `StorageProvider` from `@edunexus/shared`.
 
 ```typescript
 export function createStorageProvider(): StorageProvider {
-  const provider = process.env.STORAGE_PROVIDER ?? 'local';
+  const provider = process.env.STORAGE_PROVIDER ?? "local";
   switch (provider) {
-    case 's3':   return new S3StorageProvider();
-    case 'cloudinary': return new CloudinaryStorageProvider();
-    default:     return new LocalStorageProvider();
+    case "s3":
+      return new S3StorageProvider();
+    case "cloudinary":
+      return new CloudinaryStorageProvider();
+    default:
+      return new LocalStorageProvider();
   }
 }
 ```
@@ -307,18 +458,18 @@ A reusable shadcn-based upload component:
 
 ## 6. Env Variables
 
-| Variable | Used by | Required for |
-|---|---|---|
-| `STORAGE_PROVIDER` | factory | All — `local`, `cloudinary`, or `s3` |
-| `STORAGE_LOCAL_PATH` | LocalProvider | Dev (defaults to `.edunexus/storage/local`) |
-| `CLOUDINARY_CLOUD_NAME` | CloudinaryProvider | Preview/staging |
-| `CLOUDINARY_API_KEY` | CloudinaryProvider | Preview/staging |
-| `CLOUDINARY_API_SECRET` | CloudinaryProvider | Preview/staging |
-| `STORAGE_ENDPOINT` | S3Provider | Production (S3-compatible) |
-| `STORAGE_ACCESS_KEY` | S3Provider | Production |
-| `STORAGE_SECRET_KEY` | S3Provider | Production |
-| `STORAGE_BUCKET` | S3Provider | Production |
-| `STORAGE_REGION` | S3Provider | Production |
+| Variable                | Used by            | Required for                                |
+| ----------------------- | ------------------ | ------------------------------------------- |
+| `STORAGE_PROVIDER`      | factory            | All — `local`, `cloudinary`, or `s3`        |
+| `STORAGE_LOCAL_PATH`    | LocalProvider      | Dev (defaults to `.edunexus/storage/local`) |
+| `CLOUDINARY_CLOUD_NAME` | CloudinaryProvider | Preview/staging                             |
+| `CLOUDINARY_API_KEY`    | CloudinaryProvider | Preview/staging                             |
+| `CLOUDINARY_API_SECRET` | CloudinaryProvider | Preview/staging                             |
+| `STORAGE_ENDPOINT`      | S3Provider         | Production (S3-compatible)                  |
+| `STORAGE_ACCESS_KEY`    | S3Provider         | Production                                  |
+| `STORAGE_SECRET_KEY`    | S3Provider         | Production                                  |
+| `STORAGE_BUCKET`        | S3Provider         | Production                                  |
+| `STORAGE_REGION`        | S3Provider         | Production                                  |
 
 Existing `NEXT_PUBLIC_*` Cloudinary vars in `.env` are deprecated — uploads go through the backend, not direct browser-to-Cloudinary.
 

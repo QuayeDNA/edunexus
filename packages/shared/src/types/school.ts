@@ -1,4 +1,9 @@
-import type { CurriculumMode, CalendarMode, GradingSystem, Status } from './common';
+import type {
+  CurriculumMode,
+  CalendarMode,
+  GradingSystem,
+  Status,
+} from "./common";
 
 export interface School {
   id: string;

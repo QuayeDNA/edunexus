@@ -1,21 +1,27 @@
-import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { applicants } from '@edunexus/database';
-import { eq, count } from 'drizzle-orm';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { resolveTenant } from '@/lib/tenant/resolve';
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { applicants } from "@edunexus/database";
+import { eq, count } from "drizzle-orm";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { resolveTenant } from "@/lib/tenant/resolve";
 
 export async function GET(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = request.headers.get("host") ?? "";
   const tenant = await resolveTenant(host);
   const schoolId = tenant.schoolId;
-  if (!schoolId) return apiError(400, 'Tenant not resolved');
+  if (!schoolId) return apiError(400, "Tenant not resolved");
 
-  const statuses = ['submitted', 'under_review', 'accepted', 'rejected', 'waitlisted'] as const;
+  const statuses = [
+    "submitted",
+    "under_review",
+    "accepted",
+    "rejected",
+    "waitlisted",
+  ] as const;
 
   const counts = await db
     .select({

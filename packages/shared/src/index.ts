@@ -8,24 +8,13 @@ export type {
   CalendarMode,
   GradingSystem,
   PaginationParams,
-} from './types/common';
+} from "./types/common";
 
-export type {
-  School,
-  AcademicYear,
-  Term,
-  SchoolConfig,
-} from './types/school';
+export type { School, AcademicYear, Term, SchoolConfig } from "./types/school";
 
-export type {
-  Student,
-  Guardian,
-  StudentGuardian,
-} from './types/student';
+export type { Student, Guardian, StudentGuardian } from "./types/student";
 
-export type {
-  Staff,
-} from './types/staff';
+export type { Staff } from "./types/staff";
 
 export type {
   GradeLevel,
@@ -37,12 +26,9 @@ export type {
   Assessment,
   AssessmentScore,
   ReportCard,
-} from './types/academics';
+} from "./types/academics";
 
-export type {
-  AttendanceRecord,
-  StaffAttendance,
-} from './types/attendance';
+export type { AttendanceRecord, StaffAttendance } from "./types/attendance";
 
 export type {
   FeeCategory,
@@ -50,7 +36,7 @@ export type {
   StudentFee,
   Payment,
   Expense,
-} from './types/finance';
+} from "./types/finance";
 
 // Constants
 export {
@@ -58,7 +44,7 @@ export {
   ROLE_ROUTES,
   ROLE_LABELS,
   ROLE_HIERARCHY,
-} from './constants/roles';
+} from "./constants/roles";
 
 export {
   GHANA_BASIC_GRADES,
@@ -67,7 +53,7 @@ export {
   BRITISH_GCSE_GRADES,
   AMERICAN_GPA_GRADES,
   GRADE_SYSTEMS,
-} from './constants/grades';
+} from "./constants/grades";
 
 export {
   GHANA_TERMS,
@@ -76,7 +62,7 @@ export {
   detectMomoProvider,
   GHANA_REGIONS,
   CURRENCY,
-} from './constants/ghana';
+} from "./constants/ghana";
 
 // Utils
 export {
@@ -84,13 +70,13 @@ export {
   GHANA_PAYE_BANDS,
   calculateGhanaPAYE,
   calculatePayslip,
-} from './utils/ghana-payroll';
+} from "./utils/ghana-payroll";
 
 export type {
   GHANA_PAYE_BAND,
   PayslipInput,
   PayslipResult,
-} from './utils/ghana-payroll';
+} from "./utils/ghana-payroll";
 
 export {
   getGrade,
@@ -98,11 +84,9 @@ export {
   calculatePositionInClass,
   calculateClassAverage,
   hasPassed,
-} from './utils/grade-utils';
+} from "./utils/grade-utils";
 
-export type {
-  ScoreEntry,
-} from './utils/grade-utils';
+export type { ScoreEntry } from "./utils/grade-utils";
 
 export {
   formatGHS,
@@ -111,7 +95,7 @@ export {
   formatName,
   truncate,
   pluralize,
-} from './utils/formatters';
+} from "./utils/formatters";
 
 export type {
   EntityType,
@@ -119,7 +103,7 @@ export type {
   UploadResult,
   StorageProvider,
   FilePermission,
-} from './types/storage';
+} from "./types/storage";
 
 export {
   buildStoragePath,
@@ -127,4 +111,4 @@ export {
   MAX_FILE_SIZE,
   STORAGE_PERMISSIONS,
   checkFilePermission,
-} from './constants/storage';
+} from "./constants/storage";

@@ -1,5 +1,4 @@
-export { createClient } from './client';
-export type { DatabaseClient } from './client';
-export { tenantQuery } from './helpers';
+export { createClient } from "./client";
+export type { DatabaseClient } from "./client";
 
-export * from './schema/index';
+export * from "./schema/index";

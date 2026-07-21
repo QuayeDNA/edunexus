@@ -4,12 +4,12 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
   CopyObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import type { StorageProvider, UploadResult } from '@edunexus/shared';
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { StorageProvider, UploadResult } from "@edunexus/shared";
 
 export class S3StorageProvider implements StorageProvider {
-  readonly name = 's3';
+  readonly name = "s3";
 
   private client: S3Client;
   private bucket: string;
@@ -17,13 +17,13 @@ export class S3StorageProvider implements StorageProvider {
   constructor() {
     this.client = new S3Client({
       endpoint: process.env.STORAGE_ENDPOINT,
-      region: process.env.STORAGE_REGION ?? 'us-east-1',
+      region: process.env.STORAGE_REGION ?? "us-east-1",
       credentials: {
-        accessKeyId: process.env.STORAGE_ACCESS_KEY ?? '',
-        secretAccessKey: process.env.STORAGE_SECRET_KEY ?? '',
+        accessKeyId: process.env.STORAGE_ACCESS_KEY ?? "",
+        secretAccessKey: process.env.STORAGE_SECRET_KEY ?? "",
       },
     });
-    this.bucket = process.env.STORAGE_BUCKET ?? 'edunexus';
+    this.bucket = process.env.STORAGE_BUCKET ?? "edunexus";
   }
 
   async upload(
@@ -67,10 +67,7 @@ export class S3StorageProvider implements StorageProvider {
     );
   }
 
-  async copy(
-    sourcePath: string,
-    destPath: string,
-  ): Promise<string> {
+  async copy(sourcePath: string, destPath: string): Promise<string> {
     await this.client.send(
       new CopyObjectCommand({
         Bucket: this.bucket,

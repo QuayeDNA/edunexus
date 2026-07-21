@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Loader2, CreditCard } from 'lucide-react';
-import { usePayment } from '@/hooks/use-payment';
+import { Button } from "@/components/ui/button";
+import { Loader2, CreditCard } from "lucide-react";
+import { usePayment } from "@/hooks/use-payment";
 
 interface PaymentButtonProps {
   amount: number;
@@ -17,7 +17,7 @@ interface PaymentButtonProps {
 export function PaymentButton({
   amount,
   email,
-  label = 'Pay Now',
+  label = "Pay Now",
   metadata,
   onSuccess,
   onError,
@@ -28,10 +28,10 @@ export function PaymentButton({
   const handlePayment = async () => {
     const result = await initializePayment({ amount, email, metadata });
     if (result?.authorizationUrl) {
-      window.open(result.authorizationUrl, '_blank');
+      window.open(result.authorizationUrl, "_blank");
       onSuccess?.(result.reference);
     } else {
-      onError?.('Failed to initialize payment');
+      onError?.("Failed to initialize payment");
     }
   };
 
@@ -42,7 +42,7 @@ export function PaymentButton({
       ) : (
         <CreditCard className="mr-2 h-4 w-4" />
       )}
-      {isLoading ? 'Processing...' : label}
+      {isLoading ? "Processing..." : label}
     </Button>
   );
 }

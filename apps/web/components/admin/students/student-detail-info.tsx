@@ -1,13 +1,6 @@
-'use client';
+"use client";
 
-interface StudentDetail {
-  id: string; firstName: string; lastName: string; otherNames: string | null;
-  studentIdNumber: string; gender: string; dateOfBirth: string;
-  placeOfBirth: string | null; nationality: string | null; religion: string | null;
-  address: string | null; phone: string | null; email: string | null;
-  bloodGroup: string | null; medicalNotes: string | null;
-  enrollmentDate: string; status: string;
-}
+import type { StudentDetail } from "@/types/students";
 
 export function StudentDetailInfo({ student }: { student: StudentDetail }) {
   return (
@@ -18,9 +11,20 @@ export function StudentDetailInfo({ student }: { student: StudentDetail }) {
             Personal Information
           </h3>
           <dl className="space-y-2 text-sm">
-            <Row label="Full Name" value={`${student.firstName} ${student.lastName}${student.otherNames ? ` (${student.otherNames})` : ''}`} />
-            <Row label="Date of Birth" value={new Date(student.dateOfBirth).toLocaleDateString('en-GH')} />
-            <Row label="Gender" value={student.gender.charAt(0).toUpperCase() + student.gender.slice(1)} />
+            <Row
+              label="Full Name"
+              value={`${student.firstName} ${student.lastName}${student.otherNames ? ` (${student.otherNames})` : ""}`}
+            />
+            <Row
+              label="Date of Birth"
+              value={new Date(student.dateOfBirth).toLocaleDateString("en-GH")}
+            />
+            <Row
+              label="Gender"
+              value={
+                student.gender.charAt(0).toUpperCase() + student.gender.slice(1)
+              }
+            />
             <Row label="Nationality" value={student.nationality} />
             <Row label="Religion" value={student.religion} />
             <Row label="Blood Group" value={student.bloodGroup} />
@@ -31,7 +35,7 @@ export function StudentDetailInfo({ student }: { student: StudentDetail }) {
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Medical Notes
           </h3>
-          <p className="text-sm">{student.medicalNotes || 'None recorded'}</p>
+          <p className="text-sm">{student.medicalNotes || "None recorded"}</p>
         </div>
       </div>
       <div className="space-y-6">
@@ -50,11 +54,17 @@ export function StudentDetailInfo({ student }: { student: StudentDetail }) {
   );
 }
 
-function Row({ label, value }: { label: string; value: string | null | undefined }) {
+function Row({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}) {
   return (
     <div className="flex justify-between">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd>{value || '—'}</dd>
+      <dd>{value || "—"}</dd>
     </div>
   );
 }

@@ -12,25 +12,25 @@ Implement the applicant intake pipeline: a new `applicants` table, public submis
 
 New file: `packages/database/src/schema/applicants.ts`
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `uuid pk default gen_random_uuid()` | |
-| `school_id` | `uuid references schools(id) not null` | Tenant-scoped |
-| `first_name` | `varchar(100) not null` | |
-| `last_name` | `varchar(100) not null` | |
-| `date_of_birth` | `date not null` | |
-| `gender` | `varchar(10) not null` | |
-| `guardian_name` | `varchar(200) not null` | |
-| `guardian_email` | `varchar(255) not null` | Contact for confirmation |
-| `guardian_phone` | `varchar(20)` | Optional |
-| `guardian_address` | `text` | Optional |
-| `grade_level_id` | `uuid references grade_levels(id) not null` | Grade applied for |
-| `previous_school` | `varchar(255)` | Optional |
-| `document_urls` | `text[]` | Array of Cloudinary URLs |
-| `status` | `varchar(20) not null default 'submitted'` | `submitted`, `under_review`, `accepted`, `rejected`, `waitlisted` |
-| `admin_notes` | `text` | Internal notes |
-| `created_at` | `timestamptz default now() not null` | |
-| `updated_at` | `timestamptz default now() not null` | |
+| Column             | Type                                        | Notes                                                             |
+| ------------------ | ------------------------------------------- | ----------------------------------------------------------------- |
+| `id`               | `uuid pk default gen_random_uuid()`         |                                                                   |
+| `school_id`        | `uuid references schools(id) not null`      | Tenant-scoped                                                     |
+| `first_name`       | `varchar(100) not null`                     |                                                                   |
+| `last_name`        | `varchar(100) not null`                     |                                                                   |
+| `date_of_birth`    | `date not null`                             |                                                                   |
+| `gender`           | `varchar(10) not null`                      |                                                                   |
+| `guardian_name`    | `varchar(200) not null`                     |                                                                   |
+| `guardian_email`   | `varchar(255) not null`                     | Contact for confirmation                                          |
+| `guardian_phone`   | `varchar(20)`                               | Optional                                                          |
+| `guardian_address` | `text`                                      | Optional                                                          |
+| `grade_level_id`   | `uuid references grade_levels(id) not null` | Grade applied for                                                 |
+| `previous_school`  | `varchar(255)`                              | Optional                                                          |
+| `document_urls`    | `text[]`                                    | Array of Cloudinary URLs                                          |
+| `status`           | `varchar(20) not null default 'submitted'`  | `submitted`, `under_review`, `accepted`, `rejected`, `waitlisted` |
+| `admin_notes`      | `text`                                      | Internal notes                                                    |
+| `created_at`       | `timestamptz default now() not null`        |                                                                   |
+| `updated_at`       | `timestamptz default now() not null`        |                                                                   |
 
 Indexes: `(school_id)`, `(status)`, `(school_id, status)`.
 
@@ -88,11 +88,13 @@ A Server Component page at `apps/web/app/apply/page.tsx`:
 ## Dependencies
 
 None beyond what exists:
+
 - `apps/web/services/email/index.ts` — Resend service (already built, Phase 2)
 - `gradeLevels` schema — already seeded with 11 grades (Creche–JHS3)
 - `@tanstack/react-query` — already installed (for admin list view later)
 
 New env vars added (optional — form works without them, just no file upload):
+
 - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
 - `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`
 
@@ -101,6 +103,7 @@ New env vars added (optional — form works without them, just no file upload):
 ## Acceptance Criteria
 
 Given a valid school subdomain:
+
 1. When a guardian submits the form with all required fields, then an `applicant` row is created with status `submitted`
 2. When the form is submitted, then a confirmation email is sent to `guardian_email` within 1 minute (in dev mode, logged to console)
 3. When a required field is missing, then the form shows an inline validation error and no row is created

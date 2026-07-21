@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useRef } from 'react';
-import type { EntityType } from '@edunexus/shared';
+import { useState, useCallback, useRef } from "react";
+import type { EntityType } from "@edunexus/shared";
 
 interface UploadedFile {
   id: string;
@@ -32,9 +32,9 @@ interface FileUploadProps {
 export function FileUpload({
   entityType,
   entityId,
-  accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx',
+  accept = ".pdf,.jpg,.jpeg,.png,.doc,.docx",
   maxFiles = 5,
-  uploadUrl = '/api/files/upload',
+  uploadUrl = "/api/files/upload",
   tenantId,
   autoUpload = true,
   onUploadComplete,
@@ -43,7 +43,7 @@ export function FileUpload({
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = useCallback(
@@ -51,7 +51,7 @@ export function FileUpload({
       const fileList = e.target.files;
       if (!fileList?.length) return;
 
-      setError('');
+      setError("");
 
       if (autoUpload) {
         setUploading(true);
@@ -62,30 +62,30 @@ export function FileUpload({
 
           try {
             const formData = new FormData();
-            formData.append('file', file);
-            formData.append('entityType', entityType);
-            formData.append('entityId', entityId);
+            formData.append("file", file);
+            formData.append("entityType", entityType);
+            formData.append("entityId", entityId);
 
             const headers: Record<string, string> = {};
             if (tenantId) {
-              headers['x-tenant-id'] = tenantId;
+              headers["x-tenant-id"] = tenantId;
             }
 
             const res = await fetch(uploadUrl, {
-              method: 'POST',
+              method: "POST",
               headers,
               body: formData,
             });
 
             const json = await res.json();
             if (!res.ok) {
-              setError(json.error ?? 'Upload failed');
+              setError(json.error ?? "Upload failed");
               break;
             }
 
             uploaded.push(json.data);
           } catch {
-            setError('Network error during upload');
+            setError("Network error during upload");
             break;
           }
         }
@@ -107,17 +107,28 @@ export function FileUpload({
       }
 
       if (inputRef.current) {
-        inputRef.current.value = '';
+        inputRef.current.value = "";
       }
     },
-    [autoUpload, entityType, entityId, files, maxFiles, tenantId, uploadUrl, onUploadComplete, onFilesPending, pendingFiles],
+    [
+      autoUpload,
+      entityType,
+      entityId,
+      files,
+      maxFiles,
+      tenantId,
+      uploadUrl,
+      onUploadComplete,
+      onFilesPending,
+      pendingFiles,
+    ],
   );
 
   const removeFile = (id: string) => {
     if (autoUpload) {
-      setFiles(prev => prev.filter(f => f.id !== id));
+      setFiles((prev) => prev.filter((f) => f.id !== id));
     } else {
-      const updated = pendingFiles.filter(f => f.name !== id);
+      const updated = pendingFiles.filter((f) => f.name !== id);
       setPendingFiles(updated);
       onFilesPending?.(updated);
     }
@@ -154,13 +165,11 @@ export function FileUpload({
         )}
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {!autoUpload && pendingFiles.length > 0 && (
         <ul className="space-y-2">
-          {pendingFiles.map(f => (
+          {pendingFiles.map((f) => (
             <li
               key={f.name}
               className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm"
@@ -180,7 +189,7 @@ export function FileUpload({
 
       {displayFiles.length > 0 && (
         <ul className="space-y-2">
-          {displayFiles.map(f => (
+          {displayFiles.map((f) => (
             <li
               key={f.id}
               className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm"

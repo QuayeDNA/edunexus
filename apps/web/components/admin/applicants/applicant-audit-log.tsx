@@ -1,27 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-
-interface AuditEntry {
-  id: string;
-  action: string;
-  oldData: Record<string, unknown>;
-  newData: Record<string, unknown>;
-  createdAt: string;
-}
+import { useEffect, useState } from "react";
+import type { ApplicantAuditEntry } from "@/types/applicant";
 
 interface AuditLogProps {
   applicantId: string;
 }
 
 export function ApplicantAuditLog({ applicantId }: AuditLogProps) {
-  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [entries, setEntries] = useState<ApplicantAuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`/api/audit-logs?tableName=applicants&recordId=${applicantId}`)
-      .then(res => res.ok ? res.json() : { data: [] })
-      .then(data => setEntries(data.data ?? []))
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((data) => setEntries(data.data ?? []))
       .finally(() => setLoading(false));
   }, [applicantId]);
 
@@ -44,19 +37,22 @@ export function ApplicantAuditLog({ applicantId }: AuditLogProps) {
         Activity Log
       </h3>
       <div className="space-y-3">
-        {entries.map(entry => (
+        {entries.map((entry) => (
           <div key={entry.id} className="flex items-start gap-3 text-sm">
             <div className="mt-1 h-2 w-2 rounded-full bg-muted-foreground/30 shrink-0" />
             <div>
-              <p className="font-medium">{entry.action.replace(/_/g, ' ')}</p>
+              <p className="font-medium">{entry.action.replace(/_/g, " ")}</p>
               <p className="text-xs text-muted-foreground">
-                {new Date(entry.createdAt).toLocaleString('en-GH')}
+                {new Date(entry.createdAt).toLocaleString("en-GH")}
               </p>
-              {entry.newData && typeof (entry.newData as Record<string, unknown>).status === 'string' && (
-                <p className="text-xs text-muted-foreground">
-                  Status → {String((entry.newData as Record<string, unknown>).status)}
-                </p>
-              )}
+              {entry.newData &&
+                typeof (entry.newData as Record<string, unknown>).status ===
+                  "string" && (
+                  <p className="text-xs text-muted-foreground">
+                    Status →{" "}
+                    {String((entry.newData as Record<string, unknown>).status)}
+                  </p>
+                )}
             </div>
           </div>
         ))}

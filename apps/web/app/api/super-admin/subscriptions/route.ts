@@ -1,11 +1,12 @@
-import { db } from '@/lib/db';
-import { schoolSubscriptions, schools, schoolPlans } from '@edunexus/database/src/schema';
-import { desc, eq } from 'drizzle-orm';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess } from '@/lib/api/response';
+import { db } from "@/lib/db";
+import { schoolSubscriptions, schools, schoolPlans } from "@edunexus/database";
+import { desc, eq } from "drizzle-orm";
+import { routeHandler } from "@/lib/api/handler";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess } from "@/lib/api/response";
 
-export async function GET() {
-  const { error } = await requireRole('super_admin');
+export const GET = routeHandler(async () => {
+  const { error } = await requireRole("super_admin");
   if (error) return error;
 
   const subscriptions = await db
@@ -26,4 +27,4 @@ export async function GET() {
     .orderBy(desc(schoolSubscriptions.createdAt));
 
   return apiSuccess(subscriptions);
-}
+});

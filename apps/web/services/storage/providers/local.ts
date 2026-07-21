@@ -1,10 +1,10 @@
-import fs from 'fs/promises';
-import path from 'path';
-import crypto from 'crypto';
-import type { StorageProvider, UploadResult } from '@edunexus/shared';
+import fs from "fs/promises";
+import path from "path";
+import crypto from "crypto";
+import type { StorageProvider, UploadResult } from "@edunexus/shared";
 
 export class LocalStorageProvider implements StorageProvider {
-  readonly name = 'local';
+  readonly name = "local";
 
   private baseDir: string;
 
@@ -12,7 +12,7 @@ export class LocalStorageProvider implements StorageProvider {
     this.baseDir =
       baseDir ??
       process.env.STORAGE_LOCAL_PATH ??
-      path.join(process.cwd(), '.edunexus', 'storage', 'local');
+      path.join(process.cwd(), ".edunexus", "storage", "local");
   }
 
   async upload(
@@ -33,10 +33,10 @@ export class LocalStorageProvider implements StorageProvider {
     _expiresIn: number = 3600,
   ): Promise<string> {
     const signature = crypto
-      .createHmac('sha256', process.env.AUTH_SECRET ?? 'dev-secret')
+      .createHmac("sha256", process.env.AUTH_SECRET ?? "dev-secret")
       .update(storagePath)
       .update(_expiresIn.toString())
-      .digest('hex');
+      .digest("hex");
     return `/api/files/serve/${storagePath}?expires=${Date.now() + _expiresIn * 1000}&sig=${signature}`;
   }
 
@@ -45,10 +45,7 @@ export class LocalStorageProvider implements StorageProvider {
     await fs.unlink(fullPath);
   }
 
-  async copy(
-    sourcePath: string,
-    destPath: string,
-  ): Promise<string> {
+  async copy(sourcePath: string, destPath: string): Promise<string> {
     const fullSource = path.join(this.baseDir, sourcePath);
     const fullDest = path.join(this.baseDir, destPath);
     await fs.mkdir(path.dirname(fullDest), { recursive: true });

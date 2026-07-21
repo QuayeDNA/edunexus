@@ -1,5 +1,5 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface TransferCertificateParams {
   studentName: string;
@@ -12,11 +12,13 @@ interface TransferCertificateParams {
   schoolName: string;
 }
 
-export async function generateTransferCertificate(params: TransferCertificateParams): Promise<Buffer> {
-  const doc = new jsPDF({ format: 'a4', unit: 'mm' });
+export async function generateTransferCertificate(
+  params: TransferCertificateParams,
+): Promise<Buffer> {
+  const doc = new jsPDF({ format: "a4", unit: "mm" });
 
   doc.setFontSize(18);
-  doc.text('TRANSFER CERTIFICATE', 105, 30, { align: 'center' });
+  doc.text("TRANSFER CERTIFICATE", 105, 30, { align: "center" });
 
   doc.setFontSize(11);
   doc.text(`School: ${params.schoolName}`, 20, 50);
@@ -24,22 +26,30 @@ export async function generateTransferCertificate(params: TransferCertificatePar
 
   autoTable(doc, {
     startY: 70,
-    head: [['Field', 'Details']],
+    head: [["Field", "Details"]],
     body: [
-      ['Student Name', params.studentName],
-      ['Student ID', params.studentIdNumber],
-      ['Date of Birth', params.dateOfBirth],
-      ['Last Class Attended', params.lastClass],
-      ['Reason for Transfer', params.reason],
-      ['Target School', params.targetSchool],
+      ["Student Name", params.studentName],
+      ["Student ID", params.studentIdNumber],
+      ["Date of Birth", params.dateOfBirth],
+      ["Last Class Attended", params.lastClass],
+      ["Reason for Transfer", params.reason],
+      ["Target School", params.targetSchool],
     ],
     styles: { fontSize: 10 },
     headStyles: { fillColor: [59, 130, 246] },
   });
 
-  doc.text('School Stamp & Signature:', 20, (doc as any).lastAutoTable.finalY + 20);
-  doc.text('_________________________', 20, (doc as any).lastAutoTable.finalY + 28);
-  doc.text('Authorized Signature', 20, (doc as any).lastAutoTable.finalY + 36);
+  doc.text(
+    "School Stamp & Signature:",
+    20,
+    (doc as any).lastAutoTable.finalY + 20,
+  );
+  doc.text(
+    "_________________________",
+    20,
+    (doc as any).lastAutoTable.finalY + 28,
+  );
+  doc.text("Authorized Signature", 20, (doc as any).lastAutoTable.finalY + 36);
 
-  return Buffer.from(doc.output('arraybuffer'));
+  return Buffer.from(doc.output("arraybuffer"));
 }

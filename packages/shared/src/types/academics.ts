@@ -1,4 +1,4 @@
-import type { Status } from './common';
+import type { Status } from "./common";
 
 export interface GradeLevel {
   id: string;
@@ -6,7 +6,13 @@ export interface GradeLevel {
   name: string;
   code: string;
   level_number: number;
-  category: 'creche' | 'nursery' | 'kindergarten' | 'primary' | 'junior_secondary' | 'senior_secondary';
+  category:
+    | "creche"
+    | "nursery"
+    | "kindergarten"
+    | "primary"
+    | "junior_secondary"
+    | "senior_secondary";
   description?: string | null;
   sort_order: number;
   created_at: string;
@@ -70,7 +76,7 @@ export interface AssessmentType {
   name: string;
   code: string;
   weight: number;
-  category: 'continuous' | 'exam';
+  category: "continuous" | "exam";
   created_at: string;
   updated_at: string;
 }

@@ -1,21 +1,21 @@
-import { NextRequest } from 'next/server';
-import { requireRole } from '@/lib/api/require-role';
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { parseCsv, autoMapColumns } from '@/services/csv-parser';
-import type { KnownField } from '@/services/csv-parser';
+import { NextRequest } from "next/server";
+import { requireRole } from "@/lib/api/require-role";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { parseCsv, autoMapColumns } from "@/services/csv-parser";
+import type { KnownField } from "@/services/csv-parser";
 
 export async function POST(request: NextRequest) {
-  const { error: authError } = await requireRole('admin', 'super_admin');
+  const { error: authError } = await requireRole("admin", "super_admin");
   if (authError) return authError;
 
   const body = await request.json();
-  if (!body.csv || typeof body.csv !== 'string') {
-    return apiError(422, 'CSV content is required');
+  if (!body.csv || typeof body.csv !== "string") {
+    return apiError(422, "CSV content is required");
   }
 
   const result = parseCsv(body.csv);
   if (result.headers.length === 0) {
-    return apiError(422, 'CSV must have at least a header row');
+    return apiError(422, "CSV must have at least a header row");
   }
 
   const columnMap = autoMapColumns(result.headers);
@@ -34,10 +34,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const sampleRows = result.rows.slice(0, 10).map(row => {
+  const sampleRows = result.rows.slice(0, 10).map((row) => {
     const record: Record<string, string> = {};
     for (let i = 0; i < result.headers.length; i++) {
-      record[result.headers[i]] = row.cells[i] ?? '';
+      record[result.headers[i]] = row.cells[i] ?? "";
     }
     return record;
   });

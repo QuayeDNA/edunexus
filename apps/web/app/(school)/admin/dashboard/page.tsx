@@ -1,20 +1,35 @@
-import { requireRole } from '@/lib/auth/auth.guard';
-import { db } from '@/lib/db';
-import { schools } from '@edunexus/database';
-import { eq } from 'drizzle-orm';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Users, Briefcase, GraduationCap, CalendarCheck, Plus, Upload, Send } from 'lucide-react';
-import Link from 'next/link';
-import { ApplicationUrlCard } from '@/components/admin/application-url-card';
+import { requireRole } from "@/lib/auth/auth.guard";
+import { db } from "@/lib/db";
+import { schools } from "@edunexus/database";
+import { eq } from "drizzle-orm";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Users,
+  Briefcase,
+  GraduationCap,
+  CalendarCheck,
+  Plus,
+  Upload,
+  Send,
+} from "lucide-react";
+import Link from "next/link";
+import { ApplicationUrlCard } from "@/components/admin/application-url-card";
 
 export default async function AdminDashboard() {
-  const session = await requireRole('admin');
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const session = await requireRole("admin");
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-  let schoolSlug = '';
-  let schoolName = '';
+  let schoolSlug = "";
+  let schoolName = "";
   if (session.user.schoolId) {
-    const [school] = await db.select({ slug: schools.slug, name: schools.name })
+    const [school] = await db
+      .select({ slug: schools.slug, name: schools.name })
       .from(schools)
       .where(eq(schools.id, session.user.schoolId))
       .limit(1);
@@ -24,7 +39,7 @@ export default async function AdminDashboard() {
     }
   }
 
-  const isDev = baseUrl.includes('localhost');
+  const isDev = baseUrl.includes("localhost");
   const appHost = new URL(baseUrl).host;
   const applyUrl = isDev
     ? `${baseUrl}/apply?school=${schoolSlug}`
@@ -34,10 +49,10 @@ export default async function AdminDashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-text-primary">{schoolName}</h1>
-          <p className="mt-1 text-sm text-text-secondary">
-            Admin Dashboard
-          </p>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            {schoolName}
+          </h1>
+          <p className="mt-1 text-sm text-text-secondary">Admin Dashboard</p>
         </div>
       </div>
 
@@ -114,7 +129,9 @@ export default async function AdminDashboard() {
       </div>
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-text-primary">Quick Actions</h2>
+        <h2 className="mb-4 text-lg font-semibold text-text-primary">
+          Quick Actions
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link href="/admin/students/new">
             <Card className="cursor-pointer transition-shadow hover:shadow-md">
@@ -123,7 +140,9 @@ export default async function AdminDashboard() {
                   <Plus className="h-5 w-5 text-brand-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-medium">Add New Student</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Add New Student
+                  </CardTitle>
                   <CardDescription>Enroll a student</CardDescription>
                 </div>
               </CardContent>
@@ -137,8 +156,12 @@ export default async function AdminDashboard() {
                   <GraduationCap className="h-5 w-5 text-brand-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-medium">Review Applications</CardTitle>
-                  <CardDescription>Process admission applications</CardDescription>
+                  <CardTitle className="text-sm font-medium">
+                    Review Applications
+                  </CardTitle>
+                  <CardDescription>
+                    Process admission applications
+                  </CardDescription>
                 </div>
               </CardContent>
             </Card>
@@ -151,7 +174,9 @@ export default async function AdminDashboard() {
                   <Upload className="h-5 w-5 text-accent-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-medium">Import Students</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Import Students
+                  </CardTitle>
                   <CardDescription>Bulk upload via CSV</CardDescription>
                 </div>
               </CardContent>
@@ -165,7 +190,9 @@ export default async function AdminDashboard() {
                   <Send className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-medium">Send Announcement</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Send Announcement
+                  </CardTitle>
                   <CardDescription>Notify parents &amp; staff</CardDescription>
                 </div>
               </CardContent>

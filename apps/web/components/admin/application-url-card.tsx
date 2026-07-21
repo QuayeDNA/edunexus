@@ -1,12 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Link, Copy, Check } from 'lucide-react';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Link, Copy, Check } from "lucide-react";
 
-export function ApplicationUrlCard({ url, schoolName }: { url: string; schoolName: string }) {
+export function ApplicationUrlCard({
+  url,
+  schoolName,
+}: {
+  url: string;
+  schoolName: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   const copyUrl = async () => {
@@ -15,9 +27,11 @@ export function ApplicationUrlCard({ url, schoolName }: { url: string; schoolNam
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      const input = document.getElementById('application-url-input') as HTMLInputElement;
+      const input = document.getElementById(
+        "application-url-input",
+      ) as HTMLInputElement;
       input?.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
     }
   };
 
@@ -31,7 +45,9 @@ export function ApplicationUrlCard({ url, schoolName }: { url: string; schoolNam
           <CardTitle className="text-sm font-medium text-text-secondary">
             Application Portal
           </CardTitle>
-          <CardDescription>Share this link with parents to apply online</CardDescription>
+          <CardDescription>
+            Share this link with parents to apply online
+          </CardDescription>
         </div>
       </CardHeader>
       <CardContent>
@@ -42,8 +58,17 @@ export function ApplicationUrlCard({ url, schoolName }: { url: string; schoolNam
             readOnly
             className="font-mono text-sm"
           />
-          <Button variant="outline" size="icon" onClick={copyUrl} title="Copy URL">
-            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={copyUrl}
+            title="Copy URL"
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
           </Button>
         </div>
         <p className="mt-2 text-xs text-text-muted">
