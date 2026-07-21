@@ -128,8 +128,7 @@ export async function deleteGradeLevel(ctx: ServiceContext, id: string) {
   if (Number(classCount.count) > 0) {
     throw new ConflictError('Cannot delete grade level with existing classes. Delete the classes first.');
   }
-  const [deleted] = await ctx.db.delete(gradeLevels)
-    .where(and(eq(gradeLevels.id, id), eq(gradeLevels.schoolId, ctx.schoolId)))
-    .returning({ id: gradeLevels.id });
+  await ctx.db.delete(gradeLevels)
+    .where(and(eq(gradeLevels.id, id), eq(gradeLevels.schoolId, ctx.schoolId)));
   return { deleted: true };
 }
