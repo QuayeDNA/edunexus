@@ -33,15 +33,36 @@ export interface Class {
 
 export interface Subject {
   id: string;
-  school_id: string;
-  name: string;
+  schoolId: string;
   code: string;
+  name: string;
   category?: string | null;
-  is_core: boolean;
-  max_score: number;
-  pass_score: number;
-  created_at: string;
-  updated_at: string;
+  description?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubjectGradeLevel {
+  id: string;
+  schoolId: string;
+  subjectId: string;
+  gradeLevelId: string;
+  isCore: boolean;
+  sortOrder?: number | null;
+  subjectCode?: string;
+  subjectName?: string;
+}
+
+export interface Curriculum {
+  id: string;
+  schoolId: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  subjectCount?: number;
+  subjects?: Subject[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ClassSubject {
