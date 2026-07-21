@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { resolveTenant } from '@/lib/tenant/resolve';
-import { setCurrentTerm, AppError } from '@/services/academic-structure';
+import { setCurrentTerm } from '@/services/academic-structure';
+import { AppError } from '@/lib/api/errors';
 import { db } from '@/lib/db';
 
 export async function POST(

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -115,19 +115,23 @@ export function AcademicManagementClient() {
 
   const handleDelete = async () => {
     if (!deletingTarget) return;
-    const endpoint = deletingTarget.type === 'year'
-      ? `/api/academic-years/${deletingTarget.id}`
-      : `/api/terms/${deletingTarget.id}`;
-    const res = await fetch(endpoint, { method: 'DELETE' });
-    const body = await res.json();
-    if (body.success) {
-      toast.success(`${deletingTarget.type === 'year' ? 'Year' : 'Term'} deleted`);
-      setDeletingTarget(null);
-      loadYears();
-      if (deletingTarget.type === 'term' && selectedYearId) loadTerms(selectedYearId);
-      if (deletingTarget.type === 'year') setSelectedYearId(null);
-    } else {
-      toast.error(body.error);
+    try {
+      const endpoint = deletingTarget.type === 'year'
+        ? `/api/academic-years/${deletingTarget.id}`
+        : `/api/terms/${deletingTarget.id}`;
+      const res = await fetch(endpoint, { method: 'DELETE' });
+      const body = await res.json();
+      if (body.success) {
+        toast.success(`${deletingTarget.type === 'year' ? 'Year' : 'Term'} deleted`);
+        setDeletingTarget(null);
+        loadYears();
+        if (deletingTarget.type === 'term' && selectedYearId) loadTerms(selectedYearId);
+        if (deletingTarget.type === 'year') setSelectedYearId(null);
+      } else {
+        toast.error(body.error ?? 'Failed to delete');
+      }
+    } catch {
+      toast.error('Network error — could not delete');
     }
   };
 
@@ -238,7 +242,7 @@ export function AcademicManagementClient() {
                           </div>
                           <div className="flex items-center gap-2">
                             {term.isCurrent && <Badge variant="default" className="text-xs">Current</Badge>}
-                            <Badge variant={term.locked ? 'secondary' : 'outline'} className="text-xs">
+                            <Badge variant={term.locked ? 'info' : 'outline'} className="text-xs">
                               {term.locked ? 'Locked' : 'Active'}
                             </Badge>
                             {!term.isCurrent && (

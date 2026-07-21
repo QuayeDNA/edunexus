@@ -31,7 +31,7 @@ vi.mock('@/lib/db', () => {
 });
 
 const { GET: listGET, POST: createPOST } = await import('@/app/api/terms/route');
-const { GET: detailGET, PATCH, DELETE } = await import('@/app/api/terms/[id]/route');
+const { PATCH, DELETE } = await import('@/app/api/terms/[id]/route');
 const { POST: setCurrentPOST } = await import('@/app/api/terms/[id]/set-current/route');
 const { POST: toggleLockPOST } = await import('@/app/api/terms/[id]/toggle-lock/route');
 
@@ -46,7 +46,7 @@ describe('GET /api/terms', () => {
   });
 
   it('returns terms for a valid academicYearId', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.orderBy.mockResolvedValue([
       { id: 't1', termNumber: '1', name: 'First Term', locked: false, schoolId },
     ]);
@@ -63,7 +63,7 @@ describe('GET /api/terms', () => {
 
 describe('POST /api/terms', () => {
   it('creates a term with valid data', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.limit
       .mockResolvedValueOnce([{ id: '11111111-1111-1111-1111-111111111111', startDate: new Date('2024-09-09'), endDate: new Date('2025-07-18'), schoolId }])
       .mockResolvedValueOnce([])
@@ -86,7 +86,7 @@ describe('POST /api/terms', () => {
 
 describe('PATCH /api/terms/[id]', () => {
   it('updates a term', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.limit.mockResolvedValueOnce([{ id: 't1', schoolId, academicYearId: 'y1' }]);
     db.returning.mockResolvedValue([{ id: 't1', name: 'Updated', schoolId }]);
 
@@ -106,7 +106,7 @@ describe('PATCH /api/terms/[id]', () => {
 
 describe('DELETE /api/terms/[id]', () => {
   it('deletes a term', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.limit.mockResolvedValueOnce([{ id: 't1', schoolId }]);
     db.returning.mockResolvedValue([{ id: 't1' }]);
 
@@ -122,7 +122,7 @@ describe('DELETE /api/terms/[id]', () => {
 
 describe('POST /api/terms/[id]/toggle-lock', () => {
   it('toggles term locked status', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.limit.mockResolvedValue([{ id: 't1', locked: false, schoolId }]);
     db.returning.mockResolvedValue([{ id: 't1', locked: true, schoolId }]);
 
@@ -140,7 +140,7 @@ describe('POST /api/terms/[id]/set-current', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('sets the term as current', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.limit.mockResolvedValue([{ id: 't1', schoolId, academicYearId: 'y1' }]);
 
     const req = new NextRequest('http://localhost/api/terms/t1/set-current', { method: 'POST' });

@@ -3,9 +3,9 @@ import {
   createAcademicYear, updateAcademicYear, deleteAcademicYear,
   setCurrentAcademicYear, listAcademicYears, getAcademicYear,
   createTerm, updateTerm, deleteTerm, toggleTermLock,
-  setCurrentTerm, listTerms, getTerm, AppError,
-  createAcademicYearSchema, createTermSchema,
+  setCurrentTerm, listTerms, getTerm,
 } from '@/services/academic-structure';
+import { AppError } from '@/lib/api/errors';
 
 const schoolId = 'school-1';
 
@@ -15,8 +15,6 @@ const mockYear = {
   isCurrent: true, createdAt: new Date(), updatedAt: new Date(),
 };
 
-const mockYears = [mockYear];
-
 const mockTerm = {
   id: 'term-1', schoolId, academicYearId: 'year-1',
   termNumber: '1', name: 'First Term',
@@ -24,10 +22,9 @@ const mockTerm = {
   isCurrent: true, locked: false, createdAt: new Date(), updatedAt: new Date(),
 };
 
-const mockTerms = [mockTerm];
 
-function createMockDb() {
-  const txRun = vi.fn();
+
+function createMockDb(): any {
   return {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
@@ -194,7 +191,7 @@ describe('AcademicStructureService', () => {
 
       const result = await createTerm({ db: mockDb2, schoolId }, {
         academicYearId: 'year-1', termNumber: '1', name: 'First Term',
-        startDate: '2024-09-09', endDate: '2024-12-13',
+        startDate: '2024-09-09', endDate: '2024-12-13', isCurrent: false,
       });
 
       expect(result.name).toBe('First Term');
@@ -207,7 +204,7 @@ describe('AcademicStructureService', () => {
 
       await expect(createTerm({ db: mockDb2, schoolId }, {
         academicYearId: 'year-1', termNumber: '1', name: 'Bad',
-        startDate: '2025-09-09', endDate: '2025-12-13',
+        startDate: '2025-09-09', endDate: '2025-12-13', isCurrent: false,
       })).rejects.toThrow(AppError);
     });
   });

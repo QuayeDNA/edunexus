@@ -38,7 +38,7 @@ describe('GET /api/academic-years', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('returns list of academic years', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.orderBy.mockResolvedValue([
       { id: 'y1', name: '2024/2025', isCurrent: true, schoolId },
     ]);
@@ -57,7 +57,7 @@ describe('POST /api/academic-years', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('creates a year with valid data', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.limit.mockResolvedValue([]);
 
     const req = new NextRequest('http://localhost/api/academic-years', {
@@ -89,7 +89,7 @@ describe('GET /api/academic-years/[id]', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('returns year with terms', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.limit.mockResolvedValueOnce([{ id: 'y1', name: '2024/2025', schoolId, startDate: new Date(), endDate: new Date() }]);
     db.orderBy.mockResolvedValueOnce([]);
 
@@ -107,7 +107,7 @@ describe('PATCH /api/academic-years/[id]', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('updates an academic year', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.returning.mockResolvedValue([{ id: 'y1', name: '2025/2026 Updated', schoolId }]);
 
     const req = new NextRequest('http://localhost/api/academic-years/y1', {
@@ -139,7 +139,7 @@ describe('DELETE /api/academic-years/[id]', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('deletes an academic year', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.where.mockResolvedValueOnce([{ count: '0' }]);
     db.returning.mockResolvedValue([{ id: 'y1' }]);
 
@@ -157,7 +157,7 @@ describe('POST /api/academic-years/[id]/set-current', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('sets the year as current', async () => {
-    const { db } = await import('@/lib/db');
+    const db: any = (await import('@/lib/db')).db;
     db.limit.mockResolvedValue([{ id: 'y1', name: '2024/2025', schoolId, startDate: new Date(), endDate: new Date() }]);
 
     const req = new NextRequest('http://localhost/api/academic-years/y1/set-current', { method: 'POST' });
