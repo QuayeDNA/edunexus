@@ -5,7 +5,7 @@ import { apiSuccess, apiError } from '@/lib/api/response';
 import { resolveTenant } from '@/lib/tenant/resolve';
 import {
   getCurriculum, updateCurriculum, deleteCurriculum,
-  updateCurriculumSchema, setCurriculumSubjects, setCurriculumSubjectsSchema,
+  updateCurriculumSchema,
 } from '@/services/curricula';
 import { db } from '@/lib/db';
 

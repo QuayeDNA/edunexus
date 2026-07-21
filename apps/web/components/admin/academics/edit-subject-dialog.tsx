@@ -4,25 +4,35 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-interface CurriculumRow {
-  id: string; code: string; name: string; description: string | null; subjectCount: number; schoolId: string;
+const CATEGORIES = [
+  { value: 'core', label: 'Core' }, { value: 'elective', label: 'Elective' },
+  { value: 'vocational', label: 'Vocational' }, { value: 'language', label: 'Language' },
+  { value: 'religious', label: 'Religious & Moral' }, { value: 'creative', label: 'Creative Arts' },
+  { value: 'science', label: 'Science' }, { value: 'mathematics', label: 'Mathematics' },
+  { value: 'humanities', label: 'Humanities' },
+];
+
+interface SubjectRow {
+  id: string; code: string; name: string; category: string | null; description: string | null; schoolId: string;
 }
 
 interface Props {
-  curriculum: CurriculumRow;
+  subject: SubjectRow;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export function EditCurriculumDialog({ curriculum, open, onOpenChange, onSuccess }: Props) {
-  const [code, setCode] = useState(curriculum.code);
-  const [name, setName] = useState(curriculum.name);
-  const [description, setDescription] = useState(curriculum.description ?? '');
+export function EditSubjectDialog({ subject, open, onOpenChange, onSuccess }: Props) {
+  const [code, setCode] = useState(subject.code);
+  const [name, setName] = useState(subject.name);
+  const [category, setCategory] = useState(subject.category ?? '');
+  const [description, setDescription] = useState(subject.description ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -42,21 +52,22 @@ export function EditCurriculumDialog({ curriculum, open, onOpenChange, onSuccess
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/curricula/${curriculum.id}`, {
+      const res = await fetch(`/api/subjects/${subject.id}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           code: code.trim(),
           name: name.trim(),
+          category: category || null,
           description: description.trim() || null,
         }),
       });
       const body = await res.json();
       if (body.success) {
-        toast.success('Curriculum updated');
+        toast.success('Subject updated');
         onSuccess();
       } else {
-        toast.error(body.error ?? 'Failed to update curriculum');
+        toast.error(body.error ?? 'Failed to update subject');
       }
     } catch {
       toast.error('Network error');
@@ -69,8 +80,8 @@ export function EditCurriculumDialog({ curriculum, open, onOpenChange, onSuccess
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Curriculum</DialogTitle>
-          <DialogDescription>Update curriculum details.</DialogDescription>
+          <DialogTitle>Edit Subject</DialogTitle>
+          <DialogDescription>Update subject details.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -82,6 +93,19 @@ export function EditCurriculumDialog({ curriculum, open, onOpenChange, onSuccess
             <Label htmlFor="edit-name">Name</Label>
             <Input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} />
             {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-category">Category</Label>
+            <Select value={category} onValueChange={(v) => setCategory(v as string)} items={CATEGORIES}>
+              <SelectTrigger className="w-full" id="edit-category">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-description">Description</Label>

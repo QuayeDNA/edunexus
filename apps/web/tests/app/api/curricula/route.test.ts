@@ -30,7 +30,7 @@ vi.mock('@/lib/db', () => {
 });
 
 const { GET: listGET, POST } = await import('@/app/api/curricula/route');
-const { GET: detailGET, PATCH, DELETE } = await import('@/app/api/curricula/[id]/route');
+const { PATCH, DELETE } = await import('@/app/api/curricula/[id]/route');
 
 describe('GET /api/curricula', () => {
   beforeEach(() => { vi.clearAllMocks(); });
