@@ -13,6 +13,8 @@ import { EditTermDialog } from './edit-term-dialog';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog';
 import { EmptyState } from '@/components/empty-state';
 import { GradeLevelsSection } from './grade-levels-section';
+import { SubjectsSection } from './subjects-section';
+import { CurriculaSection } from './curricula-section';
 import { toast } from 'sonner';
 
 interface AcademicYear {
@@ -307,6 +309,14 @@ export function AcademicManagementClient() {
 
       <div className="pt-6 border-t border-border">
         <GradeLevelsSection />
+      </div>
+
+      <div className="pt-6 border-t border-border">
+        <SubjectsSection />
+      </div>
+
+      <div className="pt-6 border-t border-border">
+        <CurriculaSection />
       </div>
 
       <ConfirmDeleteDialog

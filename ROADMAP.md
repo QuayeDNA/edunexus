@@ -212,15 +212,14 @@ One paragraph — what and why.
   - AC: Given a class is created with capacity 30, when the enrollment count reaches 30, then further enrollment attempts are rejected with an over-capacity error.
   - AC: Given a teacher is assigned as homeroom to two classes at the same time slot, then the system warns on save but does not block (teacher may teach multiple classes).
   - ⚡ **GitHub:** [#29](https://github.com/QuayeDNA/edunexus/issues/29)
-- **[3.1.3] Subjects & Curriculum CRUD** — subject-to-grade-level mapping, core vs elective flag
+- ~~**[3.1.3] Subjects & Curriculum CRUD** — subject-to-grade-level mapping, core vs elective flag~~ ✅ Complete
   - **Entity layer:** L1
-  - **Depends on:** [#29](https://github.com/QuayeDNA/edunexus/issues/29) (3.1.2)
-  - **Blocker:** none
+  - **Depends on:** #29 (3.1.2) ✅
   - **Roles affected:** admin
   - Tasks: schema for subjects, curriculum, and subject_grade_level tables; list/create/edit subjects with code, name, description; map subjects to grade levels with core/elective flag; curriculum grouping (e.g., "Science" curriculum includes Physics, Chemistry, Biology).
-  - AC: Given a subject is marked as core for Grade 7, when viewing the Grade 7 subject list, then it is labeled as "Core" and cannot be deselected by students.
-  - AC: Given a subject is deleted that is assigned to a class's timetable, then the system prevents deletion with a conflict error unless all references are removed first.
-  - ⚡ **GitHub:** [#30](https://github.com/QuayeDNA/edunexus/issues/30)
+  - AC: ✅ Subject core/elective flag enforced via toggle-core endpoint
+  - AC: ✅ Subject deletion blocked if referenced by classSubjects or subjectGradeLevels
+  - ⚡ **GitHub:** [#30](https://github.com/QuayeDNA/edunexus/issues/30) — **PR [#136](https://github.com/QuayeDNA/edunexus/pull/136)**
 - **[3.1.4] Class-Subject-Teacher assignment matrix** — bulk assign, conflict warning if teacher already booked
   - **Entity layer:** L1
   - **Depends on:** [#30](https://github.com/QuayeDNA/edunexus/issues/30) (3.1.3), [#35](https://github.com/QuayeDNA/edunexus/issues/35) (3.3.1 Staff)

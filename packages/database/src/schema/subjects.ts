@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, varchar, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, timestamp, varchar, text, index } from "drizzle-orm/pg-core";
 import { schools } from "./schools";
 
 export const subjects = pgTable(
@@ -11,6 +11,7 @@ export const subjects = pgTable(
     code: varchar("code", { length: 20 }).notNull(),
     name: varchar("name", { length: 100 }).notNull(),
     category: varchar("category", { length: 50 }),
+    description: text("description"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
