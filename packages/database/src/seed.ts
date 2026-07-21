@@ -9,6 +9,10 @@ import {
   terms,
   gradeLevels,
   classes,
+  subjects,
+  subjectGradeLevels,
+  curricula,
+  curriculumSubjects,
   profiles,
   students,
   guardians,
@@ -349,6 +353,91 @@ async function main() {
     }
   }
   console.log(`   Classes created per grade level`);
+
+  console.log("Creating subjects...");
+  const subjectData = [
+    { code: 'MATH', name: 'Mathematics', category: 'core' },
+    { code: 'ENGLISH', name: 'English Language', category: 'core' },
+    { code: 'SCIENCE', name: 'Science', category: 'core' },
+    { code: 'GH_LANG', name: 'Ghanaian Language', category: 'language' },
+    { code: 'BDT', name: 'Basic Design & Technology', category: 'vocational' },
+    { code: 'ICT', name: 'Information Technology', category: 'core' },
+    { code: 'CREATIVE', name: 'Creative Arts', category: 'creative' },
+    { code: 'RME', name: 'Religious & Moral Education', category: 'religious' },
+    { code: 'HISTORY', name: 'History', category: 'humanities' },
+    { code: 'FRENCH', name: 'French', category: 'language' },
+    { code: 'PE', name: 'Physical Education', category: 'core' },
+  ];
+
+  const existingSubjects = await db.select().from(subjects).where(eq(subjects.schoolId, schoolId));
+  let createdSubjects: any[];
+  if (existingSubjects.length > 0) {
+    createdSubjects = existingSubjects;
+    console.log(`   Subjects already exist, reusing ${existingSubjects.length} subjects`);
+  } else {
+    createdSubjects = await db.insert(subjects).values(
+      subjectData.map((s) => ({ schoolId, ...s })),
+    ).returning();
+    console.log(`   Subjects: ${createdSubjects.length} created`);
+  }
+
+  console.log("Mapping subjects to grade levels...");
+  const gradeLevelRows = await db.select().from(gradeLevels).where(eq(gradeLevels.schoolId, schoolId));
+  const coreSubjectCodes = ['MATH', 'ENGLISH', 'SCIENCE', 'ICT', 'PE'];
+  const coreSubjects = createdSubjects.filter((s: any) => coreSubjectCodes.includes(s.code));
+  const electiveSubjects = createdSubjects.filter((s: any) => !coreSubjectCodes.includes(s.code));
+
+  for (const gl of gradeLevelRows) {
+    const existingMappings = await db.select().from(subjectGradeLevels)
+      .where(and(eq(subjectGradeLevels.schoolId, schoolId), eq(subjectGradeLevels.gradeLevelId, gl.id)));
+    if (existingMappings.length > 0) continue;
+
+    await db.insert(subjectGradeLevels).values(
+      coreSubjects.map((s: any, i: number) => ({
+        schoolId,
+        subjectId: s.id,
+        gradeLevelId: gl.id,
+        isCore: true,
+        sortOrder: i,
+      })),
+    );
+    if (gl.level >= 5) {
+      await db.insert(subjectGradeLevels).values(
+        electiveSubjects.slice(0, 4).map((s: any, i: number) => ({
+          schoolId,
+          subjectId: s.id,
+          gradeLevelId: gl.id,
+          isCore: false,
+          sortOrder: coreSubjects.length + i,
+        })),
+      );
+    }
+  }
+  console.log(`   Subject-grade-level mappings created per grade level`);
+
+  console.log("Creating curriculum...");
+  const [existingCurriculum] = await db.select().from(curricula).where(
+    and(eq(curricula.schoolId, schoolId), eq(curricula.code, 'CORE')),
+  );
+  if (!existingCurriculum) {
+    const [coreCurriculum] = await db.insert(curricula).values({
+      schoolId,
+      code: 'CORE',
+      name: 'Core Subjects',
+      description: 'Ghana Education Service core curriculum subjects',
+    }).returning();
+
+    await db.insert(curriculumSubjects).values(
+      coreSubjects.map((s: any) => ({
+        schoolId,
+        curriculumId: coreCurriculum.id,
+        subjectId: s.id,
+      })),
+    );
+    console.log('   Curriculum created with core subjects');
+  } else {
+    console.log('   Curriculum already exists, skipping');
+  }
 
   const PASSWORD = "Admin@123";
 
