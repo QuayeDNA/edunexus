@@ -43,11 +43,11 @@ describe('GradeLevelService', () => {
   describe('listGradeLevels', () => {
     it('returns ordered grade levels with class count', async () => {
       const mockDb = createMockDb();
-      mockDb.orderBy.mockResolvedValue([
+      (mockDb as any).orderBy.mockResolvedValue([
         { ...mockGradeLevel, classCount: 2 },
         { ...mockGradeLevel, id: 'gl-2', code: 'P2', name: 'Primary 2', level: 6, sortOrder: 6, classCount: 1 },
       ]);
-      const result = await listGradeLevels({ db: mockDb, schoolId });
+      const result = await listGradeLevels({ db: mockDb as any, schoolId });
       expect(result).toHaveLength(2);
       expect(result[0].classCount).toBe(2);
     });
@@ -56,25 +56,25 @@ describe('GradeLevelService', () => {
   describe('getGradeLevel', () => {
     it('returns grade level with class count', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValue([{ ...mockGradeLevel, classCount: 2 }]);
-      const result = await getGradeLevel({ db: mockDb, schoolId }, 'gl-1');
+      (mockDb as any).limit.mockResolvedValue([{ ...mockGradeLevel, classCount: 2 }]);
+      const result = await getGradeLevel({ db: mockDb as any, schoolId }, 'gl-1');
       expect(result.id).toBe('gl-1');
       expect(result.classCount).toBe(2);
     });
 
     it('throws 404 if not found', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValue([]);
-      await expect(getGradeLevel({ db: mockDb, schoolId }, 'nonexistent')).rejects.toThrow(NotFoundError);
+      (mockDb as any).limit.mockResolvedValue([]);
+      await expect(getGradeLevel({ db: mockDb as any, schoolId }, 'nonexistent')).rejects.toThrow(NotFoundError);
     });
   });
 
   describe('createGradeLevel', () => {
     it('creates a grade level', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValue([]);
-      mockDb.returning.mockResolvedValue([mockGradeLevel]);
-      const result = await createGradeLevel({ db: mockDb, schoolId }, {
+      (mockDb as any).limit.mockResolvedValue([]);
+      (mockDb as any).returning.mockResolvedValue([mockGradeLevel]);
+      const result = await createGradeLevel({ db: mockDb as any, schoolId }, {
         code: 'P1', name: 'Primary 1', level: 5, category: 'primary',
       });
       expect(result.id).toBe('gl-1');
@@ -82,8 +82,8 @@ describe('GradeLevelService', () => {
 
     it('rejects duplicate code', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValue([mockGradeLevel]);
-      await expect(createGradeLevel({ db: mockDb, schoolId }, {
+      (mockDb as any).limit.mockResolvedValue([mockGradeLevel]);
+      await expect(createGradeLevel({ db: mockDb as any, schoolId }, {
         code: 'P1', name: 'Primary 1', level: 5, category: 'primary',
       })).rejects.toThrow(ConflictError);
     });
@@ -92,44 +92,44 @@ describe('GradeLevelService', () => {
   describe('updateGradeLevel', () => {
     it('updates a grade level', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValueOnce([mockGradeLevel]);
-      mockDb.returning.mockResolvedValue([{ ...mockGradeLevel, name: 'Primary 1 Updated' }]);
-      const result = await updateGradeLevel({ db: mockDb, schoolId }, 'gl-1', { name: 'Primary 1 Updated' });
+      (mockDb as any).limit.mockResolvedValueOnce([mockGradeLevel]);
+      (mockDb as any).returning.mockResolvedValue([{ ...mockGradeLevel, name: 'Primary 1 Updated' }]);
+      const result = await updateGradeLevel({ db: mockDb as any, schoolId }, 'gl-1', { name: 'Primary 1 Updated' });
       expect(result.name).toBe('Primary 1 Updated');
     });
 
     it('rejects changing to an existing code', async () => {
       const mockDb = createMockDb();
-      mockDb.limit
+      (mockDb as any).limit
         .mockResolvedValueOnce([mockGradeLevel])
         .mockResolvedValueOnce([{ id: 'gl-2', code: 'P2' }]);
-      await expect(updateGradeLevel({ db: mockDb, schoolId }, 'gl-1', { code: 'P2' })).rejects.toThrow(ConflictError);
+      await expect(updateGradeLevel({ db: mockDb as any, schoolId }, 'gl-1', { code: 'P2' })).rejects.toThrow(ConflictError);
     });
   });
 
   describe('deleteGradeLevel', () => {
     it('deletes a grade level', async () => {
       const mockDb = createMockDb();
-      mockDb.limit
+      (mockDb as any).limit
         .mockResolvedValueOnce([mockGradeLevel])
         .mockResolvedValueOnce([{ count: '0' }]);
-      mockDb.returning.mockResolvedValue([{ id: 'gl-1' }]);
-      const result = await deleteGradeLevel({ db: mockDb, schoolId }, 'gl-1');
+      (mockDb as any).returning.mockResolvedValue([{ id: 'gl-1' }]);
+      const result = await deleteGradeLevel({ db: mockDb as any, schoolId }, 'gl-1');
       expect(result.deleted).toBe(true);
     });
 
     it('rejects if classes exist', async () => {
       const mockDb = createMockDb();
-      mockDb.limit
+      (mockDb as any).limit
         .mockResolvedValueOnce([mockGradeLevel])
         .mockResolvedValueOnce([{ count: '3' }]);
-      await expect(deleteGradeLevel({ db: mockDb, schoolId }, 'gl-1')).rejects.toThrow(ConflictError);
+      await expect(deleteGradeLevel({ db: mockDb as any, schoolId }, 'gl-1')).rejects.toThrow(ConflictError);
     });
 
     it('throws 404 if not found', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValueOnce([]);
-      await expect(deleteGradeLevel({ db: mockDb, schoolId }, 'nonexistent')).rejects.toThrow(NotFoundError);
+      (mockDb as any).limit.mockResolvedValueOnce([]);
+      await expect(deleteGradeLevel({ db: mockDb as any, schoolId }, 'nonexistent')).rejects.toThrow(NotFoundError);
     });
   });
 });

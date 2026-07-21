@@ -29,75 +29,73 @@ const mockClass = {
   id: 'c-1',
   schoolId,
   name: 'Class 1A',
-  code: 'P1-A',
+  code: 'P1A',
   gradeLevelId: 'gl-1',
   academicYearId: 'ay-1',
   homeroomTeacherId: null,
   capacity: 40,
-  roomNumber: null,
-  createdAt: new Date('2025-01-01'),
-  updatedAt: new Date('2025-01-01'),
-  deletedAt: null,
+  roomNumber: '101',
+  gradeLevelName: 'Primary 1',
 };
 
 describe('ClassService', () => {
   describe('listClasses', () => {
-    it('returns classes for a grade level with grade level name', async () => {
+    it('returns classes for a grade level', async () => {
       const mockDb = createMockDb();
-      mockDb.orderBy.mockResolvedValue([
-        { ...mockClass, gradeLevelName: 'Primary 1' },
-      ]);
-      const result = await listClasses({ db: mockDb, schoolId }, 'gl-1');
-      expect(result).toHaveLength(1);
-      expect(result[0].gradeLevelName).toBe('Primary 1');
+      (mockDb as any).orderBy.mockResolvedValue([mockClass, { ...mockClass, id: 'c-2', name: 'Class 1B' }]);
+      const result = await listClasses({ db: mockDb as any, schoolId }, 'gl-1');
+      expect(result).toHaveLength(2);
+      expect(result[0].name).toBe('Class 1A');
     });
   });
 
   describe('getClass', () => {
-    it('returns a single class', async () => {
+    it('returns a class by id', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValue([{ ...mockClass, gradeLevelName: 'Primary 1' }]);
-      const result = await getClass({ db: mockDb, schoolId }, 'c-1');
+      (mockDb as any).limit.mockResolvedValue([mockClass]);
+      const result = await getClass({ db: mockDb as any, schoolId }, 'c-1');
       expect(result.id).toBe('c-1');
     });
 
     it('throws 404 if not found', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValue([]);
-      await expect(getClass({ db: mockDb, schoolId }, 'missing')).rejects.toThrow(NotFoundError);
+      (mockDb as any).limit.mockResolvedValue([]);
+      await expect(getClass({ db: mockDb as any, schoolId }, 'nonexistent')).rejects.toThrow(NotFoundError);
     });
   });
 
   describe('createClass', () => {
-    it('creates a class with valid data', async () => {
+    it('creates a class', async () => {
       const mockDb = createMockDb();
-      mockDb.limit
-        .mockResolvedValueOnce([{ id: 'gl-1' }])
-        .mockResolvedValueOnce([{ id: 'ay-1' }])
-        .mockResolvedValueOnce([]);
-      mockDb.returning.mockResolvedValue([mockClass]);
-      const result = await createClass({ db: mockDb, schoolId }, {
+      (mockDb as any).limit
+        .mockResolvedValueOnce([{ id: 'gl-1' }])   // validateClassRefs: gradeLevel
+        .mockResolvedValueOnce([{ id: 'ay-1' }])   // validateClassRefs: academicYear
+        .mockResolvedValue([]);                     // duplicate check: none
+      (mockDb as any).returning.mockResolvedValue([mockClass]);
+      const result = await createClass({ db: mockDb as any, schoolId }, {
         name: 'Class 1A', gradeLevelId: 'gl-1', academicYearId: 'ay-1',
       });
       expect(result.id).toBe('c-1');
     });
 
-    it('rejects duplicate name within grade level', async () => {
+    it('rejects duplicate name in same grade level', async () => {
       const mockDb = createMockDb();
-      mockDb.limit
-        .mockResolvedValueOnce([{ id: 'gl-1' }])
-        .mockResolvedValueOnce([{ id: 'ay-1' }])
-        .mockResolvedValueOnce([mockClass]);
-      await expect(createClass({ db: mockDb, schoolId }, {
+      (mockDb as any).limit
+        .mockResolvedValueOnce([{ id: 'gl-1' }])   // validateClassRefs: gradeLevel
+        .mockResolvedValueOnce([{ id: 'ay-1' }])   // validateClassRefs: academicYear
+        .mockResolvedValue([mockClass]);            // duplicate check: conflict
+      await expect(createClass({ db: mockDb as any, schoolId }, {
         name: 'Class 1A', gradeLevelId: 'gl-1', academicYearId: 'ay-1',
       })).rejects.toThrow(ConflictError);
     });
 
-    it('rejects invalid grade level', async () => {
+    it('rejects invalid gradeLevelId', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValueOnce([]);
-      await expect(createClass({ db: mockDb, schoolId }, {
-        name: 'Bad', gradeLevelId: 'bad-gl', academicYearId: 'ay-1',
+      (mockDb as any).limit
+        .mockResolvedValueOnce([])                   // validateClassRefs: gradeLevel not found
+        .mockResolvedValue([{ id: 'ay-1' }]);
+      await expect(createClass({ db: mockDb as any, schoolId }, {
+        name: 'Class 1A', gradeLevelId: 'invalid-gl', academicYearId: 'ay-1',
       })).rejects.toThrow(NotFoundError);
     });
   });
@@ -105,30 +103,40 @@ describe('ClassService', () => {
   describe('updateClass', () => {
     it('updates a class name', async () => {
       const mockDb = createMockDb();
-      mockDb.limit
-        .mockResolvedValueOnce([mockClass])
-        .mockResolvedValueOnce([{ id: 'gl-1' }])
-        .mockResolvedValueOnce([{ id: 'ay-1' }])
-        .mockResolvedValueOnce([]);
-      mockDb.returning.mockResolvedValue([{ ...mockClass, name: 'Updated' }]);
-      const result = await updateClass({ db: mockDb, schoolId }, 'c-1', { name: 'Updated' });
-      expect(result.name).toBe('Updated');
+      (mockDb as any).limit
+        .mockResolvedValueOnce([mockClass])          // get existing class
+        .mockResolvedValueOnce([{ id: 'gl-1' }])    // validateClassRefs: gradeLevel
+        .mockResolvedValueOnce([{ id: 'ay-1' }])    // validateClassRefs: academicYear
+        .mockResolvedValue([]);                      // duplicate name check: none
+      (mockDb as any).returning.mockResolvedValue([{ ...mockClass, name: 'Class 1A Updated' }]);
+      const result = await updateClass({ db: mockDb as any, schoolId }, 'c-1', { name: 'Class 1A Updated' });
+      expect(result.name).toBe('Class 1A Updated');
+    });
+
+    it('rejects changing to a duplicate name', async () => {
+      const mockDb = createMockDb();
+      (mockDb as any).limit
+        .mockResolvedValueOnce([mockClass])          // get existing class
+        .mockResolvedValueOnce([{ id: 'gl-1' }])    // validateClassRefs: gradeLevel
+        .mockResolvedValueOnce([{ id: 'ay-1' }])    // validateClassRefs: academicYear
+        .mockResolvedValue([{ id: 'c-2', name: 'Class 1B' }]); // duplicate name check: conflict
+      await expect(updateClass({ db: mockDb as any, schoolId }, 'c-1', { name: 'Class 1B' })).rejects.toThrow(ConflictError);
     });
   });
 
   describe('deleteClass', () => {
-    it('soft deletes a class', async () => {
+    it('soft-deletes a class', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValueOnce([mockClass]);
-      mockDb.returning.mockResolvedValue([{ id: 'c-1' }]);
-      const result = await deleteClass({ db: mockDb, schoolId }, 'c-1');
+      (mockDb as any).limit.mockResolvedValue([mockClass]);
+      (mockDb as any).returning.mockResolvedValue([{ id: 'c-1' }]);
+      const result = await deleteClass({ db: mockDb as any, schoolId }, 'c-1');
       expect(result.deleted).toBe(true);
     });
 
     it('throws 404 if not found', async () => {
       const mockDb = createMockDb();
-      mockDb.limit.mockResolvedValue([]);
-      await expect(deleteClass({ db: mockDb, schoolId }, 'missing')).rejects.toThrow(NotFoundError);
+      (mockDb as any).limit.mockResolvedValue([]);
+      await expect(deleteClass({ db: mockDb as any, schoolId }, 'nonexistent')).rejects.toThrow(NotFoundError);
     });
   });
 });
