@@ -276,6 +276,20 @@ export async function updateTerm(ctx: ServiceContext, id: string, data: z.infer<
     }
   }
 
+  if (data.termNumber !== undefined && data.termNumber !== existing.termNumber) {
+    const [duplicate] = await ctx.db.select({ id: terms.id }).from(terms)
+      .where(and(
+        eq(terms.schoolId, ctx.schoolId),
+        eq(terms.academicYearId, existing.academicYearId),
+        eq(terms.termNumber, data.termNumber),
+        sql`${terms.id} != ${id}`,
+      ))
+      .limit(1);
+    if (duplicate) {
+      throw new ConflictError(`Term ${data.termNumber} already exists in this academic year`);
+    }
+  }
+
   const [updated] = await ctx.db.update(terms)
     .set({
       ...(data.termNumber !== undefined && { termNumber: data.termNumber }),

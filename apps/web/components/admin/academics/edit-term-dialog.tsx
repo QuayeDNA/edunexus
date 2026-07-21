@@ -42,7 +42,14 @@ export function EditTermDialog({ term, open, onOpenChange, onSuccess }: EditTerm
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ termNumber, name, startDate, endDate }),
       });
-      const body = await res.json();
+      let body: { success: boolean; error?: string; errors?: Record<string, string[]> };
+
+      try {
+        body = await res.json();
+      } catch {
+        toast.error(`Server error (${res.status}) — check the console for details`);
+        return;
+      }
 
       if (body.success) {
         toast.success('Term updated');
@@ -57,7 +64,7 @@ export function EditTermDialog({ term, open, onOpenChange, onSuccess }: EditTerm
         toast.error(body.error || 'Failed to update term');
       }
     } catch {
-      toast.error('Network error');
+      toast.error('Could not reach server. Check your connection.');
     } finally {
       setSaving(false);
     }
