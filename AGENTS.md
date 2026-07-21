@@ -106,6 +106,9 @@ Follow `ROADMAP.md §1` dependency graph. Before building a new entity:
 - Monetary values: `numeric` in GHS. Store as "GHS" in output, not `₵` (thermal printer issue).
 - Dates: ISO 8601 UTC, display in `en-GH` locale.
 
+**Phase 3 — Admin Portal** — 🟡 In progress
+- ~~[3.1.1] Academic Years & Terms CRUD~~ ✅ Complete (PR #134, merged to `preview` Jul 21)
+
 ### Clean Code
 
 **Types & Interfaces**

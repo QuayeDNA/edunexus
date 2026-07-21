@@ -68,35 +68,20 @@ export const academicYears = pgTable(
   ],
 );
 
-export const terms = pgTable(
-  "terms",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    schoolId: uuid("school_id")
-      .notNull()
-      .references(() => schools.id),
-    academicYearId: uuid("academic_year_id")
-      .notNull()
-      .references(() => academicYears.id),
-    termNumber: varchar("term_number", { length: 10 }).notNull(),
-    name: varchar("name", { length: 100 }).notNull(),
-    startDate: timestamp("start_date", { withTimezone: true }).notNull(),
-    endDate: timestamp("end_date", { withTimezone: true }).notNull(),
-    isCurrent: boolean("is_current").default(false).notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => [
-    index("idx_terms_school_id").on(table.schoolId),
-    index("idx_terms_academic_year_id").on(table.academicYearId),
-    uniqueIndex("idx_terms_school_year_number").on(
-      table.schoolId,
-      table.academicYearId,
-      table.termNumber,
-    ),
-  ],
-);
+export const terms = pgTable('terms', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  schoolId: uuid('school_id').notNull().references(() => schools.id),
+  academicYearId: uuid('academic_year_id').notNull().references(() => academicYears.id),
+  termNumber: varchar('term_number', { length: 10 }).notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
+  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
+  isCurrent: boolean('is_current').default(false).notNull(),
+  locked: boolean('locked').default(false).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_terms_school_id').on(table.schoolId),
+  index('idx_terms_academic_year_id').on(table.academicYearId),
+  uniqueIndex('idx_terms_school_year_number').on(table.schoolId, table.academicYearId, table.termNumber),
+]);

@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev",
+    "dev:web": "pnpm --filter @edunexus/shared build && pnpm --filter @edunexus/database build && pnpm --filter @edunexus/web dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
@@ -18,7 +19,7 @@
     "turbo": "^2.5.0",
     "typescript": "^6.0.3"
   },
-  "packageManager": "pnpm@11.13.1",
+  "packageManager": "pnpm@11.15.1",
   "engines": {
     "node": ">=24"
   }

@@ -194,8 +194,7 @@ One paragraph — what and why.
 **Timeline:** 4–6 weeks
 
 ### Epic 3.1 — Academic structure (Layer 1)
-
-- **[3.1.1] Academic Years & Terms CRUD** — set current year/term, lock past terms from edits
+- ~~[3.1.1] Academic Years & Terms CRUD~~ ✅ **Complete** (PR #134)
   - **Entity layer:** L1
   - **Depends on:** none (schema exists from Phase 1 seed)
   - **Blocker:** none
