@@ -5,11 +5,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Pencil, Trash2, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, Layers, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog';
 import { CreateCurriculumDialog } from './create-curriculum-dialog';
 import { EditCurriculumDialog } from './edit-curriculum-dialog';
+import { ManageCurriculumSubjectsDialog } from './manage-curriculum-subjects-dialog';
 import { EmptyState } from '@/components/empty-state';
 
 interface CurriculumRow {
@@ -27,6 +28,7 @@ export function CurriculaSection() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<CurriculumRow | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
+  const [managing, setManaging] = useState<CurriculumRow | null>(null);
 
   const loadCurricula = useCallback(async () => {
     try {
@@ -92,7 +94,10 @@ export function CurriculaSection() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => setManaging(curriculum)}>
+                    <BookOpen className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => setEditing(curriculum)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -118,6 +123,16 @@ export function CurriculaSection() {
           open={!!editing}
           onOpenChange={() => setEditing(null)}
           onSuccess={() => { setEditing(null); loadCurricula(); }}
+        />
+      )}
+
+      {managing && (
+        <ManageCurriculumSubjectsDialog
+          curriculumId={managing.id}
+          curriculumName={managing.name}
+          open={!!managing}
+          onOpenChange={() => setManaging(null)}
+          onSuccess={() => { setManaging(null); loadCurricula(); }}
         />
       )}
 

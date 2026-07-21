@@ -33,7 +33,7 @@ export async function listCurricula(ctx: ServiceContext) {
     description: curricula.description,
     createdAt: curricula.createdAt,
     updatedAt: curricula.updatedAt,
-    subjectCount: sql<number>`coalesce(count(${curriculumSubjects.id}), 0)`,
+    subjectCount: sql<number>`coalesce(cast(count(${curriculumSubjects.id}) as integer), 0)`,
   }).from(curricula)
     .leftJoin(curriculumSubjects, eq(curricula.id, curriculumSubjects.curriculumId))
     .where(eq(curricula.schoolId, ctx.schoolId))
