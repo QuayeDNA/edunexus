@@ -2,23 +2,25 @@ import { NextRequest } from 'next/server';
 import { requireRole } from '@/lib/api/require-role';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { resolveTenant } from '@/lib/tenant/resolve';
-import { listClasses, createClass, createClassSchema } from '@/services/classes';
+import { getClass, updateClass, deleteClass, updateClassSchema } from '@/services/classes';
 import { AppError } from '@/lib/api/errors';
 import { db } from '@/lib/db';
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { error: authError } = await requireRole('admin', 'super_admin');
   if (authError) return authError;
 
-  const host = request.headers.get('host') ?? '';
+  const host = _request.headers.get('host') ?? '';
   const tenant = await resolveTenant(host);
   if (!tenant.schoolId) return apiError(400, 'Tenant not resolved');
 
-  const gradeLevelId = request.nextUrl.searchParams.get('gradeLevelId');
-  if (!gradeLevelId) return apiError(400, 'gradeLevelId query parameter is required');
+  const { id } = await params;
 
   try {
-    const data = await listClasses({ db, schoolId: tenant.schoolId }, gradeLevelId);
+    const data = await getClass({ db, schoolId: tenant.schoolId }, id);
     return apiSuccess(data);
   } catch (error) {
     if (error instanceof AppError) return apiError(error.statusCode, error.message);
@@ -26,7 +28,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { error: authError } = await requireRole('admin');
   if (authError) return authError;
 
@@ -34,14 +39,37 @@ export async function POST(request: NextRequest) {
   const tenant = await resolveTenant(host);
   if (!tenant.schoolId) return apiError(400, 'Tenant not resolved');
 
+  const { id } = await params;
   const body = await request.json();
-  const parsed = createClassSchema.safeParse(body);
+  const parsed = updateClassSchema.safeParse(body);
   if (!parsed.success) {
     return apiError(400, 'Validation failed', parsed.error.flatten().fieldErrors as Record<string, string[]>);
   }
 
   try {
-    const data = await createClass({ db, schoolId: tenant.schoolId }, parsed.data);
+    const data = await updateClass({ db, schoolId: tenant.schoolId }, id, parsed.data);
+    return apiSuccess(data);
+  } catch (error) {
+    if (error instanceof AppError) return apiError(error.statusCode, error.message);
+    throw error;
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { error: authError } = await requireRole('admin');
+  if (authError) return authError;
+
+  const host = _request.headers.get('host') ?? '';
+  const tenant = await resolveTenant(host);
+  if (!tenant.schoolId) return apiError(400, 'Tenant not resolved');
+
+  const { id } = await params;
+
+  try {
+    const data = await deleteClass({ db, schoolId: tenant.schoolId }, id);
     return apiSuccess(data);
   } catch (error) {
     if (error instanceof AppError) return apiError(error.statusCode, error.message);

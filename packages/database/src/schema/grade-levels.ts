@@ -4,7 +4,9 @@ import {
   timestamp,
   varchar,
   integer,
+  text,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { schools } from "./schools";
 
@@ -20,6 +22,7 @@ export const gradeLevels = pgTable(
     level: integer("level").notNull(),
     category: varchar("category", { length: 50 }).notNull(),
     sortOrder: integer("sort_order").notNull(),
+    description: text("description"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -30,5 +33,6 @@ export const gradeLevels = pgTable(
   (table) => [
     index("idx_grade_levels_school_id").on(table.schoolId),
     index("idx_grade_levels_sort_order").on(table.schoolId, table.sortOrder),
+    uniqueIndex("idx_grade_levels_school_code").on(table.schoolId, table.code),
   ],
 );

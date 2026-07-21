@@ -1,11 +1,9 @@
-import type { Status } from "./common";
-
 export interface GradeLevel {
   id: string;
-  school_id: string;
+  schoolId: string;
   name: string;
   code: string;
-  level_number: number;
+  level: number;
   category:
     | "creche"
     | "nursery"
@@ -14,23 +12,23 @@ export interface GradeLevel {
     | "junior_secondary"
     | "senior_secondary";
   description?: string | null;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Class {
   id: string;
-  school_id: string;
-  academic_year_id: string;
-  grade_level_id: string;
-  class_teacher_id?: string | null;
+  schoolId: string;
   name: string;
-  section?: string | null;
-  capacity: number;
-  status: Status;
-  created_at: string;
-  updated_at: string;
+  code?: string | null;
+  gradeLevelId: string;
+  academicYearId: string;
+  homeroomTeacherId?: string | null;
+  capacity?: number | null;
+  roomNumber?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Subject {
