@@ -12,6 +12,7 @@ import { CreateTermDialog } from './create-term-dialog';
 import { EditTermDialog } from './edit-term-dialog';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog';
 import { EmptyState } from '@/components/empty-state';
+import { GradeLevelsSection } from './grade-levels-section';
 import { toast } from 'sonner';
 
 interface AcademicYear {
@@ -303,6 +304,10 @@ export function AcademicManagementClient() {
           onSuccess={() => { setEditingTerm(null); if (selectedYearId) loadTerms(selectedYearId); }}
         />
       )}
+
+      <div className="pt-6 border-t border-border">
+        <GradeLevelsSection />
+      </div>
 
       <ConfirmDeleteDialog
         open={!!deletingTarget}

@@ -87,7 +87,7 @@ export async function createGradeLevel(ctx: ServiceContext, data: z.infer<typeof
     name: data.name,
     level: data.level,
     category: data.category,
-    ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+    sortOrder: data.sortOrder ?? 0,
     ...(data.description !== undefined && { description: data.description }),
   }).returning();
   return created;
