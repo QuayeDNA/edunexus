@@ -203,7 +203,7 @@ One paragraph — what and why.
   - AC: Given a term is marked `locked`, when any user attempts to edit grades/attendance in it, then the write is rejected with a clear error.
   - AC: Given a new academic year is created, when an admin sets it as current, then the previous year's terms are automatically locked.
   - ⚡ **GitHub:** [#28](https://github.com/QuayeDNA/edunexus/issues/28)
-- **[3.1.2] Grade Levels & Classes CRUD** — capacity, homeroom teacher assignment
+- ~~[3.1.2] Grade Levels & Classes CRUD~~ ✅ **Complete** (commit `ac32e30`, Jul 21)
   - **Entity layer:** L1
   - **Depends on:** [#28](https://github.com/QuayeDNA/edunexus/issues/28) (3.1.1)
   - **Blocker:** none
