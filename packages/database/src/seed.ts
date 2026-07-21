@@ -55,6 +55,26 @@ const TERMS_2 = [
   { termNumber: '3', name: 'Third Term', startDate: '2026-04-27', endDate: '2026-07-17' },
 ];
 
+const CLASSES_BY_GRADE: Record<string, Array<{ name: string; code: string; capacity: number }>> = {
+  KG1: [{ name: "Nursery A", code: "KG1-A", capacity: 25 }],
+  KG2: [{ name: "Kindergarten A", code: "KG2-A", capacity: 25 }],
+  P1: [
+    { name: "Class 1A", code: "P1-A", capacity: 40 },
+    { name: "Class 1B", code: "P1-B", capacity: 40 },
+  ],
+  P2: [{ name: "Class 2A", code: "P2-A", capacity: 40 }],
+  P3: [{ name: "Class 3A", code: "P3-A", capacity: 40 }],
+  P4: [
+    { name: "Class 4A", code: "P4-A", capacity: 40 },
+    { name: "Class 4B", code: "P4-B", capacity: 40 },
+  ],
+  P5: [{ name: "Class 5A", code: "P5-A", capacity: 40 }],
+  P6: [{ name: "Class 6A", code: "P6-A", capacity: 40 }],
+  JHS1: [{ name: "Form 1A", code: "JHS1-A", capacity: 45 }],
+  JHS2: [{ name: "Form 2A", code: "JHS2-A", capacity: 45 }],
+  JHS3: [{ name: "Form 3A", code: "JHS3-A", capacity: 45 }],
+};
+
 const GRADE_LEVELS = [
   {
     code: "KG1",
@@ -261,6 +281,24 @@ async function main() {
       });
     }
     console.log(`   Terms for ${ACADEMIC_YEAR_2_NAME}: 3 created`);
+
+    console.log(`   Creating classes for ${ACADEMIC_YEAR_2_NAME}...`);
+    const allGradeLevels = await db.select().from(gradeLevels).where(eq(gradeLevels.schoolId, schoolId));
+    for (const gl of allGradeLevels) {
+      const gradeClasses2 = CLASSES_BY_GRADE[gl.code] ?? [];
+      for (const cl of gradeClasses2) {
+        const existing = await db.select({ id: classes.id }).from(classes)
+          .where(and(eq(classes.schoolId, schoolId), eq(classes.code, cl.code), eq(classes.academicYearId, year2.id)))
+          .then((r) => r[0] ?? null);
+        if (!existing) {
+          await db.insert(classes).values({
+            schoolId, name: cl.name, code: cl.code,
+            gradeLevelId: gl.id, academicYearId: year2.id, capacity: cl.capacity,
+          });
+        }
+      }
+    }
+    console.log(`   Classes for ${ACADEMIC_YEAR_2_NAME} created per grade level`);
   }
 
   console.log('Creating grade levels...');
@@ -286,35 +324,12 @@ async function main() {
   console.log(`   Grade levels: ${GRADE_LEVELS.length} ensured`);
 
   console.log("Creating classes...");
-  const classesByGrade: Record<
-    string,
-    Array<{ name: string; code: string; capacity: number }>
-  > = {
-    KG1: [{ name: "Nursery A", code: "KG1-A", capacity: 25 }],
-    KG2: [{ name: "Kindergarten A", code: "KG2-A", capacity: 25 }],
-    P1: [
-      { name: "Class 1A", code: "P1-A", capacity: 40 },
-      { name: "Class 1B", code: "P1-B", capacity: 40 },
-    ],
-    P2: [{ name: "Class 2A", code: "P2-A", capacity: 40 }],
-    P3: [{ name: "Class 3A", code: "P3-A", capacity: 40 }],
-    P4: [
-      { name: "Class 4A", code: "P4-A", capacity: 40 },
-      { name: "Class 4B", code: "P4-B", capacity: 40 },
-    ],
-    P5: [{ name: "Class 5A", code: "P5-A", capacity: 40 }],
-    P6: [{ name: "Class 6A", code: "P6-A", capacity: 40 }],
-    JHS1: [{ name: "Form 1A", code: "JHS1-A", capacity: 45 }],
-    JHS2: [{ name: "Form 2A", code: "JHS2-A", capacity: 45 }],
-    JHS3: [{ name: "Form 3A", code: "JHS3-A", capacity: 45 }],
-  };
-
   const allGradeLevels = await db
     .select()
     .from(gradeLevels)
     .where(eq(gradeLevels.schoolId, schoolId));
   for (const gl of allGradeLevels) {
-    const gradeClasses = classesByGrade[gl.code] ?? [];
+    const gradeClasses = CLASSES_BY_GRADE[gl.code] ?? [];
     for (const cl of gradeClasses) {
       const existing = await db
         .select({ id: classes.id })

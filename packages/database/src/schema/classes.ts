@@ -5,6 +5,7 @@ import {
   varchar,
   integer,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { schools } from "./schools";
 import { academicYears } from "./schools";
@@ -42,5 +43,6 @@ export const classes = pgTable(
     index("idx_classes_grade_level_id").on(table.gradeLevelId),
     index("idx_classes_academic_year_id").on(table.academicYearId),
     index("idx_classes_teacher_id").on(table.homeroomTeacherId),
+    uniqueIndex("idx_classes_school_grade_name").on(table.schoolId, table.gradeLevelId, table.name),
   ],
 );
