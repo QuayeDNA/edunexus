@@ -108,6 +108,7 @@ describe('PATCH /api/academic-years/[id]', () => {
 
   it('updates an academic year', async () => {
     const db: any = (await import('@/lib/db')).db;
+    db.limit.mockResolvedValueOnce([{ id: 'y1', schoolId, isCurrent: false, startDate: new Date('2025-09-08'), endDate: new Date('2026-07-17') }]);
     db.returning.mockResolvedValue([{ id: 'y1', name: '2025/2026 Updated', schoolId }]);
 
     const req = new NextRequest('http://localhost/api/academic-years/y1', {

@@ -169,7 +169,7 @@ One paragraph — what and why.
 **Timeline:** 4–6 weeks
 
 ### Epic 3.1 — Academic structure (Layer 1)
-- **[3.1.1] Academic Years & Terms CRUD** — set current year/term, lock past terms from edits
+- ~~[3.1.1] Academic Years & Terms CRUD~~ ✅ **Complete** (PR #134)
   - AC: Given a term is marked `locked`, when any user attempts to edit grades/attendance in it, then the write is rejected with a clear error.
 - **[3.1.2] Grade Levels & Classes CRUD** — capacity, homeroom teacher assignment
 - **[3.1.3] Subjects & Curriculum CRUD** — subject-to-grade-level mapping, core vs elective flag

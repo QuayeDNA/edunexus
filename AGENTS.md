@@ -167,7 +167,7 @@ The codebase is a pnpm + Turborepo workspace. Shared logic lives in packages; th
 - ~~[3.2.1] Student list/detail/edit + lifecycle UI~~ ✅ Complete (PR #124, merged to `preview` Jul 16)
 
 **Phase 3 — Admin Portal** — 🟡 In progress
-- [3.1.1] Academic Years & Terms CRUD — started (branch `311-academic-years-terms`, Jul 16)
+- ~~[3.1.1] Academic Years & Terms CRUD~~ ✅ Complete (PR #134, merged to `preview` Jul 21)
 
 Phase 1/2 prerequisites confirmed before Phase 3a work: `ROADMAP.md §1` Layer 1 (Academic Structure) exists in schema with seed data; Resend email service (Phase 2) reusable for applicant confirmations.
 

@@ -141,7 +141,9 @@ describe('POST /api/terms/[id]/set-current', () => {
 
   it('sets the term as current', async () => {
     const db: any = (await import('@/lib/db')).db;
-    db.limit.mockResolvedValue([{ id: 't1', schoolId, academicYearId: 'y1' }]);
+    db.limit
+      .mockResolvedValueOnce([{ id: 't1', schoolId, academicYearId: 'y1' }])
+      .mockResolvedValueOnce([{ isCurrent: true }]);
 
     const req = new NextRequest('http://localhost/api/terms/t1/set-current', { method: 'POST' });
     req.headers.set('host', 'demo.edunexus.com');
