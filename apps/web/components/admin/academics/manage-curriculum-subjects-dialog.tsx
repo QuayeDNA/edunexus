@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -88,13 +88,13 @@ export function ManageCurriculumSubjectsDialog({ curriculumId, curriculumName, o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content className="max-w-lg">
-        <Dialog.Header>
-          <Dialog.Title>Manage Subjects</Dialog.Title>
-          <Dialog.Description>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Manage Subjects</DialogTitle>
+          <DialogDescription>
             Select subjects to include in &quot;{curriculumName}&quot;
-          </Dialog.Description>
-        </Dialog.Header>
+          </DialogDescription>
+        </DialogHeader>
 
         {loading ? (
           <div className="space-y-3 py-4">
@@ -128,13 +128,13 @@ export function ManageCurriculumSubjectsDialog({ curriculumId, curriculumName, o
           </div>
         )}
 
-        <Dialog.Footer>
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button type="button" onClick={handleSave} disabled={submitting || loading}>
             {submitting ? 'Saving...' : 'Save Subjects'}
           </Button>
-        </Dialog.Footer>
-      </Dialog.Content>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }
