@@ -33,6 +33,10 @@ export const PUT = routeHandler(async (request: NextRequest) => {
   const parsed = saveMatrixSchema.safeParse(body);
   if (!parsed.success) throw parsed.error;
 
-  const result = await saveMatrix({ db, schoolId: tenant.schoolId }, parsed.data.gradeLevelId, parsed.data.assignments);
+  const result = await saveMatrix({ db, schoolId: tenant.schoolId }, parsed.data.gradeLevelId, parsed.data.assignments.map((a) => ({
+    classId: a.classId,
+    subjectId: a.subjectId,
+    teacherId: a.teacherId ?? null,
+  })));
   return apiSuccess(result);
 });

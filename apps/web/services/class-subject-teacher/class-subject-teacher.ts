@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, isNull } from 'drizzle-orm';
 import { classSubjects, classes, subjects, subjectGradeLevels } from '@edunexus/database';
 import { validateTeacher } from './validation';
 
@@ -30,14 +30,14 @@ export const saveMatrixSchema = z.object({
   assignments: z.array(z.object({
     classId: z.string().min(1),
     subjectId: z.string().min(1),
-    teacherId: z.string().nullable().optional(),
+    teacherId: z.string().nullable(),
   })).default([]),
 });
 
 export async function getMatrix(ctx: ServiceContext, gradeLevelId: string, academicYearId: string): Promise<MatrixData> {
   const classRows = await ctx.db.select({ id: classes.id, name: classes.name, code: classes.code })
     .from(classes)
-    .where(and(eq(classes.schoolId, ctx.schoolId), eq(classes.gradeLevelId, gradeLevelId), eq(classes.academicYearId, academicYearId), eq(classes.deletedAt, null)))
+    .where(and(eq(classes.schoolId, ctx.schoolId), eq(classes.gradeLevelId, gradeLevelId), eq(classes.academicYearId, academicYearId), isNull(classes.deletedAt)))
     .orderBy(classes.name);
 
   const subjectRows = await ctx.db.select({
@@ -54,7 +54,7 @@ export async function getMatrix(ctx: ServiceContext, gradeLevelId: string, acade
     .where(eq(subjects.schoolId, ctx.schoolId))
     .orderBy(subjects.name);
 
-  const classIds = classRows.map((c) => c.id);
+  const classIds = classRows.map((c: { id: string }) => c.id);
   const assignmentRows = classIds.length > 0
     ? await ctx.db.select({ classId: classSubjects.classId, subjectId: classSubjects.subjectId, teacherId: classSubjects.teacherId })
         .from(classSubjects)
@@ -64,7 +64,7 @@ export async function getMatrix(ctx: ServiceContext, gradeLevelId: string, acade
   return {
     classes: classRows,
     subjects: subjectRows,
-    assignments: assignmentRows.map((a) => ({ ...a, teacherId: a.teacherId ?? null })),
+    assignments: assignmentRows.map((a: { classId: string; subjectId: string; teacherId: string | null }) => ({ ...a, teacherId: a.teacherId ?? null })),
   };
 }
 
