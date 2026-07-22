@@ -29,6 +29,27 @@ export interface StaffOption {
   lastName: string
 }
 
+export interface ConflictAssignment {
+  classId: string
+  className: string
+  subjectId: string
+  subjectName: string
+}
+
+export interface Conflict {
+  teacherId: string
+  teacherName: string
+  gradeLevelId: string
+  gradeLevelName: string
+  assignments: ConflictAssignment[]
+}
+
+export interface SaveResult {
+  saved: number
+  errors: { rowKey: string; error: string }[]
+  conflicts: Conflict[]
+}
+
 export interface MatrixClientProps {
   gradeLevels: GradeLevel[]
   defaultAcademicYearId: string
