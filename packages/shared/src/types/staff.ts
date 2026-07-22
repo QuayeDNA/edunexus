@@ -1,31 +1,44 @@
-import type { Gender, EmploymentStatus } from "./common";
+import type { EmploymentStatus } from './common';
 
 export interface Staff {
   id: string;
-  school_id: string;
-  staff_id_number: string;
-  first_name: string;
-  last_name: string;
-  other_names?: string | null;
-  gender: Gender;
-  date_of_birth: string;
+  schoolId: string;
+  staffIdNumber: string;
+  firstName: string;
+  lastName: string;
+  otherNames?: string | null;
+  gender: 'male' | 'female';
+  dateOfBirth: string;
+  nationality?: string | null;
+  religion?: string | null;
+  address?: string | null;
   phone: string;
-  email: string;
-  address: string;
-  role:
-    | "teacher"
-    | "admin"
-    | "support"
-    | "accountant"
-    | "librarian"
-    | "transport"
-    | "nurse";
-  employment_status: EmploymentStatus;
+  email?: string | null;
+  role: 'teacher' | 'admin' | 'support' | 'accountant' | 'librarian' | 'transport' | 'nurse';
+  department?: string | null;
+  employmentStatus: EmploymentStatus;
+  dateHired: string;
   qualification?: string | null;
-  specialization?: string | null;
-  date_hired: string;
-  profile_image_url?: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at?: string | null;
+  ssnitNumber?: string | null;
+  bankName?: string | null;
+  bankAccount?: string | null;
+  emergencyContact?: string | null;
+  emergencyName?: string | null;
+  profileId?: string | null;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+}
+
+export interface EmploymentContract {
+  id: string;
+  schoolId: string;
+  staffId: string;
+  type: 'permanent' | 'fixed_term' | 'part_time';
+  startDate: string;
+  endDate?: string | null;
+  salary?: string | null;
+  position?: string | null;
+  createdAt: string;
 }

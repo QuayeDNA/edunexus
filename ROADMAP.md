@@ -258,13 +258,13 @@ One paragraph — what and why.
 
 ### Epic 3.3 — Staff
 
-- **[3.3.1] Staff list/detail/new/edit**
+- ~~**[3.3.1] Staff list/detail/new/edit**~~ ✅ Complete (PR #137, merged to `preview` Jul 22)
   - **Entity layer:** L2
   - **Depends on:** none (standalone entity)
   - **Blocker:** none
   - **Roles affected:** admin
   - Tasks: schema for staff and employment_contracts tables; list with filters (department, status, role); detail view with contract info and audit log; create/edit staff profile with employment contract (type: permanent/fixed-term/part-time, salary in GHS, start/end date); deactivate/reactivate staff.
-  - AC: Given a staff member is created with a fixed-term contract ending June 30, when the date passes, then the staff status auto-changes to `inactive` and the admin receives a notification.
+  - AC: Given a staff member is created with a fixed-term contract ending June 30, when the date passes, then the staff status auto-changes to `inactive` and the admin receives a notification. _(deferred — requires cron/scheduler)_
   - AC: Given an admin searches for "Ama" in the staff list, then all staff with "Ama" in first name, last name, or employee ID are returned.
   - ⚡ **GitHub:** [#35](https://github.com/QuayeDNA/edunexus/issues/35)
 - **[3.3.2] Leave management**
