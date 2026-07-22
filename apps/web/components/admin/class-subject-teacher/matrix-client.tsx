@@ -8,44 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Save } from 'lucide-react'
+import type { GradeLevel, ClassRow, SubjectCol, StaffOption, MatrixClientProps } from '@/types/class-subject-teacher'
 
-interface GradeLevel {
-  id: string
-  name: string
-  code: string | null
-}
-
-interface ClassRow {
-  id: string
-  name: string
-  code: string | null
-}
-
-interface SubjectCol {
-  id: string
-  name: string
-  code: string
-  isCore: boolean
-}
-
-interface Assignment {
-  classId: string
-  subjectId: string
-  teacherId: string | null
-}
-
-interface StaffOption {
-  id: string
-  firstName: string
-  lastName: string
-}
-
-interface Props {
-  gradeLevels: GradeLevel[]
-  defaultAcademicYearId: string
-}
-
-export function MatrixClient({ gradeLevels, defaultAcademicYearId }: Props) {
+export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClientProps) {
   const [selectedGrade, setSelectedGrade] = useState('')
   const [classes, setClasses] = useState<ClassRow[]>([])
   const [subjects, setSubjects] = useState<SubjectCol[]>([])
@@ -59,7 +24,7 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: Props) {
       const res = await fetch('/api/staff?role=teacher')
       const body = await res.json()
       if (body.success) setTeachers(body.data ?? [])
-    } catch { /* ignore */ }
+    } catch { toast.error('Failed to load teacher list') }
   }, [])
 
   useEffect(() => { fetchTeachers() }, [fetchTeachers])
@@ -118,7 +83,7 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: Props) {
       if (body.success) {
         toast.success(`Saved ${body.data.saved} assignments`)
         if (body.data.errors?.length > 0) {
-          body.data.errors.forEach((e: any) => toast.error(`${e.classId}/${e.subjectId}: ${e.error}`))
+          body.data.errors.forEach((e: { classId: string; subjectId: string; error: string }) => toast.error(`${e.classId}/${e.subjectId}: ${e.error}`))
         }
         if (defaultAcademicYearId) loadMatrix(selectedGrade, defaultAcademicYearId)
       } else {
@@ -196,6 +161,10 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: Props) {
 
       {!loading && selectedGrade && classes.length === 0 && (
         <p className="text-sm text-muted-foreground">No classes found for this grade level. Create classes first.</p>
+      )}
+
+      {!loading && selectedGrade && classes.length > 0 && subjects.length === 0 && (
+        <p className="text-sm text-muted-foreground">No subjects found for this grade level. Map subjects to grade levels first.</p>
       )}
     </div>
   )
