@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { Save } from 'lucide-react'
-import type { GradeLevel, ClassRow, SubjectCol, StaffOption, MatrixClientProps } from '@/types/class-subject-teacher'
+import { Save, TriangleAlert } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { GradeLevel, ClassRow, SubjectCol, StaffOption, MatrixClientProps, Conflict } from '@/types/class-subject-teacher'
 
 export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClientProps) {
   const [selectedGrade, setSelectedGrade] = useState('')
@@ -18,6 +19,8 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClien
   const [teachers, setTeachers] = useState<StaffOption[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [conflicts, setConflicts] = useState<Conflict[]>([])
+  const [conflictedKeys, setConflictedKeys] = useState<Set<string>>(new Set())
 
   const fetchTeachers = useCallback(async () => {
     try {
@@ -64,15 +67,16 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClien
     })
   }
 
-  const handleSave = async () => {
+  const handleSave = async (force = false) => {
     setSaving(true)
-    const payload = {
+    const payload: Record<string, unknown> = {
       gradeLevelId: selectedGrade,
       assignments: Array.from(assignments.entries()).map(([key, teacherId]) => {
         const [classId, subjectId] = key.split('|')
         return { classId, subjectId, teacherId }
       }),
     }
+    if (force) payload.force = true
     try {
       const res = await fetch('/api/class-subject-teacher', {
         method: 'PUT',
@@ -81,7 +85,21 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClien
       })
       const body = await res.json()
       if (body.success) {
-        toast.success(`Saved ${body.data.saved} assignments`)
+        if (body.data.conflicts?.length > 0) {
+          setConflicts(body.data.conflicts)
+          const keys = new Set<string>()
+          for (const c of body.data.conflicts) {
+            for (const a of c.assignments) {
+              keys.add(`${a.classId}|${a.subjectId}`)
+            }
+          }
+          setConflictedKeys(keys)
+          toast.error(`${body.data.conflicts.length} conflict(s) detected`)
+        } else {
+          setConflicts([])
+          setConflictedKeys(new Set())
+          toast.success(`Saved ${body.data.saved} assignments`)
+        }
         if (body.data.errors?.length > 0) {
           body.data.errors.forEach((e: { classId: string; subjectId: string; error: string }) => toast.error(`${e.classId}/${e.subjectId}: ${e.error}`))
         }
@@ -109,11 +127,36 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClien
           </Select>
         </div>
         {selectedGrade && (
-          <Button onClick={handleSave} disabled={saving || loading}>
+          <Button onClick={() => handleSave(false)} disabled={saving || loading}>
             <Save className="mr-2 h-4 w-4" />{saving ? 'Saving...' : 'Save All'}
           </Button>
         )}
       </div>
+
+      {conflicts.length > 0 && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
+            <TriangleAlert className="h-4 w-4" />
+            <span>{conflicts.length} teacher conflict(s) detected</span>
+          </div>
+          <ul className="text-sm text-red-700 space-y-1 mb-3">
+            {conflicts.map((c, i) => (
+              <li key={i}>
+                <strong>{c.teacherName}</strong> is assigned to {c.assignments.length} subjects in{' '}
+                {c.gradeLevelName}: {c.assignments.map(a => `${a.className} - ${a.subjectName}`).join(', ')}
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => { setConflicts([]); setConflictedKeys(new Set()) }}>
+              Dismiss
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => handleSave(true)} disabled={saving}>
+              {saving ? 'Saving...' : 'Save anyway'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {loading && <p className="text-sm text-muted-foreground">Loading matrix...</p>}
 
@@ -139,8 +182,9 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClien
                     {subjects.map((sub) => {
                       const key = `${cls.id}|${sub.id}`
                       const teacherId = assignments.get(key) ?? ''
+                      const isConflicted = conflictedKeys.has(key)
                       return (
-                        <TableCell key={sub.id}>
+                        <TableCell key={sub.id} className={cn(isConflicted && 'ring-2 ring-red-400 rounded-md')}>
                           <Select value={teacherId} onValueChange={(v) => setTeacher(cls.id, sub.id, v as string)} items={teachers.map((t) => ({ value: t.id, label: `${t.firstName} ${t.lastName}` }))}>
                             <SelectTrigger className="w-full"><SelectValue placeholder="Unassigned" /></SelectTrigger>
                             <SelectContent>
