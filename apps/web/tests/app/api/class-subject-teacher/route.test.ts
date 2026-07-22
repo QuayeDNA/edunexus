@@ -73,10 +73,14 @@ describe('PUT /api/class-subject-teacher', () => {
       insert: vi.fn().mockReturnThis(),
       values: vi.fn().mockReturnThis(),
     }));
+    db.where = vi.fn()
+      .mockImplementationOnce(() => db)  // validateTeacher: chain
+      .mockResolvedValueOnce([])         // detectConflicts: resolve
     const req = new NextRequest('http://localhost/api/class-subject-teacher', {
       method: 'PUT',
       body: JSON.stringify({
         gradeLevelId: 'gl-1',
+        academicYearId: 'ay-1',
         assignments: [{ classId: 'c-1', subjectId: 's-1', teacherId: 't-1' }],
       }),
     });
