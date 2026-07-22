@@ -17,6 +17,7 @@ import {
   Settings,
   LogOut,
   ClipboardList,
+  Grid3x3,
 } from "lucide-react";
 import { APP_NAME } from "@/lib/utils/constants";
 import { signOut } from "next-auth/react";
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/admin/staff", label: "Staff", icon: Briefcase },
   { href: "/admin/classes", label: "Classes", icon: GraduationCap },
   { href: "/admin/academics", label: "Academics", icon: BookOpen },
+  { href: "/admin/class-subject-teacher", label: "Subject Assign", icon: Grid3x3 },
   { href: "/admin/attendance", label: "Attendance", icon: CalendarCheck },
   { href: "/admin/finance", label: "Finance", icon: Wallet },
   { href: "/admin/payroll", label: "Payroll", icon: DollarSign },

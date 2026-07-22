@@ -14,8 +14,8 @@
 | Phase 1–2 (Foundation + Super Admin Portal) | ✅ Complete                         |
 | Phase 3a (Admissions & Enrollment)          | ✅ Complete                         |
 | Phase 3 (Admin Portal)                      | ⏳ In progress                      |
-| Current branch                              | `331-staff-crud`                    |
-| Next issue                                  | [3.3.2] Leave management            |
+| Current branch                              | `314-class-subject-teacher-assignment` |
+| Next issue                                  | [3.1.4] Class-Subject-Teacher assignment matrix |
 
 ---
 
@@ -110,6 +110,8 @@ Follow `ROADMAP.md §1` dependency graph. Before building a new entity:
 - ~~[3.1.1] Academic Years & Terms CRUD~~ ✅ Complete (PR #134, merged to `preview` Jul 21)
 - ~~[3.1.3] Subjects & Curriculum CRUD~~ ✅ Complete (PR #136, merged to `preview` Jul 22)
 - ~~[3.3.1] Staff CRUD~~ ✅ Complete (PR #137, merged to `preview` Jul 22)
+- **Next:** [3.1.4] Class-Subject-Teacher assignment matrix — was blocked on Staff CRUD, now unblocked
+- [3.3.2] Leave management — deferred (lower priority)
 
 ### Clean Code
 

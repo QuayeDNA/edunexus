@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, varchar, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, timestamp, varchar, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { schools } from "./schools";
 import { classes } from "./classes";
 import { subjects } from "./subjects";
@@ -30,5 +30,6 @@ export const classSubjects = pgTable(
     index("idx_class_subjects_class_id").on(table.classId),
     index("idx_class_subjects_subject_id").on(table.subjectId),
     index("idx_class_subjects_teacher_id").on(table.teacherId),
+    uniqueIndex("idx_class_subjects_class_subject").on(table.classId, table.subjectId),
   ],
 );
