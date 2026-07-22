@@ -13,9 +13,9 @@
 | ------------------------------------------- | ----------------------------------- |
 | Phase 1–2 (Foundation + Super Admin Portal) | ✅ Complete                         |
 | Phase 3a (Admissions & Enrollment)          | ✅ Complete                         |
-| Phase 3 (Admin Portal)                      | ⏳ Refactor sprint first            |
-| Current branch                              | `epic-refactor-sprint-1`            |
-| Next issue                                  | [3.1.1] Academic Years & Terms CRUD |
+| Phase 3 (Admin Portal)                      | ⏳ In progress                      |
+| Current branch                              | `331-staff-crud`                    |
+| Next issue                                  | [3.3.2] Leave management            |
 
 ---
 
@@ -108,6 +108,8 @@ Follow `ROADMAP.md §1` dependency graph. Before building a new entity:
 
 **Phase 3 — Admin Portal** — 🟡 In progress
 - ~~[3.1.1] Academic Years & Terms CRUD~~ ✅ Complete (PR #134, merged to `preview` Jul 21)
+- ~~[3.1.3] Subjects & Curriculum CRUD~~ ✅ Complete (PR #136, merged to `preview` Jul 22)
+- ~~[3.3.1] Staff CRUD~~ ✅ Complete (PR #137, merged to `preview` Jul 22)
 
 ### Clean Code
 
