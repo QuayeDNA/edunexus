@@ -35,6 +35,7 @@ jsPDF | Vitest | Playwright | Turborepo | S3-compatible storage
 | `apps/web`          | Next.js app — pages, API routes, components, hooks, services, lib         |
 | `packages/database` | Drizzle schema, client, migrations, seed — import as `@edunexus/database` |
 | `packages/shared`   | Shared types, constants, utilities — import as `@edunexus/shared`         |
+| `docs/superpowers/design/` | Design system docs — philosophy, tokens, flows, roadmap, agent instructions |
 
 ## Import Rules (MANDATORY)
 
@@ -86,6 +87,24 @@ Follow `ROADMAP.md §1` dependency graph. Before building a new entity:
 - Delete actions must show confirmation dialog.
 - Empty states: icon + heading + description + CTA.
 - Loading states: skeleton loaders, never full-page spinners.
+
+---
+
+## Design System & UI Direction
+
+EduNexus has a documented design system grounded in Ghanaian school life — see `docs/superpowers/design/`. Read these **before** any UI work:
+
+| Doc | What it covers |
+|-----|----------------|
+| `01-DESIGN-PHILOSOPHY.md` | The "why" — role accents, appropriation guardrails, tone of voice, the Term Ribbon signature element |
+| `02-DESIGN-SYSTEM.md` | The "how" — typography (Fraunces + IBM Plex), color tokens (OKLCH), component conventions, motion, multi-tenant theming |
+| `03-USER-FLOWS.md` | Design-specific notes on key flows (admissions, attendance, payments, report cards) |
+| `04-DESIGN-ROADMAP.md` | Phases D0–D7 — retrofitting existing screens, document system, tenant branding |
+| `05-DESIGN-AGENT.md` | Hard bans, role-accent discipline, tenant safety rules, UI PR review checklist |
+
+**Read order for any UI task:** Philosophy → Design System → User Flows → Design Roadmap → then `frontend-design`/`artisan-ui` skills for craft.
+
+**Future plan:** A phased implementation (D0–D7 in `04-DESIGN-ROADMAP.md`) replaces the generic token system, retrofits shipped screens, builds a shared document rendering module (`packages/documents`), and launches per-school tenant branding — all sequenced to avoid blocking feature work.
 
 ---
 
@@ -208,3 +227,4 @@ Redis/MinIO optional (BullMQ, file uploads). Docker not required for dev.
 3. Check current branch and latest git log.
 4. Read `docs/superpowers/plans/` for current task plan.
 5. Cross-check `ROADMAP.md §16` for platform-operator items attached to the current phase.
+6. Read `docs/superpowers/design/05-DESIGN-AGENT.md` if the task involves any UI work — it cross-references the full design doc stack and provides a review checklist.
