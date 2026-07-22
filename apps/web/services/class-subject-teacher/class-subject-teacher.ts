@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { eq, and, inArray, isNull } from 'drizzle-orm';
-import { classSubjects, classes, subjects, subjectGradeLevels } from '@edunexus/database';
+import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
+import { classSubjects, classes, subjects, subjectGradeLevels, gradeLevels, staff } from '@edunexus/database';
 import { validateTeacher } from './validation';
+import type { SaveResult, Conflict, ConflictAssignment } from '@/types/class-subject-teacher';
 
 interface ServiceContext {
   db: any;
@@ -18,11 +19,6 @@ export interface MatrixData {
   classes: { id: string; name: string; code: string | null }[];
   subjects: { id: string; name: string; code: string; isCore: boolean }[];
   assignments: MatrixAssignment[];
-}
-
-export interface SaveResult {
-  saved: number;
-  errors: { classId: string; subjectId: string; error: string }[];
 }
 
 export const saveMatrixSchema = z.object({
@@ -68,7 +64,63 @@ export async function getMatrix(ctx: ServiceContext, gradeLevelId: string, acade
   };
 }
 
-export async function saveMatrix(ctx: ServiceContext, gradeLevelId: string, assignments: MatrixAssignment[]): Promise<SaveResult> {
+export async function detectConflicts(ctx: ServiceContext): Promise<Conflict[]> {
+  const rows = await ctx.db
+    .select({
+      teacherId: classSubjects.teacherId,
+      classId: classSubjects.classId,
+      subjectId: classSubjects.subjectId,
+      className: classes.name,
+      gradeLevelId: classes.gradeLevelId,
+      gradeLevelName: gradeLevels.name,
+      subjectName: subjects.name,
+    })
+    .from(classSubjects)
+    .innerJoin(classes, eq(classSubjects.classId, classes.id))
+    .innerJoin(subjects, eq(classSubjects.subjectId, subjects.id))
+    .innerJoin(gradeLevels, eq(classes.gradeLevelId, gradeLevels.id))
+    .where(
+      and(
+        eq(classSubjects.schoolId, ctx.schoolId),
+        sql`${classSubjects.teacherId} is not null`,
+      ),
+    );
+
+  const teacherIds: string[] = [...new Set(rows.filter((r: { teacherId: string | null }) => r.teacherId).map((r: { teacherId: string | null }) => r.teacherId!))] as string[];
+  if (teacherIds.length === 0) return [];
+
+  const teachers = await ctx.db
+    .select({ id: staff.id, firstName: staff.firstName, lastName: staff.lastName })
+    .from(staff)
+    .where(inArray(staff.id, teacherIds));
+
+  const teacherMap = new Map<string, string>(teachers.map((t: { id: string; firstName: string; lastName: string }) => [t.id, `${t.firstName} ${t.lastName}`]));
+
+  const grouped = new Map<string, Conflict>();
+  for (const r of rows) {
+    if (!r.teacherId) continue;
+    const key = `${r.teacherId}|${r.gradeLevelId}`;
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        teacherId: r.teacherId,
+        teacherName: teacherMap.get(r.teacherId) ?? "Unknown",
+        gradeLevelId: r.gradeLevelId,
+        gradeLevelName: r.gradeLevelName,
+        assignments: [],
+      });
+    }
+    grouped.get(key)!.assignments.push({
+      classId: r.classId,
+      className: r.className,
+      subjectId: r.subjectId,
+      subjectName: r.subjectName,
+    });
+  }
+
+  return [...grouped.values()].filter(g => g.assignments.length > 1);
+}
+
+export async function saveMatrix(ctx: ServiceContext, gradeLevelId: string, assignments: MatrixAssignment[], force?: boolean): Promise<SaveResult> {
   const errors: { classId: string; subjectId: string; error: string }[] = [];
   const validAssignments: MatrixAssignment[] = [];
 
@@ -100,5 +152,9 @@ export async function saveMatrix(ctx: ServiceContext, gradeLevelId: string, assi
     }
   });
 
-  return { saved: validAssignments.length, errors };
+  const result: SaveResult = { saved: validAssignments.length, errors, conflicts: [] };
+  if (!force) {
+    result.conflicts = await detectConflicts(ctx);
+  }
+  return result;
 }

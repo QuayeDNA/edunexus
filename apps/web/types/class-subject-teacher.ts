@@ -46,7 +46,7 @@ export interface Conflict {
 
 export interface SaveResult {
   saved: number
-  errors: { rowKey: string; error: string }[]
+  errors: { classId: string; subjectId: string; error: string }[]
   conflicts: Conflict[]
 }
 
