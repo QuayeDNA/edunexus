@@ -17,6 +17,8 @@ import {
   students,
   guardians,
   studentGuardians,
+  staff,
+  employmentContracts,
 } from "./schema/index";
 import { randomBytes, scryptSync } from "crypto";
 
@@ -634,6 +636,69 @@ async function main() {
     console.log("   Created student-guardian link");
   } else {
     console.log("   Skipped — link already exists");
+  }
+
+  console.log("Creating staff records...");
+  const staffList = await db.select().from(staff).where(eq(staff.schoolId, schoolId));
+
+  if (staffList.length === 0) {
+    const adminProfile = await db.select().from(profiles)
+      .where(and(eq(profiles.schoolId, schoolId), eq(profiles.role, 'admin')))
+      .limit(1);
+    const teacherProfile = await db.select().from(profiles)
+      .where(and(eq(profiles.schoolId, schoolId), eq(profiles.role, 'teacher')))
+      .limit(1);
+
+    const createdStaff = await db.insert(staff).values([
+      {
+        schoolId,
+        staffIdNumber: 'ADM001',
+        firstName: 'Kofi',
+        lastName: 'Asante',
+        gender: 'male',
+        dateOfBirth: '1985-06-15',
+        phone: '0551234567',
+        email: 'admin@academy.edunexus.com',
+        role: 'admin',
+        department: 'administration',
+        employmentStatus: 'permanent',
+        dateHired: '2024-01-01',
+        qualification: 'Bachelor of Education',
+        profileId: adminProfile[0]?.id ?? null,
+        status: 'active',
+      },
+      {
+        schoolId,
+        staffIdNumber: 'TCH001',
+        firstName: 'Ama',
+        lastName: 'Mensah',
+        gender: 'female',
+        dateOfBirth: '1990-03-20',
+        phone: '0557654321',
+        email: 'teacher@academy.edunexus.com',
+        role: 'teacher',
+        department: 'academic',
+        employmentStatus: 'permanent',
+        dateHired: '2024-09-01',
+        qualification: 'Bachelor of Science in Education',
+        profileId: teacherProfile[0]?.id ?? null,
+        status: 'active',
+      },
+    ]).returning();
+
+    await db.insert(employmentContracts).values(
+      createdStaff.map((s: any) => ({
+        schoolId,
+        staffId: s.id,
+        type: s.employmentStatus === 'permanent' ? 'permanent' : 'fixed_term',
+        startDate: s.dateHired,
+        position: s.role === 'admin' ? 'School Administrator' : 'Classroom Teacher',
+      })),
+    );
+
+    console.log('   Staff records created: 2');
+  } else {
+    console.log('   Staff records already exist, skipping');
   }
 
   console.log("\n✅ Seed complete!");
