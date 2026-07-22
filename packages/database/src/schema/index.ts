@@ -38,5 +38,6 @@ export {
   parentEngagements,
   lessonPlans,
 } from "./behavior";
+export { employmentContracts } from "./employment-contracts";
 export { auditLogs } from "./audit";
 export { schoolPlans, schoolSubscriptions, invoices } from "./billing";

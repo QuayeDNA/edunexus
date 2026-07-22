@@ -9,6 +9,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { schools } from "./schools";
+import { profiles } from "./profiles";
 
 export const staff = pgTable(
   "staff",
@@ -18,6 +19,7 @@ export const staff = pgTable(
       .notNull()
       .references(() => schools.id),
     staffIdNumber: varchar("staff_id_number", { length: 50 }).notNull(),
+    profileId: uuid("profile_id").references(() => profiles.id),
     firstName: varchar("first_name", { length: 100 }).notNull(),
     lastName: varchar("last_name", { length: 100 }).notNull(),
     otherNames: varchar("other_names", { length: 100 }),
