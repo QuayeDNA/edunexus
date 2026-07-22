@@ -117,7 +117,7 @@ export function StaffTable({ data, loading, onDeactivate }: Props) {
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <Link href={`/admin/staff/${s.id}`} className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}><Eye className="h-4 w-4" /></Link>
-                    <Button variant="ghost" size="sm"><Pencil className="h-4 w-4" /></Button>
+                    <Link href={`/admin/staff/${s.id}/edit`} className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}><Pencil className="h-4 w-4" /></Link>
                     {s.status === 'active' && (
                       <Button variant="ghost" size="sm" onClick={() => onDeactivate(s.id, `${s.firstName} ${s.lastName}`)}>
                         <XCircle className="h-4 w-4 text-red-500" />
