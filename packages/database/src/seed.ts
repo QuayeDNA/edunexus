@@ -2,7 +2,7 @@ import { config } from "dotenv";
 import { resolve } from "path";
 config({ path: resolve(__dirname, "../../../.env") });
 import { createClient } from "./client";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, isNull } from "drizzle-orm";
 import {
   schools,
   academicYears,
@@ -349,7 +349,7 @@ async function main() {
     scopedSchoolId: string | null,
   ) {
     const existing = await db.select({ id: profiles.id }).from(profiles)
-      .where(and(eq(profiles.email, email), eq(profiles.schoolId, scopedSchoolId)))
+      .where(and(eq(profiles.email, email), scopedSchoolId ? eq(profiles.schoolId, scopedSchoolId) : isNull(profiles.schoolId)))
       .then((r) => r[0] ?? null);
     if (existing) return existing.id;
     const [row] = await db.insert(profiles).values({

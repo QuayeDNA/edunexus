@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Save, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { GradeLevel, ClassRow, SubjectCol, StaffOption, MatrixClientProps, Conflict } from '@/types/class-subject-teacher'
+import type { ClassRow, SubjectCol, StaffOption, MatrixClientProps, Conflict } from '@/types/class-subject-teacher'
 
 export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClientProps) {
   const [selectedGrade, setSelectedGrade] = useState('')

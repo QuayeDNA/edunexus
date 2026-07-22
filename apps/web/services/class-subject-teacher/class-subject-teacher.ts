@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
 import { classSubjects, classes, subjects, subjectGradeLevels, gradeLevels, staff } from '@edunexus/database';
 import { validateTeacher } from './validation';
-import type { SaveResult, Conflict, ConflictAssignment } from '@/types/class-subject-teacher';
+import type { SaveResult, Conflict } from '@/types/class-subject-teacher';
 
 interface ServiceContext {
   db: any;
