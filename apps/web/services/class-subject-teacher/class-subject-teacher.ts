@@ -28,6 +28,7 @@ export const saveMatrixSchema = z.object({
     subjectId: z.string().min(1),
     teacherId: z.string().nullable(),
   })).default([]),
+  force: z.boolean().optional().default(false),
 });
 
 export async function getMatrix(ctx: ServiceContext, gradeLevelId: string, academicYearId: string): Promise<MatrixData> {
