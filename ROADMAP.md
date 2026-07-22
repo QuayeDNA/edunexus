@@ -222,8 +222,8 @@ One paragraph — what and why.
   - ⚡ **GitHub:** [#30](https://github.com/QuayeDNA/edunexus/issues/30) — **PR [#136](https://github.com/QuayeDNA/edunexus/pull/136)**
 - **[3.1.4] Class-Subject-Teacher assignment matrix** — bulk assign, conflict warning if teacher already booked
   - **Entity layer:** L1
-  - **Depends on:** [#30](https://github.com/QuayeDNA/edunexus/issues/30) (3.1.3), [#35](https://github.com/QuayeDNA/edunexus/issues/35) (3.3.1 Staff)
-  - **Blocker:** depends on Staff CRUD for teacher selection
+  - **Depends on:** [#30](https://github.com/QuayeDNA/edunexus/issues/30) (3.1.3), [#35](https://github.com/QuayeDNA/edunexus/issues/35) (3.3.1 Staff) — ✅ both complete
+  - **Blocker:** ~~depends on Staff CRUD for teacher selection~~ ✅ resolved
   - **Roles affected:** admin
   - Tasks: schema for class_subject_teacher pivot table; grid/matrix UI showing subjects per class with teacher dropdowns; batch save; real-time conflict detection (teacher booked in two classes at same period — requires timetable integration in v2).
   - AC: Given a teacher is assigned to Subject A in Class 1, when the admin assigns the same teacher to Subject B in Class 2, then the system saves successfully but flags a potential conflict (soft warning, not a hard block at this stage).
