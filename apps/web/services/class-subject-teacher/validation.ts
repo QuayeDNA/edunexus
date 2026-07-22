@@ -1,6 +1,5 @@
 import { eq, and } from 'drizzle-orm';
 import { staff } from '@edunexus/database';
-import { NotFoundError } from '@/lib/api/errors';
 
 interface ServiceContext {
   db: any;
