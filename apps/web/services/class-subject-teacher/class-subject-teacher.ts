@@ -23,6 +23,7 @@ export interface MatrixData {
 
 export const saveMatrixSchema = z.object({
   gradeLevelId: z.string().min(1, 'Grade level is required'),
+  academicYearId: z.string().min(1, 'Academic year is required'),
   assignments: z.array(z.object({
     classId: z.string().min(1),
     subjectId: z.string().min(1),
@@ -65,7 +66,7 @@ export async function getMatrix(ctx: ServiceContext, gradeLevelId: string, acade
   };
 }
 
-export async function detectConflicts(ctx: ServiceContext): Promise<Conflict[]> {
+export async function detectConflicts(ctx: ServiceContext, academicYearId?: string): Promise<Conflict[]> {
   const rows = await ctx.db
     .select({
       teacherId: classSubjects.teacherId,
@@ -84,6 +85,7 @@ export async function detectConflicts(ctx: ServiceContext): Promise<Conflict[]> 
       and(
         eq(classSubjects.schoolId, ctx.schoolId),
         sql`${classSubjects.teacherId} is not null`,
+        academicYearId ? eq(classes.academicYearId, academicYearId) : undefined,
       ),
     );
 
@@ -121,7 +123,7 @@ export async function detectConflicts(ctx: ServiceContext): Promise<Conflict[]> 
   return [...grouped.values()].filter(g => g.assignments.length > 1);
 }
 
-export async function saveMatrix(ctx: ServiceContext, gradeLevelId: string, assignments: MatrixAssignment[], force?: boolean): Promise<SaveResult> {
+export async function saveMatrix(ctx: ServiceContext, gradeLevelId: string, assignments: MatrixAssignment[], academicYearId?: string, force?: boolean): Promise<SaveResult> {
   const errors: { classId: string; subjectId: string; error: string }[] = [];
   const validAssignments: MatrixAssignment[] = [];
 
@@ -155,7 +157,7 @@ export async function saveMatrix(ctx: ServiceContext, gradeLevelId: string, assi
 
   const result: SaveResult = { saved: validAssignments.length, errors, conflicts: [] };
   if (!force) {
-    result.conflicts = await detectConflicts(ctx);
+    result.conflicts = await detectConflicts(ctx, academicYearId);
   }
   return result;
 }

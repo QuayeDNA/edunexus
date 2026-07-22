@@ -69,8 +69,9 @@ export function MatrixClient({ gradeLevels, defaultAcademicYearId }: MatrixClien
 
   const handleSave = async (force = false) => {
     setSaving(true)
-    const payload: Record<string, unknown> = {
+    const payload: any = {
       gradeLevelId: selectedGrade,
+      academicYearId: defaultAcademicYearId,
       assignments: Array.from(assignments.entries()).map(([key, teacherId]) => {
         const [classId, subjectId] = key.split('|')
         return { classId, subjectId, teacherId }

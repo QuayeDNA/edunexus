@@ -170,8 +170,24 @@ describe('detectConflicts', () => {
 
     const result = await saveMatrix({ db: mockDb, schoolId }, 'gl-1', [
       { classId: 'c-1', subjectId: 's-1', teacherId: 't-1' },
-    ], true);
+    ], undefined, true);
 
     expect(result.conflicts).toHaveLength(0);
+  });
+
+  it('does not flag conflict when same teacher is in different academic years', async () => {
+    const mockDb = createMockDb();
+    const rows = [
+      { teacherId: 't-1', classId: 'c-1', subjectId: 's-1', className: 'Class A', gradeLevelId: 'gl-1', gradeLevelName: 'Grade 1', subjectName: 'Math' },
+    ];
+    const teachers = [
+      { id: 't-1', firstName: 'John', lastName: 'Doe' },
+    ];
+    mockDb.where = vi.fn()
+      .mockResolvedValueOnce(rows)
+      .mockResolvedValueOnce(teachers);
+
+    const result = await detectConflicts({ db: mockDb, schoolId }, 'ay-2');
+    expect(result).toHaveLength(0);
   });
 });
