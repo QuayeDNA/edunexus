@@ -22,7 +22,7 @@ vi.mock('@/lib/db', () => {
   return { db: mockDb };
 });
 
-const { GET, POST } = await import('@/app/api/staff/[id]/contracts/route');
+const { GET } = await import('@/app/api/staff/[id]/contracts/route');
 
 describe('GET /api/staff/[id]/contracts', () => {
   beforeEach(() => { vi.clearAllMocks(); });

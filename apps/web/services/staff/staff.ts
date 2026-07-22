@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { eq, and, or, like, sql } from 'drizzle-orm';
+import { eq, and, or, like, isNull } from 'drizzle-orm';
 import { staff, profiles, employmentContracts } from '@edunexus/database';
 import { NotFoundError, ConflictError } from '@/lib/api/errors';
 
@@ -69,7 +69,7 @@ export interface StaffFilters {
 }
 
 export async function listStaff(ctx: ServiceContext, filters?: StaffFilters) {
-  const conditions: any[] = [eq(staff.schoolId, ctx.schoolId), eq(staff.deletedAt, null)];
+  const conditions: any[] = [eq(staff.schoolId, ctx.schoolId), isNull(staff.deletedAt)];
 
   if (filters?.search) {
     const term = `%${filters.search}%`;
@@ -95,7 +95,7 @@ export async function listStaff(ctx: ServiceContext, filters?: StaffFilters) {
 export async function getStaff(ctx: ServiceContext, id: string) {
   const [row] = await ctx.db.select()
     .from(staff)
-    .where(and(eq(staff.id, id), eq(staff.schoolId, ctx.schoolId), eq(staff.deletedAt, null)))
+    .where(and(eq(staff.id, id), eq(staff.schoolId, ctx.schoolId), isNull(staff.deletedAt)))
     .limit(1);
   if (!row) throw new NotFoundError('Staff');
   return row;
@@ -172,7 +172,7 @@ export async function createStaff(ctx: ServiceContext, data: z.infer<typeof crea
 
 export async function updateStaff(ctx: ServiceContext, id: string, data: z.infer<typeof updateStaffSchema>) {
   const [existing] = await ctx.db.select().from(staff)
-    .where(and(eq(staff.id, id), eq(staff.schoolId, ctx.schoolId), eq(staff.deletedAt, null)))
+    .where(and(eq(staff.id, id), eq(staff.schoolId, ctx.schoolId), isNull(staff.deletedAt)))
     .limit(1);
   if (!existing) throw new NotFoundError('Staff');
   if (data.staffIdNumber && data.staffIdNumber !== existing.staffIdNumber) {
@@ -211,7 +211,7 @@ export async function updateStaff(ctx: ServiceContext, id: string, data: z.infer
 
 export async function deactivateStaff(ctx: ServiceContext, id: string) {
   const [existing] = await ctx.db.select({ id: staff.id, status: staff.status }).from(staff)
-    .where(and(eq(staff.id, id), eq(staff.schoolId, ctx.schoolId), eq(staff.deletedAt, null)))
+    .where(and(eq(staff.id, id), eq(staff.schoolId, ctx.schoolId), isNull(staff.deletedAt)))
     .limit(1);
   if (!existing) throw new NotFoundError('Staff');
   const [updated] = await ctx.db.update(staff).set({
@@ -224,7 +224,7 @@ export async function deactivateStaff(ctx: ServiceContext, id: string) {
 
 export async function reactivateStaff(ctx: ServiceContext, id: string) {
   const [existing] = await ctx.db.select({ id: staff.id, status: staff.status }).from(staff)
-    .where(and(eq(staff.id, id), eq(staff.schoolId, ctx.schoolId), eq(staff.deletedAt, null)))
+    .where(and(eq(staff.id, id), eq(staff.schoolId, ctx.schoolId), isNull(staff.deletedAt)))
     .limit(1);
   if (!existing) throw new NotFoundError('Staff');
   const [updated] = await ctx.db.update(staff).set({
