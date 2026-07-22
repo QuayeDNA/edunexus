@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
