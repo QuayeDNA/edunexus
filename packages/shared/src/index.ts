@@ -1,3 +1,13 @@
+export {
+     hexToOklch,
+     contrastRatio,
+     oklchToCss,
+     resolveTenantAccent,
+     GROUND_LIGHT,
+     GROUND_DARK,
+   } from "./utils/tenant-theme";
+export type { OklchColor, TenantAccentResult } from "./utils/tenant-theme";
+   
 // Types
 export type {
   UserRole,

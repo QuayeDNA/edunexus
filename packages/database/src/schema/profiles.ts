@@ -24,6 +24,7 @@ export const profiles = pgTable(
     avatar: text("avatar"),
     authUserId: varchar("auth_user_id", { length: 255 }),
     isActive: boolean("is_active").default(true).notNull(),
+    themePreference: varchar("theme_preference", { length: 10 }).default("system"),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

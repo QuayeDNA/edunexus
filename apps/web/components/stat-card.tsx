@@ -25,7 +25,14 @@ export function StatCard({
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
+            {/* was: text-2xl font-bold (generic sans numeral) — Fraunces ties even a
+                small dashboard number back to the "ceremonial document" thesis
+                (Philosophy §3, System §1). Never used below 20px elsewhere, but a
+                dashboard stat is exactly the kind of small, frequent dose that
+                makes the system feel considered rather than a one-off flourish. */}
+            <p className="font-display text-2xl font-medium tabular-nums" data-tabular>
+              {value}
+            </p>
             {description && (
               <p className="text-xs text-muted-foreground">{description}</p>
             )}
@@ -39,8 +46,8 @@ export function StatCard({
             <span
               className={cn(
                 "font-medium",
-                trend.direction === "up" && "text-green-600",
-                trend.direction === "down" && "text-red-600",
+                trend.direction === "up" && "text-success",
+                trend.direction === "down" && "text-destructive",
                 trend.direction === "neutral" && "text-muted-foreground",
               )}
             >
