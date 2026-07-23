@@ -8,9 +8,12 @@ const badgeVariants = cva(
       variant: {
         default: "bg-brand-100 text-brand-700",
         success: "bg-accent-100 text-accent-700",
-        warning: "bg-yellow-100 text-yellow-700",
-        danger: "bg-red-100 text-red-700",
-        info: "bg-blue-100 text-blue-700",
+        // was: bg-yellow-100 text-yellow-700 (unthemed Tailwind default)
+        warning: "bg-[color-mix(in_oklch,var(--color-warning)_18%,white)] text-[color-mix(in_oklch,var(--color-warning)_70%,black)]",
+        // was: bg-red-100 text-red-700 (unthemed Tailwind default)
+        danger: "bg-destructive/10 text-destructive",
+        // was: bg-blue-100 text-blue-700 (unthemed Tailwind default)
+        info: "bg-[color-mix(in_oklch,var(--color-info)_15%,white)] text-[color-mix(in_oklch,var(--color-info)_75%,black)]",
         outline: "border border-border text-text-secondary",
       },
     },

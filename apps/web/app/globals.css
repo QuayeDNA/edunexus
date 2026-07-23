@@ -4,70 +4,327 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  EduNexus — "The Register" design system tokens.
+  See docs/design/01-DESIGN-PHILOSOPHY.md and 02-DESIGN-SYSTEM.md for the full rationale.
+
+  TWO THINGS ARE TRUE AT ONCE IN THIS FILE, ON PURPOSE:
+
+  1. shadcn/ui semantic tokens (--background, --foreground, --primary, --secondary,
+     --muted, --accent, --destructive, --border, --input, --ring, --card, --popover,
+     --sidebar-*, --chart-*) are what components/ui/* primitives actually read
+     (confirmed by reading button.tsx, card.tsx, etc. directly — don't assume,
+     check). These are retargeted below to the new palette.
+
+  2. A SEPARATE legacy scale (--color-brand-*, --color-accent-*, --color-text-*,
+     --color-surface-*, --color-status-*) is ALSO still read directly by ~24
+     already-shipped files (badge.tsx, avatar.tsx, label.tsx, card.tsx, all 5
+     sidebars, several dashboards, auth pages, academics components — confirmed
+     via grep before touching this file). Deleting these tokens would silently
+     unstyle those screens (Tailwind just emits no rule for an unknown utility —
+     no build error, just broken UI). So instead of deleting them, they are
+     RETARGETED to the Register palette here. This means every one of those 24
+     files inherits the new look with zero code changes.
+
+  The one thing the legacy scale can't do on its own is per-ROLE differentiation,
+  because all 5 sidebars currently share the same brand-* classes. That's fixed
+  at the component level (see the 5 updated sidebar files + portal-theme-root.tsx),
+  not by adding yet another parallel token scheme here.
+
+  Retrofit backlog (docs/design/04-DESIGN-ROADMAP.md Phase D1): the academics
+  components and dashboard pages still reference the legacy scale directly rather
+  than shadcn's semantic tokens or the role/tenant accent system. They'll look
+  correct today (retargeted values), but migrating them onto --primary / role
+  scoping is still the tracked follow-up, not done here.
+*/
+
 @theme {
-  --font-sans: var(--font-inter), 'Inter', 'system-ui', 'sans-serif';
+  /* Type system — Fraunces (ceremonial/display), IBM Plex Sans (working/body),
+     IBM Plex Mono (data/tabular). Loaded via next/font/google in app/layout.tsx. */
+  --font-sans: var(--font-plex-sans), "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), "Fraunces", Georgia, serif;
+  --font-mono: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
 
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-300: #a5b4fc;
-  --color-brand-400: #818cf8;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
-  --color-brand-800: #3730a3;
-  --color-brand-900: #312e81;
-  --color-brand-950: #1e1b4b;
+  /* ---- Role accents (Philosophy §4) ----------------------------------------
+     Wayfinding chrome ONLY: sidebar, header tint, Term Ribbon, avatar rings.
+     Never semantic status. Never overridden by tenant branding. */
+  --color-role-platform: oklch(38% 0.012 250); /* graphite — super_admin */
+  --color-role-admin:    oklch(58% 0.135 75);  /* ochre/gold */
+  --color-role-teacher:  oklch(34% 0.065 155); /* chalkboard green */
+  --color-role-student:  oklch(45% 0.13 255);  /* exercise-book blue */
+  --color-role-parent:   oklch(55% 0.14 40);   /* terracotta */
 
-  --color-accent-50: #ecfdf5;
-  --color-accent-100: #d1fae5;
-  --color-accent-200: #a7f3d0;
-  --color-accent-300: #6ee7b7;
-  --color-accent-400: #34d399;
-  --color-accent-500: #10b981;
-  --color-accent-600: #059669;
-  --color-accent-700: #047857;
-  --color-accent-800: #065f46;
-  --color-accent-900: #064e3b;
-  --color-accent-950: #022c22;
+  /* ---- Status scale (new short names) — universal, never role/tenant-scoped */
+  --color-success: oklch(52% 0.13 148);
+  --color-warning: oklch(72% 0.15 82);
+  --color-info:    oklch(55% 0.075 250);
 
-  --color-surface: #ffffff;
-  --color-surface-muted: #f8fafc;
-  --color-surface-hover: #f1f5f9;
-  --color-surface-active: #e2e8f0;
+  /* ---- Legacy status names — 6 existing usages of bg-status-danger /
+     text-status-danger (and reserved for success/warning/info if used later) */
+  --color-status-success: var(--color-success);
+  --color-status-warning: var(--color-warning);
+  --color-status-danger:  oklch(50% 0.18 28);
+  --color-status-info:    var(--color-info);
 
-  --color-border: #e2e8f0;
-  --color-border-muted: #f1f5f9;
+  /* ---- Tenant accent (System §6) — front-of-house surfaces only ---------- */
+  --color-tenant-accent: var(--color-role-admin);
+  --color-tenant-accent-dim: color-mix(in oklch, var(--color-tenant-accent) 20%, transparent);
 
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
-  --color-text-inverse: #ffffff;
+  /* ---- Document/print tokens (System §5) — NOT tied to dark mode --------- */
+  --color-document-paper: oklch(97.5% 0.012 80);
+  --color-document-ink: oklch(20% 0.018 55);
+  --color-document-rule: oklch(85% 0.014 75);
 
-  --color-status-success: #10b981;
-  --color-status-warning: #f59e0b;
-  --color-status-danger: #ef4444;
-  --color-status-info: #3b82f6;
+  /* ---- Legacy "brand" ramp — retargeted from indigo to ochre/gold ---------
+     Used today by: badge.tsx (default variant), avatar.tsx, all 5 sidebars
+     (logo icon + active nav state), several dashboard/auth pages. */
+  --color-brand-50:  oklch(97% 0.02 75);
+  --color-brand-100: oklch(93% 0.035 75);
+  --color-brand-200: oklch(86% 0.06 75);
+  --color-brand-300: oklch(78% 0.09 75);
+  --color-brand-400: oklch(68% 0.115 75);
+  --color-brand-500: oklch(58% 0.135 75);
+  --color-brand-600: oklch(50% 0.13 75);
+  --color-brand-700: oklch(42% 0.115 75);
+  --color-brand-800: oklch(34% 0.09 75);
+  --color-brand-900: oklch(26% 0.06 75);
+  --color-brand-950: oklch(18% 0.04 75);
+
+  /* ---- Legacy "accent" ramp — retargeted from emerald to chalkboard green -
+     Used today by: badge.tsx (success variant), a handful of dashboard stats. */
+  --color-accent-50:  oklch(96% 0.025 155);
+  --color-accent-100: oklch(91% 0.045 155);
+  --color-accent-200: oklch(82% 0.07 155);
+  --color-accent-300: oklch(71% 0.085 155);
+  --color-accent-400: oklch(52% 0.08 155);
+  --color-accent-500: oklch(40% 0.075 155);
+  --color-accent-600: oklch(34% 0.065 155);
+  --color-accent-700: oklch(28% 0.055 155);
+  --color-accent-800: oklch(22% 0.045 155);
+  --color-accent-900: oklch(16% 0.03 155);
+  --color-accent-950: oklch(10% 0.02 155);
+
+  /* ---- Legacy surface/text/border scale — retargeted to warm paper/ink --- */
+  --color-surface:        oklch(99% 0.004 80);
+  --color-surface-muted:  oklch(95% 0.014 80);
+  --color-surface-hover:  oklch(93% 0.016 80);
+  --color-surface-active: oklch(90% 0.018 78);
+  --color-surface-alt:    oklch(97% 0.014 78);
+
+  --color-border:       oklch(88% 0.014 75);
+  --color-border-muted: oklch(92% 0.012 75);
+
+  --color-text-primary:   oklch(24% 0.018 55);
+  --color-text-secondary: oklch(42% 0.016 55);
+  --color-text-muted:     oklch(62% 0.014 55);
+  --color-text-inverse:   oklch(98% 0.006 80);
 
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
+
+  /* ---- Motion (System §4) — restrained, purposeful, matches the ledger register */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 350ms;
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* ---- Shadows — layered, warm-toned, never bare rgba (05-DESIGN-AGENT §1) */
+  --shadow-ambient: 0 1px 2px oklch(30% 0.02 60 / 0.05);
+  --shadow-card: 0 6px 20px -6px oklch(30% 0.02 60 / 0.10), 0 2px 6px -2px oklch(30% 0.02 60 / 0.06);
+  --shadow-lifted: 0 20px 48px -12px oklch(30% 0.02 60 / 0.22);
+
+  /* ---- Type scale (System §1) — three faces, three jobs, never interchanged */
+  --text-display-lg: 3.5rem;   /* report card headline, portal welcome */
+  --text-display-md: 2.5rem;
+  --text-display-sm: 1.75rem;
+  --text-heading-lg: 1.5rem;   /* page titles */
+  --text-heading-md: 1.25rem;  /* section headers */
+  --text-heading-sm: 1.0625rem;
+  --text-body: 0.9375rem;      /* 15px — the workhorse for dense tables/forms */
+  --text-caption: 0.8125rem;
+  --text-micro: 0.6875rem;     /* table meta, timestamps */
+
+  --leading-display: 0.95;
+  --leading-heading: 1.2;
+  --leading-body: 1.6;
+
+  --tracking-display: -0.02em;
+  --tracking-caption: 0.04em;
 }
 
-* {
-  border-color: var(--color-border);
+/* shadcn semantic tokens — the actual values components/ui/* primitives read. */
+:root {
+  --background: oklch(97.5% 0.012 80); /* warm paper ground, not clinical white */
+  --foreground: oklch(24% 0.018 55);   /* warm charcoal ink, not cold near-black */
+  --card: oklch(99% 0.004 80);
+  --card-foreground: oklch(24% 0.018 55);
+  --popover: oklch(99% 0.004 80);
+  --popover-foreground: oklch(24% 0.018 55);
+
+  /* Default --primary before any [data-role] scope applies (marketing/auth pages
+     outside a portal shell). Portals override this — see [data-role] blocks below
+     and components/layouts/portal-theme-root.tsx. */
+  --primary: var(--color-role-admin);
+  --primary-foreground: oklch(99% 0.006 80);
+
+  --secondary: oklch(93% 0.016 78);
+  --secondary-foreground: oklch(28% 0.018 55);
+  --muted: oklch(95% 0.014 80);
+  --muted-foreground: oklch(48% 0.016 60);
+  --accent: oklch(93% 0.016 78);
+  --accent-foreground: oklch(28% 0.018 55);
+
+  --destructive: oklch(50% 0.18 28);
+  --destructive-foreground: oklch(99% 0.006 80);
+
+  --border: oklch(88% 0.014 75);
+  --input: oklch(88% 0.014 75);
+  --ring: var(--color-role-admin);
+
+  --chart-1: var(--color-role-admin);
+  --chart-2: var(--color-role-teacher);
+  --chart-3: var(--color-role-student);
+  --chart-4: var(--color-role-parent);
+  --chart-5: var(--color-role-platform);
+
+  --radius: 0.625rem;
+
+  --sidebar: oklch(95% 0.014 80);
+  --sidebar-foreground: oklch(24% 0.018 55);
+  --sidebar-primary: var(--color-role-admin);
+  --sidebar-primary-foreground: oklch(99% 0.006 80);
+  --sidebar-accent: oklch(93% 0.016 78);
+  --sidebar-accent-foreground: oklch(28% 0.018 55);
+  --sidebar-border: oklch(88% 0.014 75);
+  --sidebar-ring: var(--color-role-admin);
 }
 
-body {
-  background-color: var(--color-surface-muted);
-  color: var(--color-text-primary);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* "Night Register" — a real second mode, not an inverted afterthought. */
+.dark {
+  --background: oklch(18% 0.012 55);
+  --foreground: oklch(94% 0.01 75);
+  --card: oklch(22% 0.014 55);
+  --card-foreground: oklch(94% 0.01 75);
+  --popover: oklch(22% 0.014 55);
+  --popover-foreground: oklch(94% 0.01 75);
+
+  --primary: oklch(70% 0.13 78); /* role accents recomputed lighter for AA on dark ground */
+  --primary-foreground: oklch(18% 0.012 55);
+
+  --secondary: oklch(28% 0.014 55);
+  --secondary-foreground: oklch(94% 0.01 75);
+  --muted: oklch(26% 0.014 55);
+  --muted-foreground: oklch(66% 0.012 65);
+  --accent: oklch(28% 0.014 55);
+  --accent-foreground: oklch(94% 0.01 75);
+
+  --destructive: oklch(62% 0.19 27);
+  --destructive-foreground: oklch(97% 0.006 80);
+
+  --border: oklch(32% 0.014 55);
+  --input: oklch(32% 0.014 55);
+  --ring: oklch(70% 0.13 78);
+
+  --chart-1: oklch(70% 0.13 78);
+  --chart-2: oklch(62% 0.09 155);
+  --chart-3: oklch(68% 0.11 255);
+  --chart-4: oklch(68% 0.13 42);
+  --chart-5: oklch(60% 0.012 250);
+
+  --sidebar: oklch(20% 0.014 55);
+  --sidebar-foreground: oklch(94% 0.01 75);
+  --sidebar-primary: oklch(70% 0.13 78);
+  --sidebar-primary-foreground: oklch(18% 0.012 55);
+  --sidebar-accent: oklch(28% 0.014 55);
+  --sidebar-accent-foreground: oklch(94% 0.01 75);
+  --sidebar-border: oklch(32% 0.014 55);
+  --sidebar-ring: oklch(70% 0.13 78);
+}
+
+/*
+  Role-accent scoping (Philosophy §4). Set data-role on a wrapper once per portal
+  (components/layouts/portal-theme-root.tsx, already wired into all 5 portal
+  layout.tsx files) — every shadcn component nested inside re-themes automatically
+  because they all read --primary / --ring / --sidebar-primary, not a hardcoded
+  color. The 5 sidebar components were also updated to read --sidebar-primary
+  instead of the old shared --color-brand-* classes, so this is where the actual
+  per-role visual difference comes from now.
+*/
+[data-role="super_admin"] {
+  --primary: var(--color-role-platform);
+  --ring: var(--color-role-platform);
+  --sidebar-primary: var(--color-role-platform);
+  --sidebar-ring: var(--color-role-platform);
+}
+[data-role="admin"] {
+  --primary: var(--color-role-admin);
+  --ring: var(--color-role-admin);
+  --sidebar-primary: var(--color-role-admin);
+  --sidebar-ring: var(--color-role-admin);
+}
+[data-role="teacher"] {
+  --primary: var(--color-role-teacher);
+  --ring: var(--color-role-teacher);
+  --sidebar-primary: var(--color-role-teacher);
+  --sidebar-ring: var(--color-role-teacher);
+}
+[data-role="student"] {
+  --primary: var(--color-role-student);
+  --ring: var(--color-role-student);
+  --sidebar-primary: var(--color-role-student);
+  --sidebar-ring: var(--color-role-student);
+}
+[data-role="parent"] {
+  --primary: var(--color-role-parent);
+  --ring: var(--color-role-parent);
+  --sidebar-primary: var(--color-role-parent);
+  --sidebar-ring: var(--color-role-parent);
+}
+
+/*
+  Tenant-branded surfaces (System §6) — applied via [data-tenant-surface] on
+  specific front-of-house pages (login, public application form, parent payment
+  screens), NEVER on the whole app. --color-tenant-accent is set per-request by
+  the tenant layout reading schools.config.branding through the contrast-
+  correction utility (packages/shared/src/utils/tenant-theme.ts). This block only
+  maps it onto --primary/--ring LOCALLY within that surface — it must never leak
+  past this scope into admin/teacher/super_admin chrome.
+*/
+[data-tenant-surface] {
+  --primary: var(--color-tenant-accent);
+  --ring: var(--color-tenant-accent);
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
+  /* Typography scale — maps design spec tokens to Tailwind utilities */
+  --font-heading: var(--font-display);
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --text-display-lg: var(--text-display-lg);
+  --text-display-md: var(--text-display-md);
+  --text-display-sm: var(--text-display-sm);
+  --text-heading-lg: var(--text-heading-lg);
+  --text-heading-md: var(--text-heading-md);
+  --text-heading-sm: var(--text-heading-sm);
+  --text-body: var(--text-body);
+  --text-caption: var(--text-caption);
+  --text-micro: var(--text-micro);
+  --leading-display: var(--leading-display);
+  --leading-heading: var(--leading-heading);
+  --leading-body: var(--leading-body);
+  --tracking-display: var(--tracking-display);
+  --tracking-caption: var(--tracking-caption);
+  /* Motion */
+  --duration-fast: var(--duration-fast);
+  --duration-base: var(--duration-base);
+  --duration-slow: var(--duration-slow);
+  --ease-out-expo: var(--ease-out-expo);
+  --ease-in-out-quart: var(--ease-in-out-quart);
+  /* Shadows */
+  --shadow-ambient: var(--shadow-ambient);
+  --shadow-card: var(--shadow-card);
+  --shadow-lifted: var(--shadow-lifted);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -108,75 +365,6 @@ body {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -186,5 +374,10 @@ body {
   }
   html {
     @apply font-sans;
+  }
+  /* Numeric/tabular data — fee tables, gradebooks, IDs — always tabular figures. */
+  .font-mono,
+  [data-tabular] {
+    font-feature-settings: "tnum" 1, "kern" 1;
   }
 }
